@@ -1,10 +1,20 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from './AuthContext'
 
 const SpaceContext = createContext({})
+
+// Helper: race a promise against a timeout
+function withTimeout(promise, ms = 8000) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('TIMEOUT')), ms)
+        ),
+    ])
+}
 
 export function SpaceProvider({ children }) {
     const { user } = useAuth()
@@ -12,6 +22,7 @@ export function SpaceProvider({ children }) {
     const [members, setMembers] = useState([])
     const [userRole, setUserRole] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [dbError, setDbError] = useState(null)
     const supabase = createClient()
 
     useEffect(() => {
@@ -20,6 +31,7 @@ export function SpaceProvider({ children }) {
             setMembers([])
             setUserRole(null)
             setLoading(false)
+            setDbError(null)
             return
         }
         loadSpace()
@@ -27,34 +39,76 @@ export function SpaceProvider({ children }) {
 
     const loadSpace = async () => {
         setLoading(true)
+        setDbError(null)
         try {
-            // Get user's space membership
-            const { data: membership } = await supabase
-                .from('space_members')
-                .select('space_id, role')
-                .eq('user_id', user.id)
-                .single()
+            // Step 1: Get user's space membership (with timeout)
+            let membership = null
+            try {
+                const { data, error } = await withTimeout(
+                    supabase
+                        .from('space_members')
+                        .select('space_id, role')
+                        .eq('user_id', user.id)
+                        .limit(1)
+                        .maybeSingle()
+                )
+                if (error) {
+                    // RLS recursion error or other DB error
+                    if (error.message?.includes('infinite recursion')) {
+                        setDbError('RLS_RECURSION')
+                        setLoading(false)
+                        return
+                    }
+                    console.warn('space_members query error:', error.message)
+                }
+                membership = data
+            } catch (err) {
+                if (err.message === 'TIMEOUT') {
+                    console.warn('space_members query timed out — likely RLS recursion')
+                    setDbError('RLS_RECURSION')
+                    setLoading(false)
+                    return
+                }
+                throw err
+            }
 
             if (membership) {
                 setUserRole(membership.role)
 
-                // Get space details
-                const { data: spaceData } = await supabase
-                    .from('spaces')
-                    .select('*')
-                    .eq('id', membership.space_id)
-                    .single()
-                setSpace(spaceData)
+                // Step 2: Get space details (spaces table — separate RLS)
+                try {
+                    const { data: spaceData } = await withTimeout(
+                        supabase
+                            .from('spaces')
+                            .select('*')
+                            .eq('id', membership.space_id)
+                            .single()
+                    )
+                    setSpace(spaceData)
+                } catch (err) {
+                    console.warn('spaces query failed:', err.message)
+                    // If we have membership but can't load space, still set basic info
+                    setSpace({ id: membership.space_id, name: 'Space' })
+                }
 
-                // Get all members with profiles
-                const { data: memberData } = await supabase
-                    .from('space_members')
-                    .select('user_id, role, joined_at, profiles(display_name, avatar_url, email)')
-                    .eq('space_id', membership.space_id)
-                    .order('joined_at', { ascending: true })
-
-                setMembers(memberData || [])
+                // Step 3: Get all members with profiles
+                try {
+                    const { data: memberData } = await withTimeout(
+                        supabase
+                            .from('space_members')
+                            .select('user_id, role, joined_at, profiles(display_name, avatar_url, email)')
+                            .eq('space_id', membership.space_id)
+                            .order('joined_at', { ascending: true })
+                    )
+                    setMembers(memberData || [])
+                } catch (err) {
+                    console.warn('members query failed:', err.message)
+                    // Still functional without member list
+                    setMembers([])
+                }
             }
+            // If no membership, user hasn't created/joined a space yet
+            // loading will be set to false, onboarding will show
         } catch (err) {
             console.error('Error loading space:', err)
         }
@@ -66,66 +120,78 @@ export function SpaceProvider({ children }) {
             .map(b => b.toString(16).padStart(2, '0')).join('')
 
         // Step 1: Create the space
-        const { data: spaceData, error: spaceError } = await supabase
-            .from('spaces')
-            .insert({ name, created_by: user.id, invite_token: inviteToken })
-            .select()
-            .single()
+        const { data: spaceData, error: spaceError } = await withTimeout(
+            supabase
+                .from('spaces')
+                .insert({ name, created_by: user.id, invite_token: inviteToken })
+                .select()
+                .single()
+        )
 
         if (spaceError) throw new Error(`Space oluşturulamadı: ${spaceError.message}`)
 
-        // Step 2: Add creator as owner (with timeout to catch RLS recursion)
+        // Step 2: Add creator as owner
         try {
-            const memberPromise = supabase
-                .from('space_members')
-                .insert({ space_id: spaceData.id, user_id: user.id, role: 'owner' })
-
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Veritabanı zaman aşımı. Supabase SQL Editor\'de fix_rls_v2.sql dosyasını çalıştırın.')), 10000)
+            const { error: memberError } = await withTimeout(
+                supabase
+                    .from('space_members')
+                    .insert({ space_id: spaceData.id, user_id: user.id, role: 'owner' }),
+                10000
             )
-
-            const { error: memberError } = await Promise.race([memberPromise, timeoutPromise])
             if (memberError) throw new Error(`Üyelik oluşturulamadı: ${memberError.message}`)
         } catch (err) {
             // Clean up: delete the space if member creation failed
             await supabase.from('spaces').delete().eq('id', spaceData.id)
+            if (err.message === 'TIMEOUT') {
+                throw new Error('Veritabanı zaman aşımı. Supabase SQL Editor\'de fix_rls_v2.sql dosyasını çalıştırın.')
+            }
             throw err
         }
 
         setSpace(spaceData)
         setUserRole('owner')
+        setDbError(null)
         return spaceData
     }
 
     const joinSpace = async (inviteToken) => {
-        const { data: spaceData, error: findError } = await supabase
-            .from('spaces')
-            .select('*')
-            .eq('invite_token', inviteToken)
-            .single()
+        const { data: spaceData, error: findError } = await withTimeout(
+            supabase
+                .from('spaces')
+                .select('*')
+                .eq('invite_token', inviteToken)
+                .single()
+        )
 
-        if (findError || !spaceData) throw new Error('Invalid invite link')
+        if (findError || !spaceData) throw new Error('Geçersiz davet linki')
 
         // Check if already a member
-        const { data: existing } = await supabase
-            .from('space_members')
-            .select('id')
-            .eq('space_id', spaceData.id)
-            .eq('user_id', user.id)
-            .single()
+        try {
+            const { data: existing } = await withTimeout(
+                supabase
+                    .from('space_members')
+                    .select('id')
+                    .eq('space_id', spaceData.id)
+                    .eq('user_id', user.id)
+                    .maybeSingle()
+            )
 
-        if (existing) {
-            setSpace(spaceData)
-            await loadSpace()
-            return spaceData
+            if (existing) {
+                setSpace(spaceData)
+                await loadSpace()
+                return spaceData
+            }
+        } catch {
+            // If check fails, proceed to insert
         }
 
-        // No member limit — group spaces support unlimited members
-        const { error: joinError } = await supabase
-            .from('space_members')
-            .insert({ space_id: spaceData.id, user_id: user.id, role: 'editor' })
+        const { error: joinError } = await withTimeout(
+            supabase
+                .from('space_members')
+                .insert({ space_id: spaceData.id, user_id: user.id, role: 'editor' })
+        )
 
-        if (joinError) throw joinError
+        if (joinError) throw new Error(`Katılım başarısız: ${joinError.message}`)
 
         setSpace(spaceData)
         await loadSpace()
@@ -133,24 +199,28 @@ export function SpaceProvider({ children }) {
     }
 
     const updateMemberRole = async (memberId, newRole) => {
-        if (userRole !== 'owner') throw new Error('Only owner can change roles')
-        const { error } = await supabase
-            .from('space_members')
-            .update({ role: newRole })
-            .eq('user_id', memberId)
-            .eq('space_id', space.id)
+        if (userRole !== 'owner') throw new Error('Sadece alan sahibi rol değiştirebilir')
+        const { error } = await withTimeout(
+            supabase
+                .from('space_members')
+                .update({ role: newRole })
+                .eq('user_id', memberId)
+                .eq('space_id', space.id)
+        )
         if (error) throw error
         await loadSpace()
     }
 
     const removeMember = async (memberId) => {
-        if (!['owner', 'admin'].includes(userRole)) throw new Error('No permission')
-        if (memberId === user.id) throw new Error('Cannot remove yourself')
-        const { error } = await supabase
-            .from('space_members')
-            .delete()
-            .eq('user_id', memberId)
-            .eq('space_id', space.id)
+        if (!['owner', 'admin'].includes(userRole)) throw new Error('Yetkiniz yok')
+        if (memberId === user.id) throw new Error('Kendinizi çıkaramazsınız')
+        const { error } = await withTimeout(
+            supabase
+                .from('space_members')
+                .delete()
+                .eq('user_id', memberId)
+                .eq('space_id', space.id)
+        )
         if (error) throw error
         await loadSpace()
     }
@@ -173,7 +243,7 @@ export function SpaceProvider({ children }) {
 
     return (
         <SpaceContext.Provider value={{
-            space, members, userRole, partner, loading, permissions,
+            space, members, userRole, partner, loading, permissions, dbError,
             createSpace, joinSpace, loadSpace, updateMemberRole, removeMember,
         }}>
             {children}

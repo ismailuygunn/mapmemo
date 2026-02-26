@@ -32,7 +32,7 @@ export default function MapPage() {
     const [mapLoaded, setMapLoaded] = useState(false)
     const [loading, setLoading] = useState(true)
     const { user } = useAuth()
-    const { space, loading: spaceLoading } = useSpace()
+    const { space, loading: spaceLoading, dbError, loadSpace: reloadSpace } = useSpace()
     const { theme } = useTheme()
     const { t } = useLanguage()
     const supabase = createClient()
@@ -40,10 +40,10 @@ export default function MapPage() {
 
     // Redirect to onboarding if no space
     useEffect(() => {
-        if (!spaceLoading && !space && user) {
+        if (!spaceLoading && !space && user && !dbError) {
             router.push('/onboarding')
         }
-    }, [space, spaceLoading, user])
+    }, [space, spaceLoading, user, dbError])
 
     // Initialize Mapbox
     useEffect(() => {
@@ -227,6 +227,28 @@ export default function MapPage() {
                     <p>{t('map.loadingSpace')}</p>
                 </div>
                 <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        )
+    }
+
+    if (dbError) {
+        return (
+            <div className="auth-bg">
+                <div style={{ color: 'white', textAlign: 'center', maxWidth: 440, padding: 32 }}>
+                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
+                    <h2 style={{ marginBottom: 8 }}>Veritabanı Hatası</h2>
+                    <p style={{ color: '#94A3B8', marginBottom: 24, fontSize: '0.875rem', lineHeight: 1.6 }}>
+                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor'de fix_rls_v2.sql dosyasını çalıştırın.
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                        <button onClick={() => reloadSpace()} className="btn btn-primary">
+                            🔄 Tekrar Dene
+                        </button>
+                        <button onClick={() => router.push('/onboarding')} className="btn btn-secondary">
+                            Yeni Alan Oluştur
+                        </button>
+                    </div>
+                </div>
             </div>
         )
     }
