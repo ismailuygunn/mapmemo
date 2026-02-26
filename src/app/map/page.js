@@ -13,35 +13,12 @@ import PinDetail from '@/components/map/PinDetail'
 import { Plus, Search, X, MapPin, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-
-// Google Maps dark mode style
-const DARK_MAP_STYLE = [
-    { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
-    { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
-    { elementType: 'labels.text.fill', stylers: [{ color: '#8892b0' }] },
-    { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-    { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#1e1e3a' }] },
-    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6c7293' }] },
-    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1a2e1a' }] },
-    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a1a2e' }] },
-    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5c' }] },
-    { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
-    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1a2b' }] },
-    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
-]
-
-const LIGHT_MAP_STYLE = [
-    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
-]
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 export default function MapPage() {
     const mapContainer = useRef(null)
     const mapRef = useRef(null)
     const markersRef = useRef([])
-    const autocompleteService = useRef(null)
-    const placesService = useRef(null)
     const [pins, setPins] = useState([])
     const [filteredPins, setFilteredPins] = useState([])
     const [selectedPin, setSelectedPin] = useState(null)
@@ -60,116 +37,99 @@ export default function MapPage() {
     const supabase = createClient()
     const router = useRouter()
 
-    // Redirect to onboarding if no space
+    // Redirect if needed
     useEffect(() => {
-        if (!spaceLoading && !space && user && !dbError) {
+        if (!spaceLoading && !space && !dbError && user) {
             router.push('/onboarding')
+        }
+        if (!spaceLoading && !user) {
+            router.push('/login')
         }
     }, [space, spaceLoading, user, dbError])
 
-    // Load Google Maps script with preconnect for speed
+    // Initialize Mapbox
     useEffect(() => {
-        // Preconnect to Google Maps servers for faster loading
-        const preconnect = document.createElement('link')
-        preconnect.rel = 'preconnect'
-        preconnect.href = 'https://maps.googleapis.com'
-        document.head.appendChild(preconnect)
-        const preconnect2 = document.createElement('link')
-        preconnect2.rel = 'preconnect'
-        preconnect2.href = 'https://maps.gstatic.com'
-        preconnect2.crossOrigin = 'anonymous'
-        document.head.appendChild(preconnect2)
-
         if (mapRef.current || !mapContainer.current) return
 
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
-        if (!apiKey) {
-            console.error('Google Maps API key not set')
+        const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+        if (!token) {
+            console.error('Mapbox token not set')
             return
         }
 
-        // Check if already loaded
-        if (window.google?.maps) {
-            initMap()
-            return
-        }
+        // Dynamic import mapbox-gl for SSR safety
+        import('mapbox-gl').then((mapboxgl) => {
+            mapboxgl.default.accessToken = token
 
-        // Use callback-based loading for speed
-        window.initGoogleMap = initMap
-        const script = document.createElement('script')
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&callback=initGoogleMap`
-        script.async = true
-        script.defer = true
-        script.onerror = () => console.error('Google Maps script failed to load')
-        document.head.appendChild(script)
+            const map = new mapboxgl.default.Map({
+                container: mapContainer.current,
+                style: theme === 'dark'
+                    ? 'mapbox://styles/mapbox/dark-v11'
+                    : 'mapbox://styles/mapbox/light-v11',
+                center: [28.9784, 41.0082], // Istanbul default [lng, lat]
+                zoom: 3,
+                attributionControl: false,
+                logoPosition: 'bottom-right',
+            })
+
+            // Add zoom/compass controls
+            map.addControl(new mapboxgl.default.NavigationControl({
+                showCompass: true,
+                showZoom: true,
+            }), 'bottom-right')
+
+            map.on('load', () => {
+                setMapLoaded(true)
+            })
+
+            // Click to add pin with reverse geocode
+            map.on('click', async (e) => {
+                if (document.querySelector('.pin-detail-card')) return
+
+                const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng }
+                setNewPinCoords(coords)
+                setNewPinLocation(null)
+
+                // Reverse geocode via Mapbox
+                try {
+                    const res = await fetch(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${e.lngLat.lng},${e.lngLat.lat}.json?access_token=${token}&language=tr`
+                    )
+                    const data = await res.json()
+                    if (data.features?.length > 0) {
+                        const feature = data.features[0]
+                        const city = data.features.find(f => f.place_type?.includes('place'))?.text
+                            || data.features.find(f => f.place_type?.includes('region'))?.text
+                            || ''
+                        const country = data.features.find(f => f.place_type?.includes('country'))?.text || ''
+                        setNewPinLocation({
+                            city,
+                            country,
+                            placeName: feature.place_name,
+                        })
+                    }
+                } catch { /* silent */ }
+            })
+
+            mapRef.current = map
+        })
 
         return () => {
-            delete window.initGoogleMap
+            if (mapRef.current) {
+                mapRef.current.remove()
+                mapRef.current = null
+            }
         }
     }, [])
-
-    function initMap() {
-        if (!mapContainer.current || mapRef.current) return
-
-        const google = window.google
-
-        const map = new google.maps.Map(mapContainer.current, {
-            center: { lat: 41.0082, lng: 28.9784 }, // Istanbul default
-            zoom: 3,
-            styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
-            disableDefaultUI: true,
-            zoomControl: true,
-            zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-            gestureHandling: 'greedy',
-            clickableIcons: false,
-        })
-
-        mapRef.current = map
-        autocompleteService.current = new google.maps.places.AutocompleteService()
-        placesService.current = new google.maps.places.PlacesService(map)
-
-        map.addListener('tilesloaded', () => {
-            setMapLoaded(true)
-        })
-
-        // Click on map to add pin with auto reverse-geocode
-        map.addListener('click', async (e) => {
-            if (document.querySelector('.pin-detail-card')) return
-
-            const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() }
-            setNewPinCoords(coords)
-            setNewPinLocation(null)
-
-            // Reverse geocode using Google Geocoding API
-            try {
-                const geocoder = new google.maps.Geocoder()
-                const { results } = await geocoder.geocode({ location: e.latLng })
-
-                if (results?.[0]) {
-                    const components = results[0].address_components
-                    const city = components.find(c => c.types.includes('locality'))?.long_name
-                        || components.find(c => c.types.includes('administrative_area_level_1'))?.long_name
-                        || ''
-                    const country = components.find(c => c.types.includes('country'))?.long_name || ''
-                    setNewPinLocation({
-                        city,
-                        country,
-                        placeName: results[0].formatted_address,
-                    })
-                }
-            } catch { /* silent */ }
-        })
-    }
 
     // Update map style on theme change
     useEffect(() => {
         if (!mapRef.current || !mapLoaded) return
-        mapRef.current.setOptions({
-            styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
-        })
+        mapRef.current.setStyle(
+            theme === 'dark'
+                ? 'mapbox://styles/mapbox/dark-v11'
+                : 'mapbox://styles/mapbox/light-v11'
+        )
     }, [theme, mapLoaded])
 
     // Load pins
@@ -205,49 +165,60 @@ export default function MapPage() {
         setFilteredPins(result)
     }, [pins, activeFilters])
 
-    // Render Google Maps markers
+    // Render Mapbox markers
     useEffect(() => {
-        if (!mapRef.current || !mapLoaded || !window.google) return
+        if (!mapRef.current || !mapLoaded) return
 
         // Clear existing markers
-        markersRef.current.forEach(m => m.setMap(null))
+        markersRef.current.forEach(m => m.remove())
         markersRef.current = []
 
         filteredPins.forEach(pin => {
             const pinType = PIN_TYPES[pin.type] || PIN_TYPES.memory
 
-            // Create SVG icon for marker
-            const svgIcon = {
-                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-                        <defs><filter id="s" x="-20%" y="-10%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter></defs>
-                        <path d="M18 0C8 0 0 8 0 18c0 13 18 26 18 26s18-13 18-26C36 8 28 0 18 0z" fill="${pinType.color}" filter="url(#s)"/>
-                        <circle cx="18" cy="16" r="11" fill="rgba(255,255,255,0.2)"/>
-                        <text x="18" y="21" text-anchor="middle" font-size="14">${pinType.emoji}</text>
-                    </svg>
-                `)}`,
-                scaledSize: new window.google.maps.Size(36, 44),
-                anchor: new window.google.maps.Point(18, 44),
-            }
-
-            const marker = new window.google.maps.Marker({
-                map: mapRef.current,
-                position: { lat: pin.lat, lng: pin.lng },
-                icon: svgIcon,
-                title: pin.title || '',
-                animation: window.google.maps.Animation.DROP,
-                optimized: true,
+            // Create custom marker element
+            const el = document.createElement('div')
+            el.className = 'mapbox-pin-marker'
+            el.innerHTML = `
+                <div style="
+                    width: 36px; height: 36px;
+                    background: ${pinType.color};
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    display: flex; align-items: center; justify-content: center;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+                    border: 2px solid rgba(255,255,255,0.3);
+                    cursor: pointer;
+                    transition: transform 150ms, box-shadow 150ms;
+                ">
+                    <span style="transform: rotate(45deg); font-size: 16px;">${pinType.emoji}</span>
+                </div>
+            `
+            el.addEventListener('mouseenter', () => {
+                el.firstElementChild.style.transform = 'rotate(-45deg) scale(1.2)'
+                el.firstElementChild.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)'
+            })
+            el.addEventListener('mouseleave', () => {
+                el.firstElementChild.style.transform = 'rotate(-45deg) scale(1)'
+                el.firstElementChild.style.boxShadow = '0 3px 10px rgba(0,0,0,0.4)'
             })
 
-            marker.addListener('click', () => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation()
                 setSelectedPin(pin)
             })
 
-            markersRef.current.push(marker)
+            // Dynamic import to avoid SSR issues
+            import('mapbox-gl').then(mapboxgl => {
+                const marker = new mapboxgl.default.Marker({ element: el, anchor: 'bottom' })
+                    .setLngLat([pin.lng, pin.lat])
+                    .addTo(mapRef.current)
+                markersRef.current.push(marker)
+            })
         })
     }, [filteredPins, mapLoaded])
 
-    // Search places using Google Places Autocomplete
+    // Search via Mapbox Geocoding API
     const handleSearch = useCallback(async (query) => {
         setSearchQuery(query)
         if (query.length < 2) {
@@ -255,47 +226,30 @@ export default function MapPage() {
             return
         }
 
-        if (!autocompleteService.current) {
-            setSearchResults([])
-            return
-        }
-
         try {
-            const request = {
-                input: query,
-                types: ['(cities)'],
-            }
-
-            autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
-                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-                    setSearchResults(predictions.map(p => ({
-                        id: p.place_id,
-                        place_name: p.description,
-                        place_id: p.place_id,
-                    })))
-                } else {
-                    setSearchResults([])
-                }
-            })
+            const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+            const res = await fetch(
+                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&types=place,locality,neighborhood&language=tr&limit=5`
+            )
+            const data = await res.json()
+            setSearchResults((data.features || []).map(f => ({
+                id: f.id,
+                place_name: f.place_name,
+                center: f.center, // [lng, lat]
+            })))
         } catch {
             setSearchResults([])
         }
     }, [])
 
     const selectSearchResult = (result) => {
-        if (!placesService.current) return
-
-        // Get place details to get coordinates
-        placesService.current.getDetails(
-            { placeId: result.place_id, fields: ['geometry', 'name'] },
-            (place, status) => {
-                if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-                    mapRef.current.panTo(place.geometry.location)
-                    mapRef.current.setZoom(12)
-                }
-            }
-        )
-
+        if (mapRef.current && result.center) {
+            mapRef.current.flyTo({
+                center: result.center,
+                zoom: 12,
+                duration: 1500,
+            })
+        }
         setSearchQuery(result.place_name)
         setSearchResults([])
     }
@@ -348,7 +302,7 @@ export default function MapPage() {
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
                     <h2 style={{ marginBottom: 8 }}>Veritabanı Hatası</h2>
                     <p style={{ color: '#94A3B8', marginBottom: 24, fontSize: '0.875rem', lineHeight: 1.6 }}>
-                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor'de fix_rls_v3.sql dosyasını çalıştırın.
+                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor&apos;de fix_rls_v3.sql dosyasını çalıştırın.
                     </p>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                         <button onClick={() => reloadSpace()} className="btn btn-primary">
@@ -369,6 +323,20 @@ export default function MapPage() {
             <div className="main-content">
                 <div className="map-container">
                     <div ref={mapContainer} className="map-canvas" />
+
+                    {/* Map loading skeleton */}
+                    {!mapLoaded && (
+                        <div style={{
+                            position: 'absolute', inset: 0, zIndex: 5,
+                            background: theme === 'dark' ? '#1a1a2e' : '#e8e8e8',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <div style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                                <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
+                                <p style={{ fontSize: '0.875rem' }}>Harita yükleniyor...</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Search Bar */}
                     <div className="map-controls">
