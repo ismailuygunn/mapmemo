@@ -42,6 +42,7 @@ export const translations = {
     'nav.map': 'Map',
     'nav.cities': 'Cities',
     'nav.planner': 'Planner',
+    'nav.meetups': 'Meetups',
     'nav.settings': 'Settings',
     'nav.signOut': 'Sign out',
 
@@ -365,6 +366,21 @@ export const translations = {
     'general.cancel': 'Cancel',
     'general.close': 'Close',
     'general.day': 'Day',
+
+    // ========== Meetups ==========
+    'meetup.subtitle': 'Plan and track your group meetups',
+    'settings.profileSaved': 'Name saved ✅',
+    'settings.inviteCopied': 'Invite link copied 📎',
+
+    // ========== Invite ==========
+    'invite.title': "You're invited! 🎉",
+    'invite.subtitle': 'Join this group space and start exploring together.',
+    'invite.createAccount': 'Create account',
+    'invite.haveAccount': 'I already have an account',
+    'invite.joining': 'Joining space...',
+    'invite.success': "You're in! 🎉",
+    'invite.redirecting': 'Redirecting to your shared map...',
+    'invite.goToMap': 'Go to Map',
   },
 
   tr: {
@@ -408,6 +424,7 @@ export const translations = {
     'nav.map': 'Harita',
     'nav.cities': 'Şehirler',
     'nav.planner': 'Planlayıcı',
+    'nav.meetups': 'Buluşmalar',
     'nav.settings': 'Ayarlar',
     'nav.signOut': 'Çıkış yap',
 
@@ -731,5 +748,20 @@ export const translations = {
     'general.cancel': 'İptal',
     'general.close': 'Kapat',
     'general.day': 'Gün',
+
+    // ========== Meetups ==========
+    'meetup.subtitle': 'Buluşmalarınızı planlayın ve takip edin',
+    'settings.profileSaved': 'İsim kaydedildi ✅',
+    'settings.inviteCopied': 'Davet linki kopyalandı 📎',
+
+    // ========== Invite ==========
+    'invite.title': 'Davet edildiniz! 🎉',
+    'invite.subtitle': 'Bu grup alanına katılın ve birlikte keşfetmeye başlayın.',
+    'invite.createAccount': 'Hesap oluştur',
+    'invite.haveAccount': 'Zaten hesabım var',
+    'invite.joining': 'Alana katılınıyor...',
+    'invite.success': 'Katıldınız! 🎉',
+    'invite.redirecting': 'Paylaşılan haritanıza yönlendiriliyorsunuz...',
+    'invite.goToMap': 'Haritaya Git',
   },
 }

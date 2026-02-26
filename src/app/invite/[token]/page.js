@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useSpace } from '@/context/SpaceContext'
-import { Heart, Check, Loader2 } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
+import { Users, Check, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -13,18 +14,17 @@ export default function InvitePage() {
     const token = params.token
     const { user, loading: authLoading } = useAuth()
     const { joinSpace } = useSpace()
+    const { t } = useLanguage()
     const router = useRouter()
-    const [status, setStatus] = useState('loading') // loading | needsAuth | joining | success | error
+    const [status, setStatus] = useState('loading')
     const [error, setError] = useState('')
 
     useEffect(() => {
         if (authLoading) return
-
         if (!user) {
             setStatus('needsAuth')
             return
         }
-
         handleJoin()
     }, [user, authLoading])
 
@@ -48,12 +48,12 @@ export default function InvitePage() {
                 animate={{ opacity: 1, y: 0 }}
             >
                 <div className="onboarding-icon">
-                    <Heart size={36} color="white" fill="white" />
+                    <Users size={36} color="white" />
                 </div>
 
                 {status === 'loading' && (
                     <>
-                        <h1 style={{ color: 'white' }}>Loading...</h1>
+                        <h1 style={{ color: 'white' }}>{t('general.loading') || 'Loading...'}</h1>
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
                             <Loader2 size={32} color="#818CF8" style={{ animation: 'spin 1s linear infinite' }} />
                         </div>
@@ -62,16 +62,18 @@ export default function InvitePage() {
 
                 {status === 'needsAuth' && (
                     <>
-                        <h1 style={{ color: 'white', marginBottom: 8 }}>You're invited! 💕</h1>
+                        <h1 style={{ color: 'white', marginBottom: 8 }}>
+                            {t('invite.title') || "You're invited! 🎉"}
+                        </h1>
                         <p style={{ color: '#94A3B8', marginBottom: 32 }}>
-                            Someone special wants to share their travel map with you. Create an account or sign in to join.
+                            {t('invite.subtitle') || 'Join this group space and start exploring together.'}
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                             <Link href={`/register?invite=${token}`} className="btn btn-primary btn-lg w-full" style={{ textAlign: 'center' }}>
-                                Create account
+                                {t('invite.createAccount') || 'Create account'}
                             </Link>
                             <Link href={`/login?invite=${token}`} className="btn btn-secondary btn-lg w-full" style={{ textAlign: 'center', color: 'white', borderColor: 'rgba(255,255,255,0.15)' }}>
-                                I already have an account
+                                {t('invite.haveAccount') || 'I already have an account'}
                             </Link>
                         </div>
                     </>
@@ -79,7 +81,7 @@ export default function InvitePage() {
 
                 {status === 'joining' && (
                     <>
-                        <h1 style={{ color: 'white' }}>Joining space...</h1>
+                        <h1 style={{ color: 'white' }}>{t('invite.joining') || 'Joining space...'}</h1>
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
                             <Loader2 size={32} color="#818CF8" style={{ animation: 'spin 1s linear infinite' }} />
                         </div>
@@ -96,8 +98,12 @@ export default function InvitePage() {
                         }}>
                             <Check size={32} color="white" />
                         </div>
-                        <h1 style={{ color: 'white', marginBottom: 8 }}>You're in! 🎉</h1>
-                        <p style={{ color: '#94A3B8' }}>Redirecting to your shared map...</p>
+                        <h1 style={{ color: 'white', marginBottom: 8 }}>
+                            {t('invite.success') || "You're in! 🎉"}
+                        </h1>
+                        <p style={{ color: '#94A3B8' }}>
+                            {t('invite.redirecting') || 'Redirecting to your shared map...'}
+                        </p>
                     </motion.div>
                 )}
 
@@ -106,17 +112,13 @@ export default function InvitePage() {
                         <h1 style={{ color: 'white', marginBottom: 8 }}>Oops!</h1>
                         <p style={{ color: '#F87171', marginBottom: 24 }}>{error}</p>
                         <Link href="/map" className="btn btn-primary btn-lg w-full" style={{ textAlign: 'center' }}>
-                            Go to Map
+                            {t('invite.goToMap') || 'Go to Map'}
                         </Link>
                     </>
                 )}
             </motion.div>
 
-            <style jsx global>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+            <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     )
 }

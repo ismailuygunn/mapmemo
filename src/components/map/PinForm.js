@@ -4,12 +4,14 @@ import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import { useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { X, Upload, Star, Loader2, Image as ImageIcon, MapPin } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, onUpdated }) {
+export default function PinForm({ coords, locationData, editPin, spaceId, onClose, onCreated, onUpdated }) {
     const isEditing = !!editPin
     const { t } = useLanguage()
+    const { toast } = useToast()
     const [formData, setFormData] = useState({
         title: editPin?.title || '',
         type: editPin?.type || 'memory',
@@ -18,8 +20,8 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
         tags: editPin?.tags?.join(', ') || '',
         rating: editPin?.rating || 0,
         date_visited: editPin?.date_visited || '',
-        city: editPin?.city || '',
-        country: editPin?.country || '',
+        city: editPin?.city || locationData?.city || '',
+        country: editPin?.country || locationData?.country || '',
         lat: editPin?.lat || coords?.lat || 0,
         lng: editPin?.lng || coords?.lng || 0,
     })
@@ -27,7 +29,11 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
     const [previews, setPreviews] = useState(editPin?.pin_media?.map(m => m.url) || [])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const [locationSearch, setLocationSearch] = useState('')
+    const [locationSearch, setLocationSearch] = useState(
+        editPin?.city
+            ? `${editPin.city}${editPin.country ? `, ${editPin.country}` : ''}`
+            : locationData?.placeName || ''
+    )
     const [locationResults, setLocationResults] = useState([])
     const fileInputRef = useRef(null)
     const supabase = createClient()
@@ -164,11 +170,14 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
             if (isEditing) {
                 onUpdated?.(pin)
+                toast.success(t('pin.updated') || 'Pin güncellendi ✅')
             } else {
                 onCreated?.(pin)
+                toast.success(t('pin.created') || 'Pin oluşturuldu 📌')
             }
         } catch (err) {
             setError(err.message)
+            toast.error(err.message)
         }
         setLoading(false)
     }

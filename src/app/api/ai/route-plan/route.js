@@ -1,4 +1,4 @@
-// AI Route Planner — Generate optimized route from existing pins
+// AI Route Planner — Optimized route from existing pins (Gemini + OpenAI fallback)
 import { NextResponse } from 'next/server'
 
 export async function POST(request) {
@@ -9,8 +9,9 @@ export async function POST(request) {
             return NextResponse.json({ error: 'No pins provided' }, { status: 400 })
         }
 
-        const apiKey = process.env.OPENAI_API_KEY
-        if (!apiKey) {
+        const geminiKey = process.env.GEMINI_API_KEY
+        const openaiKey = process.env.OPENAI_API_KEY
+        if (!geminiKey && !openaiKey) {
             return NextResponse.json({ error: 'AI service not configured' }, { status: 500 })
         }
 
@@ -22,10 +23,13 @@ export async function POST(request) {
 
 ${pinsDescription}
 
+IMPORTANT: Use REAL walking distances and travel times based on these GPS coordinates. Be geographically accurate about ${city}.
+
 Consider:
-- Walking distances between places
+- Actual walking distances between places (calculate from lat/lng)
 - Logical grouping (e.g., morning activities, lunch spots near morning sites)
-- A reasonable pace for a couple
+- A reasonable pace
+- Real transport options available in ${city}
 
 Respond in this JSON format only:
 {
@@ -49,37 +53,66 @@ Respond in this JSON format only:
 
 Respond ONLY with valid JSON.`
 
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini',
-                messages: [
-                    { role: 'system', content: 'You are a route optimization assistant. Always respond with valid JSON only.' },
-                    { role: 'user', content: prompt }
-                ],
-                temperature: 0.5,
-                max_tokens: 2000,
-            }),
-        })
+        // Try Gemini first
+        if (geminiKey) {
+            try {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiKey}`
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: 'You are a route optimization assistant. Always respond with valid JSON only. Use real geographic data to calculate distances.' }] },
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.3,
+                            maxOutputTokens: 4096,
+                            responseMimeType: 'application/json',
+                        },
+                    }),
+                })
 
-        if (!response.ok) {
-            return NextResponse.json({ error: 'AI service error' }, { status: 500 })
+                if (response.ok) {
+                    const data = await response.json()
+                    const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+                    if (content) return NextResponse.json(JSON.parse(content))
+                }
+            } catch (err) {
+                console.error('Gemini route-plan error, falling back:', err.message)
+            }
         }
 
-        const data = await response.json()
-        const content = data.choices?.[0]?.message?.content
+        // Fallback to OpenAI
+        if (openaiKey) {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openaiKey}`,
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        { role: 'system', content: 'You are a route optimization assistant. Always respond with valid JSON only.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 2000,
+                }),
+            })
 
-        try {
-            return NextResponse.json(JSON.parse(content))
-        } catch {
-            const jsonMatch = content.match(/\{[\s\S]*\}/)
-            if (jsonMatch) return NextResponse.json(JSON.parse(jsonMatch[0]))
-            return NextResponse.json({ error: 'AI returned invalid format' }, { status: 500 })
+            if (response.ok) {
+                const data = await response.json()
+                const content = data.choices?.[0]?.message?.content
+                try {
+                    return NextResponse.json(JSON.parse(content))
+                } catch {
+                    const jsonMatch = content?.match(/\{[\s\S]*\}/)
+                    if (jsonMatch) return NextResponse.json(JSON.parse(jsonMatch[0]))
+                }
+            }
         }
+
+        return NextResponse.json({ error: 'AI service error' }, { status: 500 })
     } catch (err) {
         console.error('Route plan error:', err)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })

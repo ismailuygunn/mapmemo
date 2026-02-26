@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import { useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import { X, Edit3, Trash2, Star, Calendar, Tag, ExternalLink } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -11,6 +12,7 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const { t } = useLanguage()
+    const { toast } = useToast()
     const supabase = createClient()
     const pinType = PIN_TYPES[pin.type] || PIN_TYPES.memory
     const pinStatus = PIN_STATUSES[pin.status] || PIN_STATUSES.visited
@@ -28,6 +30,7 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
             await supabase.from('pin_media').delete().eq('pin_id', pin.id)
         }
         await supabase.from('pins').delete().eq('id', pin.id)
+        toast.success(t('pin.deleted') || 'Pin silindi 🗑️')
         onDelete(pin.id)
     }
 

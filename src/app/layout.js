@@ -3,6 +3,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { SpaceProvider } from '@/context/SpaceContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { ToastProvider } from '@/context/ToastContext'
 
 export const metadata = {
   title: 'MapMemo — Couple Travel Map',
@@ -28,11 +29,13 @@ export default function RootLayout({ children }) {
       <body>
         <LanguageProvider>
           <ThemeProvider>
-            <AuthProvider>
-              <SpaceProvider>
-                {children}
-              </SpaceProvider>
-            </AuthProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <SpaceProvider>
+                  {children}
+                </SpaceProvider>
+              </AuthProvider>
+            </ToastProvider>
           </ThemeProvider>
         </LanguageProvider>
       </body>

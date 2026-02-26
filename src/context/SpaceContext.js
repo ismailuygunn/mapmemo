@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from './AuthContext'
 
@@ -9,14 +9,16 @@ const SpaceContext = createContext({})
 export function SpaceProvider({ children }) {
     const { user } = useAuth()
     const [space, setSpace] = useState(null)
-    const [partner, setPartner] = useState(null)
+    const [members, setMembers] = useState([])
+    const [userRole, setUserRole] = useState(null)
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
 
     useEffect(() => {
         if (!user) {
             setSpace(null)
-            setPartner(null)
+            setMembers([])
+            setUserRole(null)
             setLoading(false)
             return
         }
@@ -34,6 +36,8 @@ export function SpaceProvider({ children }) {
                 .single()
 
             if (membership) {
+                setUserRole(membership.role)
+
                 // Get space details
                 const { data: spaceData } = await supabase
                     .from('spaces')
@@ -42,16 +46,14 @@ export function SpaceProvider({ children }) {
                     .single()
                 setSpace(spaceData)
 
-                // Get partner
-                const { data: members } = await supabase
+                // Get all members with profiles
+                const { data: memberData } = await supabase
                     .from('space_members')
-                    .select('user_id, profiles(display_name, avatar_url, email)')
+                    .select('user_id, role, joined_at, profiles(display_name, avatar_url, email)')
                     .eq('space_id', membership.space_id)
-                    .neq('user_id', user.id)
+                    .order('joined_at', { ascending: true })
 
-                if (members && members.length > 0) {
-                    setPartner(members[0].profiles)
-                }
+                setMembers(memberData || [])
             }
         } catch (err) {
             console.error('Error loading space:', err)
@@ -78,6 +80,7 @@ export function SpaceProvider({ children }) {
         if (memberError) throw memberError
 
         setSpace(spaceData)
+        setUserRole('owner')
         return spaceData
     }
 
@@ -100,20 +103,14 @@ export function SpaceProvider({ children }) {
 
         if (existing) {
             setSpace(spaceData)
+            await loadSpace()
             return spaceData
         }
 
-        // Check member count (max 2)
-        const { count } = await supabase
-            .from('space_members')
-            .select('id', { count: 'exact' })
-            .eq('space_id', spaceData.id)
-
-        if (count >= 2) throw new Error('This couple space is already full')
-
+        // No member limit — group spaces support unlimited members
         const { error: joinError } = await supabase
             .from('space_members')
-            .insert({ space_id: spaceData.id, user_id: user.id, role: 'member' })
+            .insert({ space_id: spaceData.id, user_id: user.id, role: 'editor' })
 
         if (joinError) throw joinError
 
@@ -122,9 +119,49 @@ export function SpaceProvider({ children }) {
         return spaceData
     }
 
+    const updateMemberRole = async (memberId, newRole) => {
+        if (userRole !== 'owner') throw new Error('Only owner can change roles')
+        const { error } = await supabase
+            .from('space_members')
+            .update({ role: newRole })
+            .eq('user_id', memberId)
+            .eq('space_id', space.id)
+        if (error) throw error
+        await loadSpace()
+    }
+
+    const removeMember = async (memberId) => {
+        if (!['owner', 'admin'].includes(userRole)) throw new Error('No permission')
+        if (memberId === user.id) throw new Error('Cannot remove yourself')
+        const { error } = await supabase
+            .from('space_members')
+            .delete()
+            .eq('user_id', memberId)
+            .eq('space_id', space.id)
+        if (error) throw error
+        await loadSpace()
+    }
+
+    // Permission helpers
+    const permissions = useMemo(() => ({
+        isOwner: userRole === 'owner',
+        canInvite: ['owner', 'admin'].includes(userRole),
+        canEdit: ['owner', 'admin', 'editor'].includes(userRole),
+        canManageMembers: ['owner', 'admin'].includes(userRole),
+        canChangeRoles: userRole === 'owner',
+        canView: !!userRole,
+    }), [userRole])
+
+    // Backward compat: partner = first other member
+    const partner = useMemo(() => {
+        const others = members.filter(m => m.user_id !== user?.id)
+        return others.length > 0 ? others[0].profiles : null
+    }, [members, user])
+
     return (
         <SpaceContext.Provider value={{
-            space, partner, loading, createSpace, joinSpace, loadSpace
+            space, members, userRole, partner, loading, permissions,
+            createSpace, joinSpace, loadSpace, updateMemberRole, removeMember,
         }}>
             {children}
         </SpaceContext.Provider>

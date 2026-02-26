@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
+import { useToast } from '@/context/ToastContext'
 import Sidebar from '@/components/layout/Sidebar'
 import { Gift, Lock, Unlock, Plus, X, Calendar, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,6 +20,7 @@ export default function CapsulesPage() {
     const { space } = useSpace()
     const { user } = useAuth()
     const { t } = useLanguage()
+    const { toast } = useToast()
     const supabase = createClient()
 
     useEffect(() => {
@@ -53,6 +55,9 @@ export default function CapsulesPage() {
             setCapsules(prev => [...prev, data].sort((a, b) => new Date(a.reveal_date) - new Date(b.reveal_date)))
             setForm({ title: '', message: '', revealDate: '' })
             setShowCreate(false)
+            toast.success(t('capsule.created') || 'Kapsül oluşturuldu 💊')
+        } else if (error) {
+            toast.error(error.message)
         }
         setCreating(false)
     }
@@ -65,11 +70,13 @@ export default function CapsulesPage() {
             .eq('id', capsule.id)
         await loadCapsules()
         setRevealingId(null)
+        toast.success(t('capsule.revealed') || 'Kapsül açıldı! 🎉')
     }
 
     const deleteCapsule = async (id) => {
         await supabase.from('memory_capsules').delete().eq('id', id)
         setCapsules(prev => prev.filter(c => c.id !== id))
+        toast.success(t('capsule.deleted') || 'Kapsül silindi')
     }
 
     const today = new Date().toISOString().split('T')[0]

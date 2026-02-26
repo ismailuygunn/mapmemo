@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
 import { useLanguage } from '@/context/LanguageContext'
@@ -67,7 +67,23 @@ export default function PlannerPage() {
     const { t, locale } = useLanguage()
     const supabase = createClient()
 
+    // Calculate trip duration
+    const tripDays = useMemo(() => {
+        if (!formData.startDate || !formData.endDate) return 0
+        return Math.ceil((new Date(formData.endDate) - new Date(formData.startDate)) / (1000 * 60 * 60 * 24)) + 1
+    }, [formData.startDate, formData.endDate])
+
     useEffect(() => { if (space) loadTrips() }, [space])
+
+    // Auto search transport when dates and cities change
+    useEffect(() => {
+        if (formData.startDate && formData.departureCity && (formData.cities.length > 0 || formData.cityInput.length > 2)) {
+            const timer = setTimeout(() => {
+                autoSearchTransport(formData.cities.length > 0 ? formData.cities : [formData.cityInput.trim()])
+            }, 1500)
+            return () => clearTimeout(timer)
+        }
+    }, [formData.startDate, formData.endDate, formData.departureCity, formData.cities.length])
 
     const loadTrips = async () => {
         const { data } = await supabase
@@ -354,6 +370,24 @@ export default function PlannerPage() {
                                     <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} />
                                 </div>
                             </div>
+                            {/* Trip duration indicator */}
+                            {tripDays > 0 && (
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
+                                    background: 'rgba(79, 70, 229, 0.08)', borderRadius: 'var(--radius-md)',
+                                    fontSize: '0.875rem', color: 'var(--primary-1)', fontWeight: 500,
+                                }}>
+                                    <Calendar size={16} />
+                                    <span>{tripDays} {locale === 'tr' ? 'gün' : (tripDays === 1 ? 'day' : 'days')}</span>
+                                    {tripDays > 7 && <span style={{ color: 'var(--warning)', fontSize: '0.75rem' }}>⚠️ {locale === 'tr' ? 'Uzun plan' : 'Long plan'}</span>}
+                                    {transportLoading && <Loader2 size={14} className="spin" style={{ marginLeft: 'auto' }} />}
+                                    {!transportLoading && flightsInfo.length > 0 && (
+                                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                            ✈️ {flightsInfo.length} {locale === 'tr' ? 'uçuş bulundu' : 'flights found'}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
 
                             {/* ── Departure City + Flex ── */}
                             <div className="input-group">

@@ -25,6 +25,7 @@ export default function MapPage() {
     const [selectedPin, setSelectedPin] = useState(null)
     const [showPinForm, setShowPinForm] = useState(false)
     const [newPinCoords, setNewPinCoords] = useState(null)
+    const [newPinLocation, setNewPinLocation] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState([])
     const [activeFilters, setActiveFilters] = useState({ status: null, type: null })
@@ -65,11 +66,26 @@ export default function MapPage() {
             setMapLoaded(true)
         })
 
-        // Click on map to add pin
-        map.current.on('click', (e) => {
-            // Only if no pin is selected
+        // Click on map to add pin with auto reverse-geocode
+        map.current.on('click', async (e) => {
             if (!document.querySelector('.pin-detail-card')) {
-                setNewPinCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng })
+                const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng }
+                setNewPinCoords(coords)
+                setNewPinLocation(null)
+                // Reverse geocode to get city/country
+                try {
+                    const res = await fetch(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${e.lngLat.lng},${e.lngLat.lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=place,locality,region,country&limit=1`
+                    )
+                    const data = await res.json()
+                    if (data.features?.length > 0) {
+                        const feature = data.features[0]
+                        const context = feature.context || []
+                        const city = feature.text || ''
+                        const country = context.find(c => c.id.startsWith('country'))?.text || ''
+                        setNewPinLocation({ city, country, placeName: feature.place_name })
+                    }
+                } catch { /* silent */ }
             }
         })
 
@@ -190,6 +206,7 @@ export default function MapPage() {
         setPins(prev => [newPin, ...prev])
         setShowPinForm(false)
         setNewPinCoords(null)
+        setNewPinLocation(null)
     }
 
     const handlePinUpdated = (updatedPin) => {
@@ -362,23 +379,30 @@ export default function MapPage() {
                                 style={{
                                     position: 'absolute', bottom: 100, left: '50%',
                                     transform: 'translateX(-50%)', zIndex: 15,
+                                    maxWidth: '90%',
                                 }}
                             >
                                 <div className="card-glass" style={{
                                     display: 'flex', alignItems: 'center', gap: 12,
-                                    padding: '12px 20px',
+                                    padding: '12px 20px', borderRadius: 'var(--radius-2xl)',
                                 }}>
-                                    <MapPin size={18} style={{ color: 'var(--primary-1)' }} />
-                                    <span style={{ fontSize: '0.875rem' }}>{t('map.locationSelected')}</span>
+                                    <MapPin size={18} style={{ color: 'var(--primary-1)', flexShrink: 0 }} />
+                                    <div style={{ minWidth: 0 }}>
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                                            {newPinLocation ? `${newPinLocation.city}${newPinLocation.country ? `, ${newPinLocation.country}` : ''}` : t('map.locationSelected')}
+                                        </span>
+                                    </div>
                                     <button
                                         className="btn btn-primary btn-sm"
                                         onClick={() => setShowPinForm(true)}
+                                        style={{ flexShrink: 0 }}
                                     >
-                                        {t('map.addPin')}
+                                        <Plus size={14} /> {t('map.addPin')}
                                     </button>
                                     <button
                                         className="btn btn-ghost btn-sm"
-                                        onClick={() => setNewPinCoords(null)}
+                                        onClick={() => { setNewPinCoords(null); setNewPinLocation(null) }}
+                                        style={{ flexShrink: 0 }}
                                     >
                                         <X size={16} />
                                     </button>
@@ -394,9 +418,10 @@ export default function MapPage() {
                 {showPinForm && (
                     <PinForm
                         coords={newPinCoords}
+                        locationData={newPinLocation}
                         editPin={selectedPin}
                         spaceId={space?.id}
-                        onClose={() => { setShowPinForm(false); setNewPinCoords(null) }}
+                        onClose={() => { setShowPinForm(false); setNewPinCoords(null); setNewPinLocation(null) }}
                         onCreated={handlePinCreated}
                         onUpdated={handlePinUpdated}
                     />
