@@ -245,6 +245,7 @@ export function SpaceProvider({ children }) {
         <SpaceContext.Provider value={{
             space, members, userRole, partner, loading, permissions, dbError,
             createSpace, joinSpace, loadSpace, updateMemberRole, removeMember,
+            setSpace, setUserRole,
         }}>
             {children}
         </SpaceContext.Provider>
