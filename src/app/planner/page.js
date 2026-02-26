@@ -23,13 +23,13 @@ import CoverGenerator from '@/components/planner/CoverGenerator'
 
 export default function PlannerPage() {
     const [view, setView] = useState('form')
+    const [formStep, setFormStep] = useState(0) // 0=destination, 1=dates, 2=style, 3=preferences
     const [formData, setFormData] = useState({
         cities: [],
         cityInput: '',
         startDate: '', endDate: '',
         tempo: 'moderate', budget: 'moderate',
         interests: [],
-        // Phase 1 Advanced
         transportMode: 'mixed',
         priorities: [],
         totalBudget: '',
@@ -43,7 +43,6 @@ export default function PlannerPage() {
         accessibility: [],
         guideLanguage: '',
         dateNightMode: false,
-        // Phase 6
         flexDates: false,
         preferredTime: 'any',
         departureCity: '',
@@ -51,6 +50,8 @@ export default function PlannerPage() {
     const [itinerary, setItinerary] = useState(null)
     const [savedTrips, setSavedTrips] = useState([])
     const [loading, setLoading] = useState(false)
+    const [loadingProgress, setLoadingProgress] = useState(0)
+    const [loadingStep, setLoadingStep] = useState('')
     const [saving, setSaving] = useState(false)
     const [savedTripId, setSavedTripId] = useState(null)
     const [error, setError] = useState('')
@@ -66,6 +67,12 @@ export default function PlannerPage() {
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
+    const FORM_STEPS = [
+        { key: 'destination', icon: '📍', label: locale === 'tr' ? 'Nereye' : 'Where' },
+        { key: 'dates', icon: '📅', label: locale === 'tr' ? 'Ne Zaman' : 'When' },
+        { key: 'style', icon: '✨', label: locale === 'tr' ? 'Nasıl' : 'Style' },
+        { key: 'preferences', icon: '🎯', label: locale === 'tr' ? 'Detaylar' : 'Details' },
+    ]
 
     // Calculate trip duration
     const tripDays = useMemo(() => {
@@ -164,6 +171,8 @@ export default function PlannerPage() {
             : [formData.cityInput.trim()]
 
         setLoading(true)
+        setLoadingProgress(0)
+        setLoadingStep(locale === 'tr' ? 'Pinler kontrol ediliyor...' : 'Checking pins...')
         try {
             let existingPins = []
             if (space) {
@@ -175,16 +184,20 @@ export default function PlannerPage() {
                     cities.some(c => p.city?.toLowerCase().includes(c.toLowerCase()))
                 )
             }
+            setLoadingProgress(15)
 
-            // Fetch weather forecast (Phase 3)
+            // Fetch weather forecast
+            setLoadingStep(locale === 'tr' ? 'Hava durumu alınıyor...' : 'Fetching weather...')
             let weatherData = null
             try {
                 const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}`)
                 weatherData = await weatherRes.json()
                 if (weatherData?.available) setWeatherInfo(weatherData)
             } catch { /* silent */ }
+            setLoadingProgress(30)
 
-            // Fetch events (Phase 3)
+            // Fetch events
+            setLoadingStep(locale === 'tr' ? 'Etkinlikler aranıyor...' : 'Finding events...')
             let eventsData = []
             try {
                 const qs = new URLSearchParams({ city: cities[0] })
@@ -194,6 +207,13 @@ export default function PlannerPage() {
                 const eventsJson = await eventsRes.json()
                 if (eventsJson.events) { eventsData = eventsJson.events; setEventsInfo(eventsJson.events) }
             } catch { /* silent */ }
+            setLoadingProgress(45)
+
+            // Generate plan
+            setLoadingStep(locale === 'tr' ? 'AI plan oluşturuyor...' : 'AI generating plan...')
+            const progressInterval = setInterval(() => {
+                setLoadingProgress(prev => Math.min(prev + 2, 90))
+            }, 500)
 
             const res = await fetch('/api/ai/plan', {
                 method: 'POST',
@@ -226,15 +246,20 @@ export default function PlannerPage() {
                     locale,
                 }),
             })
+            clearInterval(progressInterval)
+            setLoadingProgress(95)
+            setLoadingStep(locale === 'tr' ? 'Plan hazırlanıyor...' : 'Preparing plan...')
+
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed')
+            setLoadingProgress(100)
             setItinerary(data)
             setView('result')
             setExpandedDay(0)
-            // Auto search transport in background
             autoSearchTransport(cities)
         } catch (err) { setError(err.message) }
         setLoading(false)
+        setLoadingProgress(0)
     }
 
     const saveTrip = async () => {
@@ -301,335 +326,431 @@ export default function PlannerPage() {
         )
     }
 
+    // Step validation
+    const canProceedStep = (step) => {
+        if (step === 0) return formData.cities.length > 0 || formData.cityInput.trim().length > 0
+        if (step === 1) return true // dates optional
+        if (step === 2) return true // style has defaults
+        return true
+    }
+
     return (
         <>
             <Sidebar />
             <div className="main-content">
                 <div className="page">
                     {/* Header */}
-                    <div className="page-header">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                    <div className="page-header" style={{ background: 'linear-gradient(135deg, rgba(79,70,229,0.08), rgba(124,58,237,0.04))', padding: '20px 24px', borderRadius: 'var(--radius-xl)', marginBottom: 'var(--space-6)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                             <div>
-                                <h1>✈️ {t('planner.title')}</h1>
-                                <p>{t('planner.subtitle')}</p>
+                                <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>✈️ {t('planner.title')}</h1>
+                                <p style={{ fontSize: '0.875rem' }}>{t('planner.subtitle')}</p>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                                <button className={`btn ${view !== 'trips' ? 'btn-primary' : 'btn-secondary'}`}
-                                    onClick={() => { setView('form'); setItinerary(null) }}>
+                                <button type="button" className={`btn ${view !== 'trips' ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={() => { setView('form'); setItinerary(null); setFormStep(0) }}>
                                     <Plane size={16} /> {t('planner.newPlan')}
                                 </button>
-                                <button className={`btn ${view === 'trips' ? 'btn-primary' : 'btn-secondary'}`}
+                                <button type="button" className={`btn ${view === 'trips' ? 'btn-primary' : 'btn-secondary'}`}
                                     onClick={() => setView('trips')}>
-                                    {t('planner.saved')} ({savedTrips.length})
+                                    <Save size={16} /> ({savedTrips.length})
                                 </button>
                             </div>
                         </div>
                     </div>
 
+                    {/* ═══ LOADING OVERLAY ═══ */}
+                    <AnimatePresence>
+                        {loading && (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                style={{
+                                    position: 'fixed', inset: 0, zIndex: 100,
+                                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                    gap: 20, padding: 32,
+                                }}>
+                                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}>
+                                    <Plane size={48} color="white" />
+                                </motion.div>
+                                <div style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, textAlign: 'center' }}>
+                                    {loadingStep}
+                                </div>
+                                <div style={{ width: '100%', maxWidth: 320, height: 6, background: 'rgba(255,255,255,0.15)', borderRadius: 99 }}>
+                                    <motion.div
+                                        style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, var(--primary-1), var(--primary-2))' }}
+                                        animate={{ width: `${loadingProgress}%` }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                </div>
+                                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem' }}>{loadingProgress}%</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {/* ═══════════════════ FORM ═══════════════════ */}
                     {view === 'form' && (
                         <motion.form className="planner-form" onSubmit={generatePlan} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
-                            {/* ── Multi-City Input ── */}
-                            <div className="input-group">
-                                <label>🏙️ {t('planner.city')}</label>
-                                <p className="input-hint">{t('planner.multiCityHint')}</p>
-                                {formData.cities.length > 0 && (
-                                    <div className="city-chips">
-                                        {formData.cities.map((c, i) => (
-                                            <span key={i} className="city-chip">
-                                                {i > 0 && <span className="city-arrow">→</span>}
-                                                {c}
-                                                <button type="button" onClick={() => removeCity(i)} className="city-chip-remove"><X size={12} /></button>
+                            {/* Step Progress Bar */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 24 }}>
+                                {FORM_STEPS.map((step, i) => (
+                                    <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                                        <button type="button" onClick={() => setFormStep(i)} style={{
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                                            background: 'none', border: 'none', cursor: 'pointer', padding: '8px 4px', width: '100%',
+                                            opacity: formStep === i ? 1 : 0.5,
+                                            transition: 'all 0.2s ease',
+                                        }}>
+                                            <div style={{
+                                                width: 36, height: 36, borderRadius: '50%',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '1.125rem',
+                                                background: formStep === i ? 'linear-gradient(135deg, var(--primary-1), var(--primary-2))' : formStep > i ? 'var(--success)' : 'var(--bg-tertiary)',
+                                                color: formStep >= i ? 'white' : 'var(--text-tertiary)',
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: formStep === i ? '0 4px 12px rgba(79,70,229,0.3)' : 'none',
+                                            }}>
+                                                {formStep > i ? '✓' : step.icon}
+                                            </div>
+                                            <span style={{ fontSize: '0.6875rem', fontWeight: formStep === i ? 600 : 400, color: formStep === i ? 'var(--primary-1)' : 'var(--text-tertiary)' }}>
+                                                {step.label}
                                             </span>
-                                        ))}
+                                        </button>
+                                        {i < FORM_STEPS.length - 1 && (
+                                            <div style={{
+                                                flex: 1, height: 2, background: formStep > i ? 'var(--success)' : 'var(--bg-tertiary)',
+                                                transition: 'background 0.3s ease', marginBottom: 18,
+                                            }} />
+                                        )}
                                     </div>
-                                )}
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <input
-                                        type="text" className="input"
-                                        placeholder={t('planner.cityPlaceholder')}
-                                        value={formData.cityInput}
-                                        onChange={(e) => update('cityInput', e.target.value)}
-                                        onKeyDown={handleCityKeyDown}
-                                    />
-                                    <button type="button" className="btn btn-secondary" onClick={addCity} style={{ flexShrink: 0 }}>
-                                        <Plus size={16} /> {t('planner.addCity')}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* ── Dates ── */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                <div className="input-group">
-                                    <label>📅 {t('planner.startDate')}</label>
-                                    <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} />
-                                </div>
-                                <div className="input-group">
-                                    <label>📅 {t('planner.endDate')}</label>
-                                    <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} />
-                                </div>
-                            </div>
-                            {/* Trip duration indicator */}
-                            {tripDays > 0 && (
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
-                                    background: 'rgba(79, 70, 229, 0.08)', borderRadius: 'var(--radius-md)',
-                                    fontSize: '0.875rem', color: 'var(--primary-1)', fontWeight: 500,
-                                }}>
-                                    <Calendar size={16} />
-                                    <span>{tripDays} {locale === 'tr' ? 'gün' : (tripDays === 1 ? 'day' : 'days')}</span>
-                                    {tripDays > 7 && <span style={{ color: 'var(--warning)', fontSize: '0.75rem' }}>⚠️ {locale === 'tr' ? 'Uzun plan' : 'Long plan'}</span>}
-                                    {transportLoading && <Loader2 size={14} className="spin" style={{ marginLeft: 'auto' }} />}
-                                    {!transportLoading && flightsInfo.length > 0 && (
-                                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                            ✈️ {flightsInfo.length} {locale === 'tr' ? 'uçuş bulundu' : 'flights found'}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* ── Departure City + Flex ── */}
-                            <div className="input-group">
-                                <label>🛫 {t('planner.departureCity')}</label>
-                                <input type="text" className="input" placeholder={t('planner.departureCityHint')}
-                                    value={formData.departureCity} onChange={(e) => update('departureCity', e.target.value)} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                {/* Flex Dates */}
-                                <div className="date-night-toggle" onClick={() => update('flexDates', !formData.flexDates)} style={{ marginBottom: 0 }}>
-                                    <div className="date-night-info">
-                                        <span>📆</span>
-                                        <div>
-                                            <span className="date-night-label">{t('planner.flexDates')}</span>
-                                            <span className="date-night-hint">{t('planner.flexDatesHint')}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`toggle-pill ${formData.flexDates ? 'toggle-pill-active' : ''}`}>
-                                        <div className="toggle-pill-dot" />
-                                    </div>
-                                </div>
-
-                                {/* Time Preference */}
-                                <div className="input-group" style={{ marginBottom: 0 }}>
-                                    <label>🕐 {t('planner.preferredTime')}</label>
-                                    <select className="input" value={formData.preferredTime} onChange={(e) => update('preferredTime', e.target.value)}>
-                                        <option value="any">{t('time.any')}</option>
-                                        <option value="morning">{t('time.morning')}</option>
-                                        <option value="afternoon">{t('time.afternoon')}</option>
-                                        <option value="evening">{t('time.evening')}</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* ── Date Night Toggle ── */}
-                            <div className="date-night-toggle" onClick={() => update('dateNightMode', !formData.dateNightMode)}>
-                                <div className="date-night-info">
-                                    <Heart size={20} fill={formData.dateNightMode ? '#EC4899' : 'none'} color={formData.dateNightMode ? '#EC4899' : 'var(--text-tertiary)'} />
-                                    <div>
-                                        <span className="date-night-label">{t('planner.dateNight')}</span>
-                                        <span className="date-night-hint">{t('planner.dateNightHint')}</span>
-                                    </div>
-                                </div>
-                                <div className={`toggle-pill ${formData.dateNightMode ? 'toggle-pill-active' : ''}`}>
-                                    <div className="toggle-pill-dot" />
-                                </div>
-                            </div>
-
-                            {/* ── Tempo ── */}
-                            <div className="input-group">
-                                <label>🚶 {t('planner.tempo')}</label>
-                                {TRIP_TEMPOS.map(tempo => (
-                                    <label key={tempo.value} className={`radio-card ${formData.tempo === tempo.value ? 'radio-card-active' : ''}`}>
-                                        <input type="radio" name="tempo" value={tempo.value} checked={formData.tempo === tempo.value}
-                                            onChange={() => update('tempo', tempo.value)} style={{ display: 'none' }} />
-                                        <span>{t(`tempo.${tempo.value}`)}</span>
-                                    </label>
                                 ))}
                             </div>
 
-                            {/* ── Budget Level ── */}
-                            <div className="input-group">
-                                <label>💰 {t('planner.budget')}</label>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    {BUDGET_LEVELS.map(b => (
-                                        <Chip key={b.value} active={formData.budget === b.value}
-                                            onClick={() => update('budget', b.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                            {t(`budget.${b.value}`)}
-                                        </Chip>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* ── Budget Target ── */}
-                            <div className="input-group">
-                                <label>🎯 {t('planner.budgetTarget')}</label>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <input type="number" className="input" placeholder={t('planner.budgetTargetPlaceholder')}
-                                        value={formData.totalBudget} onChange={(e) => update('totalBudget', e.target.value)}
-                                        style={{ flex: 1 }} />
-                                    <select className="input" value={formData.currency} onChange={(e) => update('currency', e.target.value)}
-                                        style={{ width: 100, flexShrink: 0 }}>
-                                        {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* ── Priorities ── */}
-                            <div className="input-group">
-                                <label>⚡ {t('priority.label')}</label>
-                                <p className="input-hint">{t('priority.hint')}</p>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    {PRIORITIES.map(p => (
-                                        <Chip key={p.value} active={formData.priorities.includes(p.value)}
-                                            onClick={() => toggleArray('priorities', p.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                            {t(`priority.${p.value}`)}
-                                        </Chip>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* ── Interests ── */}
-                            <div className="input-group">
-                                <label>❤️ {t('planner.interests')}</label>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                    {INTERESTS.map(interest => (
-                                        <Chip key={interest.key} active={formData.interests.includes(interest.key)}
-                                            onClick={() => toggleArray('interests', interest.key)}>
-                                            {t(`interest.${interest.key}`)}
-                                        </Chip>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* ═══════════ ADVANCED OPTIONS ═══════════ */}
-                            <div className="advanced-toggle" onClick={() => setShowAdvanced(!showAdvanced)}>
-                                <span>{t('planner.advancedOptions')}</span>
-                                {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </div>
-
-                            <AnimatePresence>
-                                {showAdvanced && (
-                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-
-                                        {/* Advanced Tabs */}
-                                        <div className="advanced-tabs">
-                                            {[
-                                                { key: 'transport', icon: Bus, label: t('planner.transportSection') },
-                                                { key: 'meals', icon: Utensils, label: t('planner.mealSection') },
-                                                { key: 'tours', icon: MapIcon, label: t('planner.tourSection') },
-                                            ].map(tab => (
-                                                <button key={tab.key} type="button"
-                                                    className={`advanced-tab ${advancedTab === tab.key ? 'advanced-tab-active' : ''}`}
-                                                    onClick={() => setAdvancedTab(tab.key)}>
-                                                    <tab.icon size={16} /> {tab.label}
+                            {/* ── STEP 0: Destination ── */}
+                            <AnimatePresence mode="wait">
+                                {formStep === 0 && (
+                                    <motion.div key="step0" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
+                                        {/* Multi-City Input */}
+                                        <div className="input-group">
+                                            <label>🏙️ {t('planner.city')}</label>
+                                            <p className="input-hint">{t('planner.multiCityHint')}</p>
+                                            {formData.cities.length > 0 && (
+                                                <div className="city-chips">
+                                                    {formData.cities.map((c, i) => (
+                                                        <span key={i} className="city-chip">
+                                                            {i > 0 && <span className="city-arrow">→</span>}
+                                                            {c}
+                                                            <button type="button" onClick={() => removeCity(i)} className="city-chip-remove"><X size={12} /></button>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <input
+                                                    type="text" className="input"
+                                                    placeholder={t('planner.cityPlaceholder')}
+                                                    value={formData.cityInput}
+                                                    onChange={(e) => update('cityInput', e.target.value)}
+                                                    onKeyDown={handleCityKeyDown}
+                                                />
+                                                <button type="button" className="btn btn-secondary" onClick={addCity} style={{ flexShrink: 0 }}>
+                                                    <Plus size={16} /> {t('planner.addCity')}
                                                 </button>
+                                            </div>
+                                        </div>
+
+                                    </motion.div>)}
+
+                                {/* ── STEP 1: Dates ── */}
+                                {formStep === 1 && (
+                                    <motion.div key="step1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                                        {/* Dates */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                            <div className="input-group">
+                                                <label>📅 {t('planner.startDate')}</label>
+                                                <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label>📅 {t('planner.endDate')}</label>
+                                                <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} />
+                                            </div>
+                                        </div>
+                                        {/* Trip duration indicator */}
+                                        {tripDays > 0 && (
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
+                                                background: 'rgba(79, 70, 229, 0.08)', borderRadius: 'var(--radius-md)',
+                                                fontSize: '0.875rem', color: 'var(--primary-1)', fontWeight: 500,
+                                            }}>
+                                                <Calendar size={16} />
+                                                <span>{tripDays} {locale === 'tr' ? 'gün' : (tripDays === 1 ? 'day' : 'days')}</span>
+                                                {tripDays > 7 && <span style={{ color: 'var(--warning)', fontSize: '0.75rem' }}>⚠️ {locale === 'tr' ? 'Uzun plan' : 'Long plan'}</span>}
+                                                {transportLoading && <Loader2 size={14} className="spin" style={{ marginLeft: 'auto' }} />}
+                                                {!transportLoading && flightsInfo.length > 0 && (
+                                                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                        ✈️ {flightsInfo.length} {locale === 'tr' ? 'uçuş bulundu' : 'flights found'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* ── Departure City + Flex ── */}
+                                        <div className="input-group">
+                                            <label>🛫 {t('planner.departureCity')}</label>
+                                            <input type="text" className="input" placeholder={t('planner.departureCityHint')}
+                                                value={formData.departureCity} onChange={(e) => update('departureCity', e.target.value)} />
+                                        </div>
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                            {/* Flex Dates */}
+                                            <div className="date-night-toggle" onClick={() => update('flexDates', !formData.flexDates)} style={{ marginBottom: 0 }}>
+                                                <div className="date-night-info">
+                                                    <span>📆</span>
+                                                    <div>
+                                                        <span className="date-night-label">{t('planner.flexDates')}</span>
+                                                        <span className="date-night-hint">{t('planner.flexDatesHint')}</span>
+                                                    </div>
+                                                </div>
+                                                <div className={`toggle-pill ${formData.flexDates ? 'toggle-pill-active' : ''}`}>
+                                                    <div className="toggle-pill-dot" />
+                                                </div>
+                                            </div>
+
+                                            {/* Time Preference */}
+                                            <div className="input-group" style={{ marginBottom: 0 }}>
+                                                <label>🕐 {t('planner.preferredTime')}</label>
+                                                <select className="input" value={formData.preferredTime} onChange={(e) => update('preferredTime', e.target.value)}>
+                                                    <option value="any">{t('time.any')}</option>
+                                                    <option value="morning">{t('time.morning')}</option>
+                                                    <option value="afternoon">{t('time.afternoon')}</option>
+                                                    <option value="evening">{t('time.evening')}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* ── Date Night Toggle ── */}
+                                        <div className="date-night-toggle" onClick={() => update('dateNightMode', !formData.dateNightMode)}>
+                                            <div className="date-night-info">
+                                                <Heart size={20} fill={formData.dateNightMode ? '#EC4899' : 'none'} color={formData.dateNightMode ? '#EC4899' : 'var(--text-tertiary)'} />
+                                                <div>
+                                                    <span className="date-night-label">{t('planner.dateNight')}</span>
+                                                    <span className="date-night-hint">{t('planner.dateNightHint')}</span>
+                                                </div>
+                                            </div>
+                                            <div className={`toggle-pill ${formData.dateNightMode ? 'toggle-pill-active' : ''}`}>
+                                                <div className="toggle-pill-dot" />
+                                            </div>
+                                        </div>
+
+                                    </motion.div>)}
+
+                                {/* ── STEP 2: Style ── */}
+                                {formStep === 2 && (
+                                    <motion.div key="step2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                                        {/* Tempo */}
+                                        <div className="input-group">
+                                            <label>🚶 {t('planner.tempo')}</label>
+                                            {TRIP_TEMPOS.map(tempo => (
+                                                <label key={tempo.value} className={`radio-card ${formData.tempo === tempo.value ? 'radio-card-active' : ''}`}>
+                                                    <input type="radio" name="tempo" value={tempo.value} checked={formData.tempo === tempo.value}
+                                                        onChange={() => update('tempo', tempo.value)} style={{ display: 'none' }} />
+                                                    <span>{t(`tempo.${tempo.value}`)}</span>
+                                                </label>
                                             ))}
                                         </div>
 
-                                        {/* ── Transport Tab ── */}
-                                        {advancedTab === 'transport' && (
-                                            <div className="advanced-content">
-                                                <label>{t('transport.label')}</label>
-                                                <p className="input-hint">{t('transport.hint')}</p>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                                                    {TRANSPORT_MODES.map(m => (
-                                                        <Chip key={m.value} active={formData.transportMode === m.value}
-                                                            onClick={() => update('transportMode', m.value)}>
-                                                            {t(`transport.${m.value}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
+                                        {/* ── Budget Level ── */}
+                                        <div className="input-group">
+                                            <label>💰 {t('planner.budget')}</label>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                {BUDGET_LEVELS.map(b => (
+                                                    <Chip key={b.value} active={formData.budget === b.value}
+                                                        onClick={() => update('budget', b.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                        {t(`budget.${b.value}`)}
+                                                    </Chip>
+                                                ))}
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {/* ── Meals Tab ── */}
-                                        {advancedTab === 'meals' && (
-                                            <div className="advanced-content">
-                                                <label>{t('meal.style')}</label>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-                                                    {MEAL_STYLES.map(m => (
-                                                        <Chip key={m.value} active={formData.mealStyle.includes(m.value)}
-                                                            onClick={() => toggleArray('mealStyle', m.value)}>
-                                                            {t(`meal.${m.value}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
-                                                <label>{t('diet.label')}</label>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                                    {DIET_OPTIONS.map(d => (
-                                                        <Chip key={d.value} active={formData.dietOptions.includes(d.value)}
-                                                            onClick={() => toggleArray('dietOptions', d.value)}>
-                                                            {t(`diet.${d.value}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
+                                        {/* ── Budget Target ── */}
+                                        <div className="input-group">
+                                            <label>🎯 {t('planner.budgetTarget')}</label>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <input type="number" className="input" placeholder={t('planner.budgetTargetPlaceholder')}
+                                                    value={formData.totalBudget} onChange={(e) => update('totalBudget', e.target.value)}
+                                                    style={{ flex: 1 }} />
+                                                <select className="input" value={formData.currency} onChange={(e) => update('currency', e.target.value)}
+                                                    style={{ width: 100, flexShrink: 0 }}>
+                                                    {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                                </select>
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {/* ── Tours Tab ── */}
-                                        {advancedTab === 'tours' && (
-                                            <div className="advanced-content">
-                                                {/* Group Type */}
-                                                <label>{t('tour.groupType')}</label>
-                                                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                                                    {TOUR_GROUP_TYPES.map(g => (
-                                                        <Chip key={g.value} active={formData.tourGroupType === g.value}
-                                                            onClick={() => update('tourGroupType', g.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                                            {t(`tour.${g.value}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
-
-                                                {/* Walking Level */}
-                                                <label>{t('tour.walkLevel')}</label>
-                                                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                                                    {WALKING_LEVELS.map(w => (
-                                                        <Chip key={w.value} active={formData.walkingLevel === w.value}
-                                                            onClick={() => update('walkingLevel', w.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                                            {t(`tour.walk${w.value.charAt(0).toUpperCase() + w.value.slice(1)}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
-
-                                                {/* Photo Stops */}
-                                                <label>{t('tour.photoStops')}</label>
-                                                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                                                    {PHOTO_STOP_OPTIONS.map(p => (
-                                                        <Chip key={p.value} active={formData.photoStops === p.value}
-                                                            onClick={() => update('photoStops', p.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                                            {t(`tour.photo${p.value.charAt(0).toUpperCase() + p.value.slice(1)}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
-
-                                                {/* Shopping Stops */}
-                                                <label>{t('tour.shoppingStop')}</label>
-                                                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                                                    {SHOPPING_STOP_OPTIONS.map(s => (
-                                                        <Chip key={s.value} active={formData.shoppingStop === s.value}
-                                                            onClick={() => update('shoppingStop', s.value)} style={{ flex: 1, justifyContent: 'center' }}>
-                                                            {t(`tour.shop${s.value.charAt(0).toUpperCase() + s.value.slice(1)}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
-
-                                                {/* Accessibility */}
-                                                <label>{t('tour.accessibility')}</label>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                                                    {ACCESSIBILITY_OPTIONS.map(a => (
-                                                        <Chip key={a.value} active={formData.accessibility.includes(a.value)}
-                                                            onClick={() => toggleArray('accessibility', a.value)}>
-                                                            {t(`tour.${a.value}`)}
-                                                        </Chip>
-                                                    ))}
-                                                </div>
+                                        {/* ── Priorities ── */}
+                                        <div className="input-group">
+                                            <label>⚡ {t('priority.label')}</label>
+                                            <p className="input-hint">{t('priority.hint')}</p>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                {PRIORITIES.map(p => (
+                                                    <Chip key={p.value} active={formData.priorities.includes(p.value)}
+                                                        onClick={() => toggleArray('priorities', p.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                        {t(`priority.${p.value}`)}
+                                                    </Chip>
+                                                ))}
                                             </div>
-                                        )}
-                                    </motion.div>
-                                )}
+                                        </div>
+
+                                        {/* ── Interests ── */}
+                                        <div className="input-group">
+                                            <label>❤️ {t('planner.interests')}</label>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                {INTERESTS.map(interest => (
+                                                    <Chip key={interest.key} active={formData.interests.includes(interest.key)}
+                                                        onClick={() => toggleArray('interests', interest.key)}>
+                                                        {t(`interest.${interest.key}`)}
+                                                    </Chip>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                    </motion.div>)}
+
+                                {/* ── STEP 3: Preferences ── */}
+                                {formStep === 3 && (
+                                    <motion.div key="step3" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                                        {/* ═══════════ ADVANCED OPTIONS ═══════════ */}
+                                        <div className="advanced-toggle" onClick={() => setShowAdvanced(!showAdvanced)}>
+                                            <span>{t('planner.advancedOptions')}</span>
+                                            {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {showAdvanced && (
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+
+                                                    {/* Advanced Tabs */}
+                                                    <div className="advanced-tabs">
+                                                        {[
+                                                            { key: 'transport', icon: Bus, label: t('planner.transportSection') },
+                                                            { key: 'meals', icon: Utensils, label: t('planner.mealSection') },
+                                                            { key: 'tours', icon: MapIcon, label: t('planner.tourSection') },
+                                                        ].map(tab => (
+                                                            <button key={tab.key} type="button"
+                                                                className={`advanced-tab ${advancedTab === tab.key ? 'advanced-tab-active' : ''}`}
+                                                                onClick={() => setAdvancedTab(tab.key)}>
+                                                                <tab.icon size={16} /> {tab.label}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* ── Transport Tab ── */}
+                                                    {advancedTab === 'transport' && (
+                                                        <div className="advanced-content">
+                                                            <label>{t('transport.label')}</label>
+                                                            <p className="input-hint">{t('transport.hint')}</p>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                                                {TRANSPORT_MODES.map(m => (
+                                                                    <Chip key={m.value} active={formData.transportMode === m.value}
+                                                                        onClick={() => update('transportMode', m.value)}>
+                                                                        {t(`transport.${m.value}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ── Meals Tab ── */}
+                                                    {advancedTab === 'meals' && (
+                                                        <div className="advanced-content">
+                                                            <label>{t('meal.style')}</label>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                                                                {MEAL_STYLES.map(m => (
+                                                                    <Chip key={m.value} active={formData.mealStyle.includes(m.value)}
+                                                                        onClick={() => toggleArray('mealStyle', m.value)}>
+                                                                        {t(`meal.${m.value}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+                                                            <label>{t('diet.label')}</label>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                                {DIET_OPTIONS.map(d => (
+                                                                    <Chip key={d.value} active={formData.dietOptions.includes(d.value)}
+                                                                        onClick={() => toggleArray('dietOptions', d.value)}>
+                                                                        {t(`diet.${d.value}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ── Tours Tab ── */}
+                                                    {advancedTab === 'tours' && (
+                                                        <div className="advanced-content">
+                                                            {/* Group Type */}
+                                                            <label>{t('tour.groupType')}</label>
+                                                            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                                                {TOUR_GROUP_TYPES.map(g => (
+                                                                    <Chip key={g.value} active={formData.tourGroupType === g.value}
+                                                                        onClick={() => update('tourGroupType', g.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                                        {t(`tour.${g.value}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+
+                                                            {/* Walking Level */}
+                                                            <label>{t('tour.walkLevel')}</label>
+                                                            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                                                {WALKING_LEVELS.map(w => (
+                                                                    <Chip key={w.value} active={formData.walkingLevel === w.value}
+                                                                        onClick={() => update('walkingLevel', w.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                                        {t(`tour.walk${w.value.charAt(0).toUpperCase() + w.value.slice(1)}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+
+                                                            {/* Photo Stops */}
+                                                            <label>{t('tour.photoStops')}</label>
+                                                            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                                                {PHOTO_STOP_OPTIONS.map(p => (
+                                                                    <Chip key={p.value} active={formData.photoStops === p.value}
+                                                                        onClick={() => update('photoStops', p.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                                        {t(`tour.photo${p.value.charAt(0).toUpperCase() + p.value.slice(1)}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+
+                                                            {/* Shopping Stops */}
+                                                            <label>{t('tour.shoppingStop')}</label>
+                                                            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                                                                {SHOPPING_STOP_OPTIONS.map(s => (
+                                                                    <Chip key={s.value} active={formData.shoppingStop === s.value}
+                                                                        onClick={() => update('shoppingStop', s.value)} style={{ flex: 1, justifyContent: 'center' }}>
+                                                                        {t(`tour.shop${s.value.charAt(0).toUpperCase() + s.value.slice(1)}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+
+                                                            {/* Accessibility */}
+                                                            <label>{t('tour.accessibility')}</label>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                                {ACCESSIBILITY_OPTIONS.map(a => (
+                                                                    <Chip key={a.value} active={formData.accessibility.includes(a.value)}
+                                                                        onClick={() => toggleArray('accessibility', a.value)}>
+                                                                        {t(`tour.${a.value}`)}
+                                                                    </Chip>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>)}
                             </AnimatePresence>
 
                             {/* Error */}
@@ -637,14 +758,28 @@ export default function PlannerPage() {
                                 <div className="form-error">{error}</div>
                             )}
 
-                            {/* Submit */}
-                            <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading} style={{ marginTop: 8 }}>
-                                {loading ? (
-                                    <><Loader2 size={18} className="spin" /> {t('planner.generating')}</>
-                                ) : (
-                                    <><Plane size={18} /> {t('planner.generateBtn')}</>
+                            {/* Step Navigation */}
+                            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                                {formStep > 0 && (
+                                    <button type="button" className="btn btn-secondary" onClick={() => setFormStep(formStep - 1)} style={{ flex: 1 }}>
+                                        ← {locale === 'tr' ? 'Geri' : 'Back'}
+                                    </button>
                                 )}
-                            </button>
+                                {formStep < 3 ? (
+                                    <button type="button" className="btn btn-primary" onClick={() => setFormStep(formStep + 1)}
+                                        disabled={!canProceedStep(formStep)} style={{ flex: 1 }}>
+                                        {locale === 'tr' ? 'İleri' : 'Next'} →
+                                    </button>
+                                ) : (
+                                    <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ flex: 2 }}>
+                                        {loading ? (
+                                            <><Loader2 size={18} className="spin" /> {t('planner.generating')}</>
+                                        ) : (
+                                            <><Plane size={18} /> {t('planner.generateBtn')}</>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
                         </motion.form>
                     )}
 
