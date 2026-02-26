@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
+import { useLanguage } from '@/context/LanguageContext'
 import { X, Edit3, Trash2, Star, Calendar, Tag, ExternalLink } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
     const [confirmDelete, setConfirmDelete] = useState(false)
     const [deleting, setDeleting] = useState(false)
+    const { t } = useLanguage()
     const supabase = createClient()
     const pinType = PIN_TYPES[pin.type] || PIN_TYPES.memory
     const pinStatus = PIN_STATUSES[pin.status] || PIN_STATUSES.visited
@@ -48,7 +50,7 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
                             padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem',
                             fontWeight: 600,
                         }}>
-                            +{pin.pin_media.length - 1} more
+                            +{pin.pin_media.length - 1} {t('pin.more')}
                         </div>
                     )}
                 </div>
@@ -65,10 +67,10 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
                                 fontWeight: 600, background: `${pinType.color}20`,
                                 color: pinType.color,
                             }}>
-                                {pinType.emoji} {pinType.label}
+                                {pinType.emoji} {t(`pinType.${pin.type}`)}
                             </span>
                             <span className={`badge badge-${pin.status === 'visited' ? 'success' : pin.status === 'planned' ? 'primary' : 'warning'}`}>
-                                {pinStatus.label}
+                                {t(`pinStatus.${pin.status}`)}
                             </span>
                         </div>
                         <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>{pin.title}</h3>
@@ -124,7 +126,7 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 8, borderTop: '1px solid var(--border)', paddingTop: 12, marginTop: 4 }}>
                     <button className="btn btn-secondary btn-sm" onClick={onEdit} style={{ flex: 1 }}>
-                        <Edit3 size={14} /> Edit
+                        <Edit3 size={14} /> {t('pin.edit')}
                     </button>
                     {!confirmDelete ? (
                         <button className="btn btn-ghost btn-sm" onClick={() => setConfirmDelete(true)} style={{ color: 'var(--error)' }}>
@@ -136,7 +138,7 @@ export default function PinDetail({ pin, onClose, onEdit, onDelete }) {
                             onClick={handleDelete}
                             disabled={deleting}
                         >
-                            {deleting ? 'Deleting...' : 'Confirm Delete'}
+                            {deleting ? t('pin.deleting') : t('pin.confirmDelete')}
                         </button>
                     )}
                 </div>

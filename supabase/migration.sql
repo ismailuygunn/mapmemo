@@ -148,10 +148,7 @@ create policy "Spaces: owner can update"
 -- SPACE MEMBERS: members can read, insert for themselves
 create policy "Space Members: members can read"
   on public.space_members for select
-  using (
-    space_id in (select space_id from public.space_members where user_id = auth.uid())
-    or user_id = auth.uid()
-  );
+  using (user_id = auth.uid());
 
 create policy "Space Members: users can insert themselves"
   on public.space_members for insert

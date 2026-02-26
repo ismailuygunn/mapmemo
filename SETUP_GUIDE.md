@@ -94,24 +94,21 @@ MapMemo, kız arkadaşınla birlikte kullanacağın bir seyahat haritası uygula
 
 ## 🚀 ADIM 7: Vercel'e Deploy Et
 
-### 7a. GitHub'a Yükle
+### 7a. GitHub'a Yükle (Tarayıcıdan — Terminal Gerektirmez!)
 
 1. **[github.com](https://github.com)** adresine git ve giriş yap
 2. Sağ üstteki **"+"** → **"New repository"** tıkla
 3. Repository adı: `mapmemo`
-4. **"Create repository"** tıkla
-5. Bilgisayarında terminali aç ve şu komutları çalıştır:
-
-```bash
-cd /Users/socialmedia/.gemini/antigravity/scratch/mapmemo
-git add .
-git commit -m "Initial commit - MapMemo"
-git branch -M main
-git remote add origin https://github.com/SENIN-KULLANICI-ADIN/mapmemo.git
-git push -u origin main
-```
-
-> `SENIN-KULLANICI-ADIN` yerine GitHub kullanıcı adını yaz.
+4. ⚠️ **Önemli**: Altta "Add a README file" seçeneğini **işaretleme** (boş bırak)
+5. **"Create repository"** tıkla
+6. Açılan sayfada **"uploading an existing file"** linkine tıkla
+7. Bilgisayarında şu klasörü aç: `/Users/socialmedia/.gemini/antigravity/scratch/mapmemo`
+8. Bu klasörün **içindeki tüm dosya ve klasörleri seç** (⌘+A) ve GitHub sayfasındaki upload alanına **sürükle-bırak** yap
+   - Yüklenmesi gereken başlıca klasörler: `src/`, `supabase/`, `public/`, ve dosyalar: `package.json`, `next.config.mjs`, `.env.example`, `SETUP_GUIDE.md`
+   - **`.next` klasörünü yükleme** (build çıktısıdır, gerekli değil)
+9. Altta "Commit changes" bölümünde mesaj yaz: `Initial commit`
+10. **"Commit changes"** butonuna tıkla
+11. ⏳ Yüklenmesini bekle (dosya boyutuna göre 1-3 dakika)
 
 ### 7b. Vercel'de Deploy
 

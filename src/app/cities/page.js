@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import { MapPin, ImageIcon, Loader2 } from 'lucide-react'
@@ -13,6 +14,7 @@ export default function CitiesPage() {
     const [cities, setCities] = useState([])
     const [loading, setLoading] = useState(true)
     const { space } = useSpace()
+    const { t } = useLanguage()
     const supabase = createClient()
     const router = useRouter()
 
@@ -39,8 +41,8 @@ export default function CitiesPage() {
             <div className="main-content">
                 <div className="page">
                     <div className="page-header">
-                        <h1>🌍 Your Cities</h1>
-                        <p>All the places you've been together</p>
+                        <h1>🌍 {t('cities.title')}</h1>
+                        <p>{t('cities.subtitle')}</p>
                     </div>
 
                     {loading ? (
@@ -50,10 +52,10 @@ export default function CitiesPage() {
                     ) : cities.length === 0 ? (
                         <div className="empty-state">
                             <MapPin size={48} className="empty-state-icon" />
-                            <h3>No cities yet</h3>
-                            <p>Add your first pin on the map and your cities will appear here.</p>
+                            <h3>{t('cities.noCities')}</h3>
+                            <p>{t('cities.noCitiesDesc')}</p>
                             <button className="btn btn-primary" onClick={() => router.push('/map')}>
-                                Go to Map
+                                {t('cities.goToMap')}
                             </button>
                         </div>
                     ) : (
@@ -80,7 +82,7 @@ export default function CitiesPage() {
                                                 padding: '6px 14px', borderRadius: 20, color: 'white',
                                                 fontSize: '0.8125rem', fontWeight: 600,
                                             }}>
-                                                {city.pins.length} pins
+                                                {city.pins.length} {t('pin.pins')}
                                             </div>
                                         </div>
                                         <div className="pin-card-body">

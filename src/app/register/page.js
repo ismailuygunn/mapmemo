@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { MapPin, Eye, EyeOff } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
+import { MapPin, Eye, EyeOff, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -15,6 +16,7 @@ export default function RegisterPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { signUp } = useAuth()
+    const { t, locale, setLocale } = useLanguage()
     const router = useRouter()
 
     const handleSubmit = async (e) => {
@@ -25,13 +27,27 @@ export default function RegisterPage() {
             await signUp(email, password, displayName)
             router.push('/onboarding')
         } catch (err) {
-            setError(err.message || 'Something went wrong')
+            setError(err.message || t('auth.somethingWrong'))
         }
         setLoading(false)
     }
 
     return (
         <div className="auth-bg">
+            {/* Language Switcher */}
+            <motion.button
+                className="lang-switcher-float"
+                onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                <Globe size={16} />
+                {locale === 'en' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+            </motion.button>
+
             <motion.div
                 className="auth-card"
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -39,26 +55,30 @@ export default function RegisterPage() {
                 transition={{ duration: 0.5, ease: 'easeOut' }}
             >
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-                    <div style={{
-                        width: 56, height: 56, borderRadius: 16,
-                        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 8px 30px rgba(79, 70, 229, 0.3)',
-                    }}>
+                    <motion.div
+                        style={{
+                            width: 56, height: 56, borderRadius: 16,
+                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 8px 30px rgba(79, 70, 229, 0.3)',
+                        }}
+                        animate={{ rotate: [0, -5, 5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
+                    >
                         <MapPin size={28} color="white" />
-                    </div>
+                    </motion.div>
                 </div>
 
-                <h1 style={{ textAlign: 'center' }}>Create account</h1>
-                <p style={{ textAlign: 'center' }}>Start your travel journey together</p>
+                <h1 style={{ textAlign: 'center' }}>{t('auth.createAccount')}</h1>
+                <p style={{ textAlign: 'center' }}>{t('auth.registerSubtitle')}</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className="input-group" style={{ marginBottom: 16 }}>
-                        <label>Your name</label>
+                        <label>{t('auth.yourName')}</label>
                         <input
                             type="text"
                             className="input"
-                            placeholder="Alex"
+                            placeholder={t('auth.namePlaceholder')}
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
                             required
@@ -66,11 +86,11 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="input-group" style={{ marginBottom: 16 }}>
-                        <label>Email</label>
+                        <label>{t('auth.email')}</label>
                         <input
                             type="email"
                             className="input"
-                            placeholder="you@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -78,12 +98,12 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="input-group" style={{ marginBottom: 8 }}>
-                        <label>Password</label>
+                        <label>{t('auth.password')}</label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showPw ? 'text' : 'password'}
                                 className="input"
-                                placeholder="Min 6 characters"
+                                placeholder={t('auth.minChars')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -127,13 +147,13 @@ export default function RegisterPage() {
                         disabled={loading}
                         style={{ marginTop: 16 }}
                     >
-                        {loading ? 'Creating account...' : 'Create account'}
+                        {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    Already have an account?{' '}
-                    <Link href="/login">Sign in</Link>
+                    {t('auth.hasAccount')}{' '}
+                    <Link href="/login">{t('auth.signInLink')}</Link>
                 </div>
             </motion.div>
         </div>

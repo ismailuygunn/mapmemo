@@ -3,11 +3,13 @@
 import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
+import { useLanguage } from '@/context/LanguageContext'
 import { X, Upload, Star, Loader2, Image as ImageIcon, MapPin } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, onUpdated }) {
     const isEditing = !!editPin
+    const { t } = useLanguage()
     const [formData, setFormData] = useState({
         title: editPin?.title || '',
         type: editPin?.type || 'memory',
@@ -86,7 +88,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
         try {
             if (!formData.lat || !formData.lng) {
-                throw new Error('Please select a location')
+                throw new Error(t('pin.selectLocation'))
             }
 
             const pinData = {
@@ -188,7 +190,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             >
                 <div className="slide-over-header">
-                    <h2>{isEditing ? 'Edit Pin' : 'New Pin'}</h2>
+                    <h2>{isEditing ? t('pin.editPin') : t('pin.newPin')}</h2>
                     <button className="btn btn-ghost btn-icon" onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -197,7 +199,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                 <form onSubmit={handleSubmit} className="slide-over-body">
                     {/* Location Search */}
                     <div className="input-group" style={{ marginBottom: 20, position: 'relative' }}>
-                        <label>📍 Location</label>
+                        <label>📍 {t('pin.location')}</label>
                         <div style={{ position: 'relative' }}>
                             <MapPin size={16} style={{
                                 position: 'absolute', left: 12, top: '50%',
@@ -206,7 +208,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                             <input
                                 type="text"
                                 className="input"
-                                placeholder="Search for a place..."
+                                placeholder={t('pin.locationPlaceholder')}
                                 value={locationSearch}
                                 onChange={(e) => searchLocation(e.target.value)}
                                 style={{ paddingLeft: 36 }}
@@ -247,11 +249,11 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Title */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Title</label>
+                        <label>{t('pin.title')}</label>
                         <input
                             type="text"
                             className="input"
-                            placeholder="Best sunset spot ever..."
+                            placeholder={t('pin.titlePlaceholder')}
                             value={formData.title}
                             onChange={(e) => update('title', e.target.value)}
                             required
@@ -260,9 +262,9 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Pin Type */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Type</label>
+                        <label>{t('pin.type')}</label>
                         <div className="pin-type-grid">
-                            {Object.entries(PIN_TYPES).map(([key, { emoji, label }]) => (
+                            {Object.entries(PIN_TYPES).map(([key, { emoji }]) => (
                                 <button
                                     key={key}
                                     type="button"
@@ -270,7 +272,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                                     onClick={() => update('type', key)}
                                 >
                                     <span className="pin-type-emoji">{emoji}</span>
-                                    {label}
+                                    {t(`pinType.${key}`)}
                                 </button>
                             ))}
                         </div>
@@ -278,9 +280,9 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Status */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Status</label>
+                        <label>{t('pin.status')}</label>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            {Object.entries(PIN_STATUSES).map(([key, { label, emoji }]) => (
+                            {Object.entries(PIN_STATUSES).map(([key, { emoji }]) => (
                                 <button
                                     key={key}
                                     type="button"
@@ -288,7 +290,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                                     onClick={() => update('status', key)}
                                     style={{ flex: 1, justifyContent: 'center' }}
                                 >
-                                    {emoji} {label}
+                                    {emoji} {t(`pinStatus.${key}`)}
                                 </button>
                             ))}
                         </div>
@@ -296,7 +298,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Rating */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Rating</label>
+                        <label>{t('pin.rating')}</label>
                         <div className="stars">
                             {[1, 2, 3, 4, 5].map(n => (
                                 <button
@@ -313,7 +315,7 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Date */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Date</label>
+                        <label>{t('pin.date')}</label>
                         <input
                             type="date"
                             className="input"
@@ -324,10 +326,10 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Notes */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Notes</label>
+                        <label>{t('pin.notes')}</label>
                         <textarea
                             className="input"
-                            placeholder="Write your memory, tips, whatever you want..."
+                            placeholder={t('pin.notesPlaceholder')}
                             value={formData.notes}
                             onChange={(e) => update('notes', e.target.value)}
                             rows={3}
@@ -336,11 +338,11 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Tags */}
                     <div className="input-group" style={{ marginBottom: 20 }}>
-                        <label>Tags (comma-separated)</label>
+                        <label>{t('pin.tags')}</label>
                         <input
                             type="text"
                             className="input"
-                            placeholder="romantic, sunset, must-visit"
+                            placeholder={t('pin.tagsPlaceholder')}
                             value={formData.tags}
                             onChange={(e) => update('tags', e.target.value)}
                         />
@@ -348,17 +350,17 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
 
                     {/* Media Upload */}
                     <div className="input-group" style={{ marginBottom: 24 }}>
-                        <label>Photos & Videos</label>
+                        <label>{t('pin.media')}</label>
                         <div
                             className={`media-upload ${files.length > 0 ? 'media-upload-active' : ''}`}
                             onClick={() => fileInputRef.current?.click()}
                         >
                             <Upload size={32} style={{ color: 'var(--text-tertiary)', marginBottom: 8 }} />
                             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                Click to upload photos or videos
+                                {t('pin.uploadText')}
                             </p>
                             <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                JPG, PNG, MP4 up to 50MB each
+                                {t('pin.uploadHint')}
                             </p>
                         </div>
                         <input
@@ -410,9 +412,9 @@ export default function PinForm({ coords, editPin, spaceId, onClose, onCreated, 
                         disabled={loading}
                     >
                         {loading ? (
-                            <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Saving...</>
+                            <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> {t('pin.saving')}</>
                         ) : (
-                            isEditing ? 'Update Pin' : 'Create Pin'
+                            isEditing ? t('pin.updatePin') : t('pin.createPin')
                         )}
                     </button>
                 </form>

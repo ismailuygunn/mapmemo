@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSpace } from '@/context/SpaceContext'
 import { useAuth } from '@/context/AuthContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { Heart, Copy, Check, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -16,6 +17,7 @@ export default function OnboardingPage() {
     const [error, setError] = useState('')
     const { createSpace } = useSpace()
     const { user } = useAuth()
+    const { t } = useLanguage()
     const router = useRouter()
 
     const handleCreateSpace = async (e) => {
@@ -49,21 +51,27 @@ export default function OnboardingPage() {
             >
                 {step === 1 && (
                     <>
+                        {/* Step indicator */}
+                        <div className="onboarding-steps">
+                            <div className="onboarding-step active" />
+                            <div className="onboarding-step" />
+                        </div>
+
                         <div className="onboarding-icon">
                             <Heart size={36} color="white" />
                         </div>
-                        <h1 style={{ color: 'white', marginBottom: 8 }}>Create your Couple Space</h1>
+                        <h1 style={{ color: 'white', marginBottom: 8 }}>{t('onboarding.createSpace')}</h1>
                         <p style={{ color: '#94A3B8', marginBottom: 32 }}>
-                            Give your travel space a name — this is where all your pins and memories will live.
+                            {t('onboarding.createSpaceSubtitle')}
                         </p>
 
                         <form onSubmit={handleCreateSpace}>
                             <div className="input-group" style={{ marginBottom: 20, textAlign: 'left' }}>
-                                <label>Space name</label>
+                                <label>{t('onboarding.spaceName')}</label>
                                 <input
                                     type="text"
                                     className="input"
-                                    placeholder="e.g. Alex & Sam's Adventures"
+                                    placeholder={t('onboarding.spaceNamePlaceholder')}
                                     value={spaceName}
                                     onChange={(e) => setSpaceName(e.target.value)}
                                     required
@@ -86,7 +94,7 @@ export default function OnboardingPage() {
                                 className="btn btn-primary btn-lg w-full"
                                 disabled={loading}
                             >
-                                {loading ? 'Creating...' : 'Create space'}
+                                {loading ? t('onboarding.creating') : t('onboarding.createSpaceBtn')}
                                 {!loading && <ArrowRight size={18} />}
                             </button>
                         </form>
@@ -99,12 +107,18 @@ export default function OnboardingPage() {
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.4 }}
                     >
+                        {/* Step indicator */}
+                        <div className="onboarding-steps">
+                            <div className="onboarding-step completed" />
+                            <div className="onboarding-step active" />
+                        </div>
+
                         <div className="onboarding-icon">
                             <Heart size={36} color="white" fill="white" />
                         </div>
-                        <h1 style={{ color: 'white', marginBottom: 8 }}>Invite your partner 💕</h1>
+                        <h1 style={{ color: 'white', marginBottom: 8 }}>{t('onboarding.invitePartner')}</h1>
                         <p style={{ color: '#94A3B8', marginBottom: 32 }}>
-                            Share this link with your partner so they can join your space.
+                            {t('onboarding.inviteSubtitle')}
                         </p>
 
                         <div style={{
@@ -131,7 +145,7 @@ export default function OnboardingPage() {
                                     color: 'white', border: 'none', flexShrink: 0,
                                 }}
                             >
-                                {copied ? <><Check size={16} /> Copied!</> : <><Copy size={16} /> Copy</>}
+                                {copied ? <><Check size={16} /> {t('onboarding.copied')}</> : <><Copy size={16} /> {t('onboarding.copy')}</>}
                             </button>
                         </div>
 
@@ -139,11 +153,11 @@ export default function OnboardingPage() {
                             onClick={() => router.push('/map')}
                             className="btn btn-primary btn-lg w-full"
                         >
-                            Go to Map <ArrowRight size={18} />
+                            {t('onboarding.goToMap')} <ArrowRight size={18} />
                         </button>
 
                         <p style={{ color: '#64748B', fontSize: '0.8125rem', marginTop: 16 }}>
-                            Your partner can join later — the link doesn't expire.
+                            {t('onboarding.linkNoExpire')}
                         </p>
                     </motion.div>
                 )}

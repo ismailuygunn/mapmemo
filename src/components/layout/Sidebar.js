@@ -3,18 +3,20 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { Map, Compass, Calendar, Settings, LogOut } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-
-const navItems = [
-    { icon: Map, label: 'Map', href: '/map' },
-    { icon: Compass, label: 'Cities', href: '/cities' },
-    { icon: Calendar, label: 'Planner', href: '/planner' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
-]
+import { useLanguage } from '@/context/LanguageContext'
 
 export default function Sidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const { signOut } = useAuth()
+    const { t } = useLanguage()
+
+    const navItems = [
+        { icon: Map, label: t('nav.map'), href: '/map' },
+        { icon: Compass, label: t('nav.cities'), href: '/cities' },
+        { icon: Calendar, label: t('nav.planner'), href: '/planner' },
+        { icon: Settings, label: t('nav.settings'), href: '/settings' },
+    ]
 
     const handleLogout = async () => {
         await signOut()
@@ -35,16 +37,18 @@ export default function Sidebar() {
                             title={label}
                         >
                             <Icon size={22} />
+                            <span className="sidebar-tooltip">{label}</span>
                         </button>
                     ))}
                 </nav>
                 <button
                     className="sidebar-link"
                     onClick={handleLogout}
-                    title="Sign out"
+                    title={t('nav.signOut')}
                     style={{ marginTop: 'auto' }}
                 >
                     <LogOut size={20} />
+                    <span className="sidebar-tooltip">{t('nav.signOut')}</span>
                 </button>
             </aside>
 

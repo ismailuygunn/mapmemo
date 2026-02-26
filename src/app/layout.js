@@ -2,6 +2,7 @@ import './globals.css'
 import { AuthProvider } from '@/context/AuthContext'
 import { SpaceProvider } from '@/context/SpaceContext'
 import { ThemeProvider } from '@/context/ThemeContext'
+import { LanguageProvider } from '@/context/LanguageContext'
 
 export const metadata = {
   title: 'MapMemo — Couple Travel Map',
@@ -25,13 +26,15 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
-        <ThemeProvider>
-          <AuthProvider>
-            <SpaceProvider>
-              {children}
-            </SpaceProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <SpaceProvider>
+                {children}
+              </SpaceProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

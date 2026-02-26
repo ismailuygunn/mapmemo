@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { MapPin, Eye, EyeOff } from 'lucide-react'
+import { useLanguage } from '@/context/LanguageContext'
+import { MapPin, Eye, EyeOff, Globe } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 
@@ -14,6 +15,7 @@ export default function LoginPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { signIn } = useAuth()
+    const { t, locale, setLocale } = useLanguage()
     const router = useRouter()
 
     const handleSubmit = async (e) => {
@@ -24,13 +26,27 @@ export default function LoginPage() {
             await signIn(email, password)
             router.push('/map')
         } catch (err) {
-            setError(err.message || 'Invalid email or password')
+            setError(err.message || t('auth.invalidCredentials'))
         }
         setLoading(false)
     }
 
     return (
         <div className="auth-bg">
+            {/* Language Switcher */}
+            <motion.button
+                className="lang-switcher-float"
+                onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                <Globe size={16} />
+                {locale === 'en' ? '🇹🇷 Türkçe' : '🇬🇧 English'}
+            </motion.button>
+
             <motion.div
                 className="auth-card"
                 initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -39,26 +55,30 @@ export default function LoginPage() {
             >
                 {/* Logo */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-                    <div style={{
-                        width: 56, height: 56, borderRadius: 16,
-                        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 8px 30px rgba(79, 70, 229, 0.3)',
-                    }}>
+                    <motion.div
+                        style={{
+                            width: 56, height: 56, borderRadius: 16,
+                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 8px 30px rgba(79, 70, 229, 0.3)',
+                        }}
+                        animate={{ rotate: [0, -5, 5, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 4 }}
+                    >
                         <MapPin size={28} color="white" />
-                    </div>
+                    </motion.div>
                 </div>
 
-                <h1 style={{ textAlign: 'center' }}>Welcome back</h1>
-                <p style={{ textAlign: 'center' }}>Sign in to your MapMemo account</p>
+                <h1 style={{ textAlign: 'center' }}>{t('auth.welcomeBack')}</h1>
+                <p style={{ textAlign: 'center' }}>{t('auth.signInSubtitle')}</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className="input-group" style={{ marginBottom: 16 }}>
-                        <label>Email</label>
+                        <label>{t('auth.email')}</label>
                         <input
                             type="email"
                             className="input"
-                            placeholder="you@example.com"
+                            placeholder={t('auth.emailPlaceholder')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -66,12 +86,12 @@ export default function LoginPage() {
                     </div>
 
                     <div className="input-group" style={{ marginBottom: 8 }}>
-                        <label>Password</label>
+                        <label>{t('auth.password')}</label>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showPw ? 'text' : 'password'}
                                 className="input"
-                                placeholder="••••••••"
+                                placeholder={t('auth.passwordPlaceholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -115,13 +135,13 @@ export default function LoginPage() {
                         disabled={loading}
                         style={{ marginTop: 16 }}
                     >
-                        {loading ? 'Signing in...' : 'Sign in'}
+                        {loading ? t('auth.signingIn') : t('auth.signIn')}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    Don't have an account?{' '}
-                    <Link href="/register">Create one</Link>
+                    {t('auth.noAccount')}{' '}
+                    <Link href="/register">{t('auth.createOne')}</Link>
                 </div>
             </motion.div>
         </div>

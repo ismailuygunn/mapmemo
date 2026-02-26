@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { useSpace } from '@/context/SpaceContext'
 import { useTheme } from '@/context/ThemeContext'
+import { useLanguage } from '@/context/LanguageContext'
 import { PIN_TYPES, PIN_STATUSES, MAP_STYLES } from '@/lib/constants'
 import Sidebar from '@/components/layout/Sidebar'
 import PinForm from '@/components/map/PinForm'
@@ -32,6 +33,7 @@ export default function MapPage() {
     const { user } = useAuth()
     const { space, loading: spaceLoading } = useSpace()
     const { theme } = useTheme()
+    const { t } = useLanguage()
     const supabase = createClient()
     const router = useRouter()
 
@@ -205,7 +207,7 @@ export default function MapPage() {
             <div className="auth-bg">
                 <div style={{ color: 'white', textAlign: 'center' }}>
                     <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                    <p>Loading your space...</p>
+                    <p>{t('map.loadingSpace')}</p>
                 </div>
                 <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -234,7 +236,7 @@ export default function MapPage() {
                                 <input
                                     type="text"
                                     className="input"
-                                    placeholder="Search places..."
+                                    placeholder={t('map.searchPlaces')}
                                     value={searchQuery}
                                     onChange={(e) => handleSearch(e.target.value)}
                                     style={{ paddingLeft: 42 }}
@@ -296,23 +298,23 @@ export default function MapPage() {
 
                     {/* Filter Chips */}
                     <div className="map-filters">
-                        {Object.entries(PIN_STATUSES).map(([key, { label, emoji }]) => (
+                        {Object.entries(PIN_STATUSES).map(([key, { emoji }]) => (
                             <button
                                 key={key}
                                 className={`filter-chip ${activeFilters.status === key ? 'filter-chip-active' : ''}`}
                                 onClick={() => toggleFilter('status', key)}
                             >
-                                {emoji} {label}
+                                {emoji} {t(`pinStatus.${key}`)}
                             </button>
                         ))}
                         <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 4px' }} />
-                        {Object.entries(PIN_TYPES).map(([key, { label, emoji }]) => (
+                        {Object.entries(PIN_TYPES).map(([key, { emoji }]) => (
                             <button
                                 key={key}
                                 className={`filter-chip ${activeFilters.type === key ? 'filter-chip-active' : ''}`}
                                 onClick={() => toggleFilter('type', key)}
                             >
-                                {emoji} {label}
+                                {emoji} {t(`pinType.${key}`)}
                             </button>
                         ))}
                     </div>
@@ -367,12 +369,12 @@ export default function MapPage() {
                                     padding: '12px 20px',
                                 }}>
                                     <MapPin size={18} style={{ color: 'var(--primary-1)' }} />
-                                    <span style={{ fontSize: '0.875rem' }}>Location selected</span>
+                                    <span style={{ fontSize: '0.875rem' }}>{t('map.locationSelected')}</span>
                                     <button
                                         className="btn btn-primary btn-sm"
                                         onClick={() => setShowPinForm(true)}
                                     >
-                                        Add Pin
+                                        {t('map.addPin')}
                                     </button>
                                     <button
                                         className="btn btn-ghost btn-sm"

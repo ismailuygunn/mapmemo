@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
+import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
@@ -19,6 +20,7 @@ export default function CityPage() {
     const [tab, setTab] = useState('pins')
     const [loading, setLoading] = useState(true)
     const { space } = useSpace()
+    const { t } = useLanguage()
     const supabase = createClient()
 
     useEffect(() => {
@@ -68,27 +70,27 @@ export default function CityPage() {
                         <div className="city-stats">
                             <div className="city-stat">
                                 <span className="city-stat-value">{pins.length}</span>
-                                <span className="city-stat-label">Total Pins</span>
+                                <span className="city-stat-label">{t('pin.pins')}</span>
                             </div>
                             <div className="city-stat">
                                 <span className="city-stat-value">{visitedCount}</span>
-                                <span className="city-stat-label">Visited</span>
+                                <span className="city-stat-label">{t('pinStatus.visited')}</span>
                             </div>
                             <div className="city-stat">
                                 <span className="city-stat-value">{plannedCount}</span>
-                                <span className="city-stat-label">Planned</span>
+                                <span className="city-stat-label">{t('pinStatus.planned')}</span>
                             </div>
                             {avgRating && (
                                 <div className="city-stat">
                                     <span className="city-stat-value" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                         {avgRating} <Star size={18} fill="#FBBF24" color="#FBBF24" />
                                     </span>
-                                    <span className="city-stat-label">Avg Rating</span>
+                                    <span className="city-stat-label">{t('pin.rating')}</span>
                                 </div>
                             )}
                             <div className="city-stat">
                                 <span className="city-stat-value">{media.length}</span>
-                                <span className="city-stat-label">Photos</span>
+                                <span className="city-stat-label">{t('pin.media')}</span>
                             </div>
                         </div>
                     </div>
@@ -97,7 +99,7 @@ export default function CityPage() {
                     <div className="tabs" style={{ marginBottom: 24 }}>
                         <button className={`tab ${tab === 'pins' ? 'tab-active' : ''}`} onClick={() => setTab('pins')}>
                             <MapPin size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 4 }} />
-                            Pins
+                            {t('pin.pins')}
                         </button>
                         <button className={`tab ${tab === 'album' ? 'tab-active' : ''}`} onClick={() => setTab('album')}>
                             <ImageIcon size={16} style={{ display: 'inline', verticalAlign: -3, marginRight: 4 }} />
@@ -135,9 +137,9 @@ export default function CityPage() {
                                                 <div className="pin-card-body">
                                                     <div className="pin-card-type">
                                                         <span style={{ fontSize: '1.1rem' }}>{pinType.emoji}</span>
-                                                        <span className="badge badge-primary">{pinType.label}</span>
+                                                        <span className="badge badge-primary">{t(`pinType.${pin.type}`)}</span>
                                                         <span className={`badge badge-${pin.status === 'visited' ? 'success' : pin.status === 'planned' ? 'sky' : 'warning'}`} style={{ marginLeft: 'auto' }}>
-                                                            {PIN_STATUSES[pin.status]?.label}
+                                                            {t(`pinStatus.${pin.status}`)}
                                                         </span>
                                                     </div>
                                                     <h4 className="pin-card-title">{pin.title}</h4>
