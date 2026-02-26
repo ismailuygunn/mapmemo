@@ -2821,3 +2821,298 @@ select.input {
   background: var(--bg-tertiary);
   color: var(--text-tertiary);
 }
+
+/* ---------- Phase 3: Weather Cards ---------- */
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.weather-card {
+  padding: 16px 12px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  transition: transform var(--transition-fast);
+}
+
+.weather-card:hover {
+  transform: translateY(-2px);
+}
+
+.weather-sunny {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.04);
+}
+
+.weather-cloudy {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.04);
+}
+
+.weather-rainy {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.weather-icon {
+  font-size: 2rem;
+}
+
+.weather-date {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.weather-temp {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.weather-desc {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.weather-rain {
+  font-size: 0.6875rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+  margin-top: 2px;
+}
+
+/* ---------- Phase 3: Events List ---------- */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  transition: all var(--transition-fast);
+}
+
+.event-card:hover {
+  border-color: var(--primary-1);
+  transform: translateX(4px);
+}
+
+.event-card-left {
+  flex-shrink: 0;
+}
+
+.event-date-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(79, 70, 229, 0.15));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-date-day {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-1);
+  line-height: 1;
+}
+
+.event-date-month {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+}
+
+.event-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-card-body h4 {
+  font-size: 0.9375rem;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.event-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.event-category {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+  font-size: 0.6875rem;
+  text-transform: capitalize;
+}
+
+.event-desc {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.event-card-action {
+  flex-shrink: 0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+/* ---------- Phase 4: Flight Search ---------- */
+.flight-search-bar {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.input-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 6px;
+}
+
+.flights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.flight-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  transition: all var(--transition-fast);
+}
+
+.flight-card:hover {
+  border-color: var(--primary-1);
+}
+
+.flight-card-route {
+  flex: 1;
+}
+
+.flight-segment {
+  margin-bottom: 6px;
+}
+
+.flight-leg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.flight-code {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.flight-arrow {
+  color: var(--primary-1);
+}
+
+.flight-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.flight-carrier {
+  font-size: 0.6875rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.flight-card-price {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.flight-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #10B981;
+}
+
+.flight-class {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .weather-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .event-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .event-card-action {
+    margin-top: 8px;
+  }
+
+  .flight-card {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .flight-card-price {
+    align-items: center;
+  }
+
+  .flight-search-bar {
+    flex-direction: column;
+  }
+}

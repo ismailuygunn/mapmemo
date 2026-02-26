@@ -50,7 +50,12 @@ export default function PlannerPage() {
     const [expandedDay, setExpandedDay] = useState(null)
     const [showRainPlan, setShowRainPlan] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
-    const [advancedTab, setAdvancedTab] = useState('transport') // transport | meals | tours
+    const [advancedTab, setAdvancedTab] = useState('transport')
+    // Phase 3+4 visible data
+    const [weatherInfo, setWeatherInfo] = useState(null)
+    const [eventsInfo, setEventsInfo] = useState([])
+    const [flightsInfo, setFlightsInfo] = useState([])
+    const [flightSearch, setFlightSearch] = useState({ origin: '', searching: false })
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -88,6 +93,27 @@ export default function PlannerPage() {
         if (e.key === 'Enter') { e.preventDefault(); addCity() }
     }
 
+    // Flight search (Phase 4)
+    const searchFlights = async () => {
+        const cities = formData.cities.length > 0 ? formData.cities : [formData.cityInput.trim()]
+        if (!flightSearch.origin || cities.length === 0) return
+        setFlightSearch(prev => ({ ...prev, searching: true }))
+        try {
+            const qs = new URLSearchParams({
+                origin: flightSearch.origin.toUpperCase(),
+                destination: cities[0].substring(0, 3).toUpperCase(),
+                departure: formData.startDate || new Date().toISOString().split('T')[0],
+                adults: '2',
+                currency: formData.currency || 'TRY',
+            })
+            if (formData.endDate) qs.append('return', formData.endDate)
+            const res = await fetch(`/api/flights?${qs}`)
+            const data = await res.json()
+            if (data.flights) setFlightsInfo(data.flights)
+        } catch { /* silent */ }
+        setFlightSearch(prev => ({ ...prev, searching: false }))
+    }
+
     const generatePlan = async (e) => {
         e.preventDefault()
         setError('')
@@ -117,7 +143,8 @@ export default function PlannerPage() {
             try {
                 const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}`)
                 weatherData = await weatherRes.json()
-            } catch { /* silent — weather is optional */ }
+                if (weatherData?.available) setWeatherInfo(weatherData)
+            } catch { /* silent */ }
 
             // Fetch events (Phase 3)
             let eventsData = []
@@ -127,8 +154,8 @@ export default function PlannerPage() {
                 if (formData.endDate) qs.append('end', formData.endDate)
                 const eventsRes = await fetch(`/api/events?${qs}`)
                 const eventsJson = await eventsRes.json()
-                if (eventsJson.events) eventsData = eventsJson.events
-            } catch { /* silent — events are optional */ }
+                if (eventsJson.events) { eventsData = eventsJson.events; setEventsInfo(eventsJson.events) }
+            } catch { /* silent */ }
 
             const res = await fetch('/api/ai/plan', {
                 method: 'POST',
@@ -535,6 +562,150 @@ export default function PlannerPage() {
                                 <h3>📋 {t('planner.overview')}</h3>
                                 <p>{itinerary.overview}</p>
                             </div>
+
+                            {/* ═══ WEATHER FORECAST ═══ */}
+                            {weatherInfo?.forecasts?.length > 0 && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        <CloudRain size={18} /> {t('weather.title')}
+                                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                            {weatherInfo.city}, {weatherInfo.country}
+                                        </span>
+                                    </div>
+                                    <div className="planner-section-body">
+                                        <div className="weather-grid">
+                                            {weatherInfo.forecasts.map((f, i) => {
+                                                const weatherIcons = { Clear: '☀️', Clouds: '☁️', Rain: '🌧️', Snow: '❄️', Thunderstorm: '⛈️', Drizzle: '🌦️', Mist: '🌫️', Fog: '🌫️' }
+                                                const icon = weatherIcons[f.weather] || '🌤️'
+                                                const rainPct = Math.round((f.pop || 0) * 100)
+                                                return (
+                                                    <div key={i} className={`weather-card ${rainPct > 50 ? 'weather-rainy' : rainPct > 20 ? 'weather-cloudy' : 'weather-sunny'}`}>
+                                                        <span className="weather-icon">{icon}</span>
+                                                        <span className="weather-date">{new Date(f.date).toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                                        <span className="weather-temp">{Math.round(f.tempMin)}° – {Math.round(f.tempMax)}°C</span>
+                                                        <span className="weather-desc">{f.description}</span>
+                                                        {rainPct > 0 && <span className="weather-rain">🌧 {rainPct}%</span>}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ═══ LOCAL EVENTS ═══ */}
+                            {eventsInfo.length > 0 && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        🎭 {t('events.title')}
+                                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                            {eventsInfo.length} {t('events.found')}
+                                        </span>
+                                    </div>
+                                    <div className="planner-section-body">
+                                        <div className="events-list">
+                                            {eventsInfo.slice(0, 8).map((event, i) => (
+                                                <div key={i} className="event-card">
+                                                    <div className="event-card-left">
+                                                        <div className="event-date-badge">
+                                                            <span className="event-date-day">{event.date ? new Date(event.date).getDate() : '?'}</span>
+                                                            <span className="event-date-month">{event.date ? new Date(event.date).toLocaleDateString(locale, { month: 'short' }) : ''}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="event-card-body">
+                                                        <h4>{event.title}</h4>
+                                                        <div className="event-meta">
+                                                            <span className="event-category">{event.category}</span>
+                                                            {event.venue && <span>📍 {event.venue}</span>}
+                                                            {event.time && <span>🕐 {event.time}</span>}
+                                                        </div>
+                                                        {event.description && <p className="event-desc">{event.description.substring(0, 120)}...</p>}
+                                                    </div>
+                                                    <div className="event-card-action">
+                                                        {event.url ? (
+                                                            <a href={event.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
+                                                                🎟️ {t('events.getTickets')}
+                                                            </a>
+                                                        ) : (
+                                                            <a href={`https://www.google.com/search?q=${encodeURIComponent(event.title + ' ' + (event.venue || '') + ' tickets')}`}
+                                                                target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">
+                                                                🔍 {t('events.search')}
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ═══ FLIGHT SEARCH ═══ */}
+                            <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                                <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                    <Plane size={18} /> {t('flights.title')}
+                                </div>
+                                <div className="planner-section-body">
+                                    <div className="flight-search-bar">
+                                        <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
+                                            <label>{t('flights.origin')}</label>
+                                            <input type="text" className="input" placeholder={t('flights.originPlaceholder')}
+                                                value={flightSearch.origin}
+                                                onChange={(e) => setFlightSearch(prev => ({ ...prev, origin: e.target.value }))}
+                                                maxLength={3} style={{ textTransform: 'uppercase' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                            <button className="btn btn-primary" onClick={searchFlights}
+                                                disabled={flightSearch.searching || !flightSearch.origin}>
+                                                {flightSearch.searching ? <Loader2 size={16} className="spin" /> : <Plane size={16} />}
+                                                {t('flights.search')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="input-hint">{t('flights.hint')}</p>
+
+                                    {/* Flight Results */}
+                                    {flightsInfo.length > 0 && (
+                                        <div className="flights-list">
+                                            {flightsInfo.map((flight, i) => (
+                                                <div key={i} className="flight-card">
+                                                    <div className="flight-card-route">
+                                                        {flight.segments?.map((seg, si) => (
+                                                            <div key={si} className="flight-segment">
+                                                                {seg.segments?.map((s, ssi) => (
+                                                                    <div key={ssi} className="flight-leg">
+                                                                        <span className="flight-code">{s.departure}</span>
+                                                                        <span className="flight-arrow">✈️→</span>
+                                                                        <span className="flight-code">{s.arrival}</span>
+                                                                        <span className="flight-time">{s.departureTime?.substring(11, 16)}</span>
+                                                                        <span className="flight-carrier">{s.flightNumber}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="flight-card-price">
+                                                        <span className="flight-price">{Number(flight.price).toLocaleString()} {flight.currency}</span>
+                                                        <span className="flight-class">{flight.bookingClass}</span>
+                                                        <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`${flightSearch.origin} to ${formData.cities[0] || formData.cityInput} ${formData.startDate}`)}`}
+                                                            target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 8 }}>
+                                                            ✈️ {t('flights.book')}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Quick booking link (always visible) */}
+                                    <div style={{ textAlign: 'center', marginTop: 16 }}>
+                                        <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`flights to ${formData.cities[0] || formData.cityInput} ${formData.startDate || ''}`)}`}
+                                            target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                                            🔍 {t('flights.googleFlights')}
+                                        </a>
+                                    </div>
+                                </div>
+                            </motion.div>
 
                             {/* Actions */}
                             <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>

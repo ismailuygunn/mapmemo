@@ -131,6 +131,24 @@ export const translations = {
     'planner.tripSaved': 'Trip saved! ✅',
     'planner.printAlbum': 'Print Album',
 
+    // ========== Weather ==========
+    'weather.title': '🌤️ Weather Forecast',
+
+    // ========== Events ==========
+    'events.title': 'Local Events & Activities',
+    'events.found': 'events found',
+    'events.getTickets': 'Get Tickets',
+    'events.search': 'Find Tickets',
+
+    // ========== Flights ==========
+    'flights.title': '✈️ Flight Search',
+    'flights.origin': 'Departure Airport (IATA)',
+    'flights.originPlaceholder': 'e.g. IST, SAW, ADB',
+    'flights.search': 'Search Flights',
+    'flights.hint': 'Enter 3-letter IATA code of your departure airport',
+    'flights.book': 'Book Flight',
+    'flights.googleFlights': 'Search on Google Flights',
+
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Relaxed — no rush, sleep in',
     'tempo.moderate': '🚶 Moderate — balanced sightseeing & rest',
@@ -437,6 +455,24 @@ export const translations = {
     'planner.createPlan': 'Plan Oluştur',
     'planner.tripSaved': 'Seyahat kaydedildi! ✅',
     'planner.printAlbum': 'Albüm Yazdır',
+
+    // ========== Weather ==========
+    'weather.title': '🌤️ Hava Durumu',
+
+    // ========== Events ==========
+    'events.title': 'Yerel Etkinlikler',
+    'events.found': 'etkinlik bulundu',
+    'events.getTickets': 'Bilet Al',
+    'events.search': 'Bilet Ara',
+
+    // ========== Flights ==========
+    'flights.title': '✈️ Uçuş Arama',
+    'flights.origin': 'Kalkış Havalimanı (IATA)',
+    'flights.originPlaceholder': 'örn. IST, SAW, ADB',
+    'flights.search': 'Uçuş Ara',
+    'flights.hint': 'Kalkış havalimanınızın 3 harfli IATA kodunu girin',
+    'flights.book': 'Uçuş Satın Al',
+    'flights.googleFlights': 'Google Flights\'ta Ara',
 
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Rahat — acele yok, geç uyan',
