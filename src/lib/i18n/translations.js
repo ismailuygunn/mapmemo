@@ -129,6 +129,7 @@ export const translations = {
     'planner.noTripsDesc': 'Generate your first AI travel plan!',
     'planner.createPlan': 'Create Plan',
     'planner.tripSaved': 'Trip saved! ✅',
+    'planner.printAlbum': 'Print Album',
 
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Relaxed — no rush, sleep in',
@@ -435,6 +436,7 @@ export const translations = {
     'planner.noTripsDesc': 'İlk AI seyahat planını oluştur!',
     'planner.createPlan': 'Plan Oluştur',
     'planner.tripSaved': 'Seyahat kaydedildi! ✅',
+    'planner.printAlbum': 'Albüm Yazdır',
 
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Rahat — acele yok, geç uyan',

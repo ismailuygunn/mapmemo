@@ -17,6 +17,7 @@ import {
     Shield, AlertTriangle, Shirt, RefreshCw, Utensils, Map as MapIcon, Bus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { openAlbumForPrint } from '@/lib/albumGenerator'
 
 export default function PlannerPage() {
     const [view, setView] = useState('form')
@@ -545,6 +546,9 @@ export default function PlannerPage() {
                                 </button>
                                 <button className="btn btn-ghost" onClick={() => { setView('form'); setItinerary(null) }}>
                                     <RefreshCw size={16} /> {t('planner.newPlan')}
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => openAlbumForPrint({ city: formData.cities.join(' → ') || formData.cityInput, start_date: formData.startDate, end_date: formData.endDate, itinerary_data: itinerary }, [], '')}>
+                                    📸 {t('planner.printAlbum')}
                                 </button>
                             </div>
 
