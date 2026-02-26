@@ -8,11 +8,15 @@ import { useSpace } from '@/context/SpaceContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
+import TripChat from '@/components/chat/TripChat'
+import ExpenseTracker from '@/components/expenses/ExpenseTracker'
+import DayPlanner from '@/components/itinerary/DayPlanner'
 import {
     ArrowLeft, MoreHorizontal, Calendar, Minus, Plus, FileText, MapPin,
     ChevronRight, X, Compass, Check, Search, Star, Bed, Clock, Loader2,
     Navigation, Plane, Car, Hotel, Phone, Globe, ChevronDown, ChevronUp,
-    MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves, Ticket
+    MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves, Ticket,
+    UtensilsCrossed, DollarSign, ListChecks
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -61,6 +65,9 @@ export default function TripPage() {
     const [airbnbLoading, setAirbnbLoading] = useState(false)
     const [events, setEvents] = useState([])
     const [eventsLoading, setEventsLoading] = useState(false)
+    const [restaurants, setRestaurants] = useState([])
+    const [restaurantsLoading, setRestaurantsLoading] = useState(false)
+    const [restCategory, setRestCategory] = useState('all')
     const [serviceTab, setServiceTab] = useState('hotels')
     const [flightOrigin, setFlightOrigin] = useState('IST')
 
@@ -113,6 +120,7 @@ export default function TripPage() {
         if (serviceTab === 'cars' && carAgencies.length === 0) fetchCars()
         if (serviceTab === 'airbnb' && airbnbListings.length === 0) fetchAirbnb()
         if (serviceTab === 'events' && events.length === 0) fetchEvents()
+        if (serviceTab === 'restaurants' && restaurants.length === 0) fetchRestaurants()
     }, [activeTab, serviceTab, trip?.city])
 
     const fetchHotels = async () => {
@@ -173,6 +181,17 @@ export default function TripPage() {
             if (data.events) setEvents(data.events)
         } catch { }
         setEventsLoading(false)
+    }
+
+    const fetchRestaurants = async (cat) => {
+        setRestaurantsLoading(true)
+        try {
+            const c = cat || restCategory
+            const res = await fetch(`/api/restaurants?city=${encodeURIComponent(trip.city)}&category=${c}`)
+            const data = await res.json()
+            if (data.restaurants) setRestaurants(data.restaurants)
+        } catch { }
+        setRestaurantsLoading(false)
     }
 
     // ── Place detail (in-app) ──
@@ -380,6 +399,7 @@ export default function TripPage() {
                                             { key: 'flights', icon: <Plane size={15} />, label: t('Uçuşlar', 'Flights') },
                                             { key: 'cars', icon: <Car size={15} />, label: t('Araç Kiralama', 'Car Rental') },
                                             { key: 'events', icon: <Ticket size={15} />, label: t('Etkinlikler', 'Events') },
+                                            { key: 'restaurants', icon: <UtensilsCrossed size={15} />, label: t('Restoranlar', 'Restaurants') },
                                         ].map(tab => (
                                             <button key={tab.key} className={`trip-service-tab ${serviceTab === tab.key ? 'active' : ''}`} onClick={() => setServiceTab(tab.key)}>{tab.icon} {tab.label}</button>
                                         ))}
@@ -567,6 +587,50 @@ export default function TripPage() {
                                             <p className="trip-events-attribution">{t('Etkinlik verileri etkinlik.io tarafından sağlanmaktadır.', 'Event data provided by etkinlik.io')}</p>
                                         </section>
                                     )}
+
+                                    {/* ── RESTAURANTS ── */}
+                                    {serviceTab === 'restaurants' && (
+                                        <section className="trip-section">
+                                            <h2 className="trip-section-title">{t(`${trip.city} Restoranları`, `Restaurants in ${trip.city}`)}</h2>
+                                            <div className="trip-rest-cats">
+                                                {[{ k: 'all', e: '🍽️', l: 'Tümü' }, { k: 'kebab', e: '🥩', l: 'Kebap' }, { k: 'fish', e: '🐟', l: 'Balık' }, { k: 'cafe', e: '☕', l: 'Kafe' }, { k: 'breakfast', e: '🥐', l: 'Kahvaltı' }, { k: 'fine_dining', e: '✨', l: 'Fine Dining' }, { k: 'street', e: '🌯', l: 'Sokak' }, { k: 'dessert', e: '🍰', l: 'Tatlı' }].map(c =>
+                                                    <button key={c.k} className={`trip-rest-cat ${restCategory === c.k ? 'active' : ''}`} onClick={() => { setRestCategory(c.k); setRestaurants([]); fetchRestaurants(c.k) }}>{c.e} {c.l}</button>
+                                                )}
+                                            </div>
+                                            {restaurantsLoading ? <LoadingPlaceholder text={t('Restoranlar aranıyor...', 'Searching restaurants...')} /> : restaurants.length === 0 ? <EmptyPlaceholder icon={<UtensilsCrossed size={36} />} text={t('Restoran bulunamadı', 'No restaurants found')} /> : (
+                                                <div className="trip-hotel-grid">
+                                                    {restaurants.map(r => (
+                                                        <div key={r.place_id} className="trip-hotel-card" onClick={() => openDetail(r)}>
+                                                            <div className="trip-hotel-image" style={{ backgroundImage: r.photo_url ? `url(${r.photo_url})` : 'none' }}>
+                                                                <div className="trip-hotel-badge">{r.category_emoji} {r.category_name}</div>
+                                                                <div className="trip-hotel-price">{r.price_text}</div>
+                                                            </div>
+                                                            <div className="trip-hotel-info">
+                                                                <h3 className="trip-hotel-name">{r.name}</h3>
+                                                                {r.rating > 0 && <RatingBar rating={r.rating} count={r.review_count} />}
+                                                                <p className="trip-hotel-address"><MapPin size={11} /> {r.address?.split(',').slice(0, 2).join(',')}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </section>
+                                    )}
+                                </motion.div>
+                            )}
+                            {activeTab === 'itinerary' && (
+                                <motion.div key="itinerary" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <DayPlanner tripId={id} spaceId={space?.id} startDate={trip?.start_date} endDate={trip?.end_date} locale={locale} spots={spots} />
+                                </motion.div>
+                            )}
+                            {activeTab === 'chat' && (
+                                <motion.div key="chat" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }} style={{ minHeight: '400px' }}>
+                                    <TripChat tripId={id} spaceId={space?.id} locale={locale} />
+                                </motion.div>
+                            )}
+                            {activeTab === 'expenses' && (
+                                <motion.div key="expenses" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <ExpenseTracker tripId={id} spaceId={space?.id} locale={locale} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -576,6 +640,9 @@ export default function TripPage() {
                     <div className="trip-floating-tabs">
                         <button className={`trip-tab ${activeTab === 'plan' ? 'active' : ''}`} onClick={() => setActiveTab('plan')}><MapPin size={15} /> {t('Plan', 'Plan')}</button>
                         <button className={`trip-tab ${activeTab === 'discover' ? 'active' : ''}`} onClick={() => setActiveTab('discover')}><Compass size={15} /> {t('Keşfet', 'Discover')}</button>
+                        <button className={`trip-tab ${activeTab === 'itinerary' ? 'active' : ''}`} onClick={() => setActiveTab('itinerary')}><ListChecks size={15} /> {t('Program', 'Schedule')}</button>
+                        <button className={`trip-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}><MessageCircle size={15} /> {t('Sohbet', 'Chat')}</button>
+                        <button className={`trip-tab ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}><DollarSign size={15} /> {t('Masraf', 'Expenses')}</button>
                     </div>
                 </div>
             </div>
