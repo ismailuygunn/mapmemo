@@ -143,7 +143,7 @@ export function SpaceProvider({ children }) {
             // Clean up: delete the space if member creation failed
             await supabase.from('spaces').delete().eq('id', spaceData.id)
             if (err.message === 'TIMEOUT') {
-                throw new Error('Veritabanı zaman aşımı. Supabase SQL Editor\'de fix_rls_v2.sql dosyasını çalıştırın.')
+                throw new Error('Veritabanı zaman aşımı. Supabase SQL Editor\'de fix_rls_v3.sql dosyasını çalıştırın.')
             }
             throw err
         }

@@ -336,7 +336,7 @@ export default function MapPage() {
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
                     <h2 style={{ marginBottom: 8 }}>Veritabanı Hatası</h2>
                     <p style={{ color: '#94A3B8', marginBottom: 24, fontSize: '0.875rem', lineHeight: 1.6 }}>
-                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor'de fix_rls_v2.sql dosyasını çalıştırın.
+                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor'de fix_rls_v3.sql dosyasını çalıştırın.
                     </p>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                         <button onClick={() => reloadSpace()} className="btn btn-primary">
