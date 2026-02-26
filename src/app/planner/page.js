@@ -17,6 +17,8 @@ import {
     Shield, AlertTriangle, Shirt, RefreshCw, Utensils, Map as MapIcon, Bus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
+import { Badge, InfoTooltip } from '@/components/ui'
 import { openAlbumForPrint } from '@/lib/albumGenerator'
 import TripGallery from '@/components/planner/TripGallery'
 import CoverGenerator from '@/components/planner/CoverGenerator'
@@ -257,7 +259,11 @@ export default function PlannerPage() {
             setView('result')
             setExpandedDay(0)
             autoSearchTransport(cities)
-        } catch (err) { setError(err.message) }
+            toast.success(locale === 'tr' ? '✈️ Planınız hazır!' : '✈️ Your plan is ready!')
+        } catch (err) {
+            setError(err.message)
+            toast.error(locale === 'tr' ? 'Plan oluşturulamadı' : 'Failed to generate plan', { description: err.message })
+        }
         setLoading(false)
         setLoadingProgress(0)
     }
@@ -281,7 +287,13 @@ export default function PlannerPage() {
             if (e) throw e
             setSavedTrips(prev => [trip, ...prev])
             setSavedTripId(trip.id)
-        } catch (err) { setError(err.message) }
+            toast.success(locale === 'tr' ? '💾 Plan kaydedildi!' : '💾 Plan saved!', {
+                description: locale === 'tr' ? 'Kayıtlı planlarınızdan erişebilirsiniz' : 'Access it from your saved plans'
+            })
+        } catch (err) {
+            setError(err.message)
+            toast.error(locale === 'tr' ? 'Kayıt başarısız' : 'Save failed', { description: err.message })
+        }
         setSaving(false)
     }
 
@@ -1059,9 +1071,9 @@ export default function PlannerPage() {
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                                                 <h4 style={{ margin: 0 }}>{item.title}</h4>
                                                                 {item.isHiddenGem && (
-                                                                    <span style={{ fontSize: '0.625rem', padding: '2px 6px', borderRadius: 99, background: 'rgba(168, 85, 247, 0.15)', color: '#A855F7', fontWeight: 600 }}>
-                                                                        💎 {locale === 'tr' ? 'Niş Öneri' : 'Hidden Gem'}
-                                                                    </span>
+                                                                    <Badge variant="gem" icon="💎">
+                                                                        {locale === 'tr' ? 'Niş Öneri' : 'Hidden Gem'}
+                                                                    </Badge>
                                                                 )}
                                                             </div>
                                                             {item.rating && (
