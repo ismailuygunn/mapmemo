@@ -399,6 +399,12 @@ Respond ONLY in this EXACT JSON format:
   ]
 }
 
+═══ MANDATORY: MULTI-DAY COMPLETENESS ═══
+This is a ${days}-DAY trip. You MUST generate content for ALL ${days} days.
+Each day MUST have 5-8 activities/items (breakfast, morning activity, lunch, afternoon activity, dinner, evening activity).
+Do NOT generate only 1-2 days. EVERY single day from Day 1 to Day ${days} must be fully detailed.
+If this is a 6-day trip, the "days" array must have EXACTLY 6 entries, each with 5-8 items.
+
 IMPORTANT for suggestions array:
 - Include 20-30 unique suggestions covering: top attractions, restaurants, cafes, hidden gems, activities, nightlife, street food spots
 - Each suggestion MUST have a unique, compelling aiSummary (3-4 sentences, written as a knowledgeable local friend)
@@ -459,7 +465,7 @@ async function callGemini(apiKey, prompt, locale) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 16384,
+            maxOutputTokens: 65536,
             responseMimeType: 'application/json',
           },
         }),

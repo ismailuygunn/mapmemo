@@ -165,10 +165,32 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             }
         }
 
+        // Fallback: Use Unsplash for high-quality city photos (free, no API key needed)
         if (!imageData) {
+            try {
+                // Unsplash Source provides free, high-quality photos
+                const unsplashUrl = `https://source.unsplash.com/800x1200/?${encodeURIComponent(city + ' landmark cityscape travel')}`
+                const unsplashRes = await fetch(unsplashUrl, { redirect: 'follow' })
+
+                if (unsplashRes.ok) {
+                    // Return the final redirected URL directly
+                    return NextResponse.json({
+                        imageUrl: unsplashRes.url,
+                        city,
+                        style: style || 'photo',
+                        model: 'unsplash',
+                        isUnsplash: true,
+                    })
+                }
+            } catch (err) {
+                console.error('Unsplash fallback error:', err.message)
+            }
+
+            // Final fallback: return a placeholder gradient
             return NextResponse.json({
-                error: 'Image generation not available. Your Gemini API key may not have image generation access. Try enabling the Generative Language API in Google Cloud Console.',
-            }, { status: 500 })
+                error: 'Image generation not available',
+                fallbackGradient: true,
+            }, { status: 200 }) // 200 so UI doesn't show error
         }
 
         const imageUrl = `data:${mimeType};base64,${imageData}`
