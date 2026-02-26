@@ -65,19 +65,32 @@ export function SpaceProvider({ children }) {
         const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
             .map(b => b.toString(16).padStart(2, '0')).join('')
 
+        // Step 1: Create the space
         const { data: spaceData, error: spaceError } = await supabase
             .from('spaces')
             .insert({ name, created_by: user.id, invite_token: inviteToken })
             .select()
             .single()
 
-        if (spaceError) throw spaceError
+        if (spaceError) throw new Error(`Space oluşturulamadı: ${spaceError.message}`)
 
-        const { error: memberError } = await supabase
-            .from('space_members')
-            .insert({ space_id: spaceData.id, user_id: user.id, role: 'owner' })
+        // Step 2: Add creator as owner (with timeout to catch RLS recursion)
+        try {
+            const memberPromise = supabase
+                .from('space_members')
+                .insert({ space_id: spaceData.id, user_id: user.id, role: 'owner' })
 
-        if (memberError) throw memberError
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Veritabanı zaman aşımı. Supabase SQL Editor\'de fix_rls_v2.sql dosyasını çalıştırın.')), 10000)
+            )
+
+            const { error: memberError } = await Promise.race([memberPromise, timeoutPromise])
+            if (memberError) throw new Error(`Üyelik oluşturulamadı: ${memberError.message}`)
+        } catch (err) {
+            // Clean up: delete the space if member creation failed
+            await supabase.from('spaces').delete().eq('id', spaceData.id)
+            throw err
+        }
 
         setSpace(spaceData)
         setUserRole('owner')
