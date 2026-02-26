@@ -78,7 +78,7 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             }
         }
 
-        const model = 'gemini-2.0-flash-exp-image-generation'
+        const model = 'gemini-2.0-flash-preview-image-generation'
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
         const response = await fetch(endpoint, {
@@ -95,8 +95,37 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
 
         if (!response.ok) {
             const errText = await response.text()
-            console.error('Gemini image gen error:', errText)
-            return NextResponse.json({ error: 'Image generation failed. Check Gemini API key.' }, { status: 500 })
+            console.error('Gemini image gen error:', response.status, errText)
+            // Try fallback model
+            const fallbackModel = 'gemini-2.0-flash-exp-image-generation'
+            const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`
+            const fallbackResponse = await fetch(fallbackEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts }],
+                    generationConfig: {
+                        responseModalities: ['TEXT', 'IMAGE'],
+                        temperature: 1.0,
+                    },
+                }),
+            })
+            if (!fallbackResponse.ok) {
+                const fbErr = await fallbackResponse.text()
+                console.error('Gemini fallback error:', fbErr)
+                return NextResponse.json({ error: `Image generation failed (${response.status}). Gemini API might not support image generation for this key. Error: ${errText.substring(0, 200)}` }, { status: 500 })
+            }
+            // Use fallback response
+            const fbData = await fallbackResponse.json()
+            let fbImage = null, fbMime = 'image/png'
+            for (const c of (fbData.candidates || [])) {
+                for (const p of (c.content?.parts || [])) {
+                    if (p.inlineData) { fbImage = p.inlineData.data; fbMime = p.inlineData.mimeType || 'image/png'; break }
+                }
+                if (fbImage) break
+            }
+            if (fbImage) return NextResponse.json({ imageUrl: `data:${fbMime};base64,${fbImage}`, city, style: style || 'romantic', model: fallbackModel })
+            return NextResponse.json({ error: 'No image generated from fallback model.' }, { status: 500 })
         }
 
         const data = await response.json()

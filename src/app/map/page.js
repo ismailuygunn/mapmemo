@@ -84,10 +84,11 @@ export default function MapPage() {
         }
 
         const script = document.createElement('script')
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&v=weekly`
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`
         script.async = true
         script.defer = true
         script.onload = initMap
+        script.onerror = () => console.error('Google Maps script failed to load')
         document.head.appendChild(script)
 
         return () => {
@@ -203,45 +204,32 @@ export default function MapPage() {
         filteredPins.forEach(pin => {
             const pinType = PIN_TYPES[pin.type] || PIN_TYPES.memory
 
-            // Create custom marker element
-            const markerDiv = document.createElement('div')
-            markerDiv.className = 'pin-marker'
-            markerDiv.style.background = pinType.color
-            markerDiv.innerHTML = `<span class="pin-marker-inner">${pinType.emoji}</span>`
-
-            // Use AdvancedMarkerElement if available, fallback to regular Marker
-            let marker
-            if (window.google.maps.marker?.AdvancedMarkerElement) {
-                marker = new window.google.maps.marker.AdvancedMarkerElement({
-                    map: mapRef.current,
-                    position: { lat: pin.lat, lng: pin.lng },
-                    content: markerDiv,
-                })
-                marker.addListener('click', () => {
-                    setSelectedPin(pin)
-                })
-            } else {
-                // Fallback: use standard marker with custom icon
-                marker = new window.google.maps.Marker({
-                    map: mapRef.current,
-                    position: { lat: pin.lat, lng: pin.lng },
-                    label: {
-                        text: pinType.emoji,
-                        fontSize: '18px',
-                    },
-                    icon: {
-                        path: window.google.maps.SymbolPath.CIRCLE,
-                        scale: 18,
-                        fillColor: pinType.color,
-                        fillOpacity: 0.9,
-                        strokeColor: '#fff',
-                        strokeWeight: 2,
-                    },
-                })
-                marker.addListener('click', () => {
-                    setSelectedPin(pin)
-                })
+            // Create SVG icon for marker
+            const svgIcon = {
+                url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+                        <defs><filter id="s" x="-20%" y="-10%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/></filter></defs>
+                        <path d="M18 0C8 0 0 8 0 18c0 13 18 26 18 26s18-13 18-26C36 8 28 0 18 0z" fill="${pinType.color}" filter="url(#s)"/>
+                        <circle cx="18" cy="16" r="11" fill="rgba(255,255,255,0.2)"/>
+                        <text x="18" y="21" text-anchor="middle" font-size="14">${pinType.emoji}</text>
+                    </svg>
+                `)}`,
+                scaledSize: new window.google.maps.Size(36, 44),
+                anchor: new window.google.maps.Point(18, 44),
             }
+
+            const marker = new window.google.maps.Marker({
+                map: mapRef.current,
+                position: { lat: pin.lat, lng: pin.lng },
+                icon: svgIcon,
+                title: pin.title || '',
+                animation: window.google.maps.Animation.DROP,
+                optimized: true,
+            })
+
+            marker.addListener('click', () => {
+                setSelectedPin(pin)
+            })
 
             markersRef.current.push(marker)
         })

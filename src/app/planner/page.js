@@ -61,6 +61,8 @@ export default function PlannerPage() {
     const [showRainPlan, setShowRainPlan] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [advancedTab, setAdvancedTab] = useState('transport')
+    const [citySuggestions, setCitySuggestions] = useState([])
+    const [departureSuggestions, setDepartureSuggestions] = useState([])
     // Phase 3+4+6 visible data
     const [weatherInfo, setWeatherInfo] = useState(null)
     const [eventsInfo, setEventsInfo] = useState([])
@@ -111,12 +113,35 @@ export default function PlannerPage() {
         }))
     }
 
-    // Multi-city management
+    // Multi-city management with Google Places
+    const fetchCitySuggestions = async (query, setter) => {
+        if (query.length < 2) { setter([]); return }
+        try {
+            const res = await fetch(`/api/places?action=autocomplete&query=${encodeURIComponent(query)}&lang=${locale || 'tr'}`)
+            if (res.ok) {
+                const data = await res.json()
+                setter(data.suggestions || [])
+            } else {
+                setter([])
+            }
+        } catch { setter([]) }
+    }
+
     const addCity = () => {
         if (formData.cityInput.trim()) {
             update('cities', [...formData.cities, formData.cityInput.trim()])
             update('cityInput', '')
+            setCitySuggestions([])
         }
+    }
+    const selectCitySuggestion = (name) => {
+        update('cities', [...formData.cities, name])
+        update('cityInput', '')
+        setCitySuggestions([])
+    }
+    const selectDepartureSuggestion = (name) => {
+        update('departureCity', name)
+        setDepartureSuggestions([])
     }
     const removeCity = (index) => {
         update('cities', formData.cities.filter((_, i) => i !== index))
@@ -459,13 +484,44 @@ export default function PlannerPage() {
                                                 </div>
                                             )}
                                             <div style={{ display: 'flex', gap: 8 }}>
-                                                <input
-                                                    type="text" className="input"
-                                                    placeholder={t('planner.cityPlaceholder')}
-                                                    value={formData.cityInput}
-                                                    onChange={(e) => update('cityInput', e.target.value)}
-                                                    onKeyDown={handleCityKeyDown}
-                                                />
+                                                <div style={{ flex: 1, position: 'relative' }}>
+                                                    <input
+                                                        type="text" className="input"
+                                                        placeholder={t('planner.cityPlaceholder')}
+                                                        value={formData.cityInput}
+                                                        onChange={(e) => { update('cityInput', e.target.value); fetchCitySuggestions(e.target.value, setCitySuggestions) }}
+                                                        onKeyDown={handleCityKeyDown}
+                                                        autoComplete="off"
+                                                    />
+                                                    {/* Google Places Suggestions */}
+                                                    {citySuggestions.length > 0 && (
+                                                        <div style={{
+                                                            position: 'absolute', top: '100%', left: 0, right: 0,
+                                                            marginTop: 4, background: 'var(--bg-secondary)',
+                                                            border: '1px solid var(--border-primary)',
+                                                            borderRadius: 'var(--radius-md)',
+                                                            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                                                            zIndex: 50, maxHeight: 200, overflow: 'auto',
+                                                        }}>
+                                                            {citySuggestions.map((s, i) => (
+                                                                <button key={i} type="button" onClick={() => selectCitySuggestion(s.name || s.description || s)}
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', gap: 8,
+                                                                        width: '100%', padding: '10px 12px', border: 'none',
+                                                                        background: 'transparent', cursor: 'pointer',
+                                                                        color: 'var(--text-primary)', fontSize: '0.875rem',
+                                                                        textAlign: 'left', transition: 'background 150ms',
+                                                                    }}
+                                                                    onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                                                                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                                                >
+                                                                    <MapPin size={14} style={{ color: 'var(--primary-1)', flexShrink: 0 }} />
+                                                                    <span>{s.name || s.description || s}</span>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <button type="button" className="btn btn-secondary" onClick={addCity} style={{ flexShrink: 0 }}>
                                                     <Plus size={16} /> {t('planner.addCity')}
                                                 </button>

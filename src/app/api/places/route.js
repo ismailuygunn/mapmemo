@@ -93,6 +93,29 @@ export async function GET(request) {
             })
         }
 
+        // Autocomplete mode — city suggestions
+        const action = searchParams.get('action')
+        if (action === 'autocomplete') {
+            const q = searchParams.get('query') || ''
+            const lang = searchParams.get('lang') || 'tr'
+            if (q.length < 2) return NextResponse.json({ suggestions: [] })
+
+            const params = new URLSearchParams({
+                input: q,
+                types: '(cities)',
+                key: apiKey,
+                language: lang,
+            })
+            const res = await fetch(`${GOOGLE_PLACES_BASE}/autocomplete/json?${params}`)
+            const data = await res.json()
+            const suggestions = (data.predictions || []).map(p => ({
+                name: p.structured_formatting?.main_text || p.description,
+                fullName: p.description,
+                placeId: p.place_id,
+            }))
+            return NextResponse.json({ suggestions })
+        }
+
         // Place Details mode
         if (placeId) {
             const details = await getPlaceDetails(placeId, apiKey)
