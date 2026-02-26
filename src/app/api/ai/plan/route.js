@@ -27,6 +27,9 @@ export async function POST(request) {
       guideLanguage,       // 'tr' | 'en' | 'other'
       dateNightMode,       // boolean
       locale,              // 'tr' | 'en' — response language
+      // Phase 3 — Weather + Events
+      weatherData,         // object | null — pre-fetched weather
+      eventsData,          // array  | null — pre-fetched events
     } = body
 
     // Support both single city and multi-city
@@ -126,6 +129,22 @@ Cities in order: ${cityList.join(' → ')}
       ? '\nIMPORTANT: Respond entirely in TURKISH. All descriptions, tips, names should be in Turkish.'
       : '\nIMPORTANT: Respond entirely in ENGLISH.'
 
+    // ── Weather Context (Phase 3) ──
+    let weatherContext = ''
+    if (weatherData?.available && weatherData.forecasts?.length > 0) {
+      weatherContext = `\nWEATHER FORECAST (real data):
+${weatherData.forecasts.map(f => `- ${f.date}: ${f.weather} (${Math.round(f.tempMin)}°C – ${Math.round(f.tempMax)}°C), Rain: ${Math.round((f.pop || 0) * 100)}%`).join('\n')}
+Use this to schedule outdoor activities on clear days and indoor on rainy days.`
+    }
+
+    // ── Events Context (Phase 3) ──
+    let eventsContext = ''
+    if (eventsData?.length > 0) {
+      eventsContext = `\nLOCAL EVENTS DURING TRIP:
+${eventsData.slice(0, 10).map(e => `- ${e.date || 'TBD'}: ${e.title} (${e.category})${e.venue ? ` at ${e.venue}` : ''}`).join('\n')}
+Incorporate relevant events as optional activities.`
+    }
+
     // ── Build Mega-Prompt ──
     const prompt = `You are an expert travel planner for couples. Create a detailed ${days}-day itinerary for: ${destinationText}.
 
@@ -133,7 +152,7 @@ Dates: ${startDate || 'flexible'} to ${endDate || 'flexible'}
 Pace/Tempo: ${tempo || 'moderate'}
 Budget level: ${budget || 'moderate'}
 Interests: ${interests?.join(', ') || 'general sightseeing'}
-${pinsContext}${transportText}${priorityText}${budgetText}${mealText}${tourText}${dateNightText}${multiCityText}${langText}
+${pinsContext}${transportText}${priorityText}${budgetText}${mealText}${tourText}${dateNightText}${multiCityText}${weatherContext}${eventsContext}${langText}
 
 TIME BUFFER RULES (mandatory):
 - Before flights: 2.5 hours buffer for airport

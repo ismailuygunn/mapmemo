@@ -111,6 +111,24 @@ export default function PlannerPage() {
                 )
             }
 
+            // Fetch weather forecast (Phase 3)
+            let weatherData = null
+            try {
+                const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}`)
+                weatherData = await weatherRes.json()
+            } catch { /* silent — weather is optional */ }
+
+            // Fetch events (Phase 3)
+            let eventsData = []
+            try {
+                const qs = new URLSearchParams({ city: cities[0] })
+                if (formData.startDate) qs.append('start', formData.startDate)
+                if (formData.endDate) qs.append('end', formData.endDate)
+                const eventsRes = await fetch(`/api/events?${qs}`)
+                const eventsJson = await eventsRes.json()
+                if (eventsJson.events) eventsData = eventsJson.events
+            } catch { /* silent — events are optional */ }
+
             const res = await fetch('/api/ai/plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -135,6 +153,8 @@ export default function PlannerPage() {
                     accessibility: formData.accessibility,
                     guideLanguage: formData.guideLanguage,
                     dateNightMode: formData.dateNightMode,
+                    weatherData,
+                    eventsData,
                     locale,
                 }),
             })
