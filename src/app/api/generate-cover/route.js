@@ -129,6 +129,41 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             }
         }
 
+        // Fallback: Try Imagen 3 API if Gemini image generation isn't available
+        if (!imageData) {
+            try {
+                const imagenEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`
+                const imagenPrompt = `A stunning, high-quality travel photograph of ${city}. ${styleDesc} Professional travel magazine cover quality, photorealistic, no text or watermarks.`
+
+                const imagenRes = await fetch(imagenEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instances: [{ prompt: imagenPrompt }],
+                        parameters: {
+                            sampleCount: 1,
+                            aspectRatio: '9:16',
+                            safetyFilterLevel: 'block_few',
+                        },
+                    }),
+                })
+
+                if (imagenRes.ok) {
+                    const imagenData = await imagenRes.json()
+                    const prediction = imagenData.predictions?.[0]
+                    if (prediction?.bytesBase64Encoded) {
+                        imageData = prediction.bytesBase64Encoded
+                        mimeType = prediction.mimeType || 'image/png'
+                        usedModel = 'imagen-3.0-generate-002'
+                    }
+                } else {
+                    console.error('Imagen 3 error:', imagenRes.status, (await imagenRes.text()).substring(0, 200))
+                }
+            } catch (err) {
+                console.error('Imagen 3 exception:', err.message)
+            }
+        }
+
         if (!imageData) {
             return NextResponse.json({
                 error: 'Image generation not available. Your Gemini API key may not have image generation access. Try enabling the Generative Language API in Google Cloud Console.',

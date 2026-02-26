@@ -71,6 +71,7 @@ export default function PlannerPage() {
     const [transportLoading, setTransportLoading] = useState(false)
     const [suggFilter, setSuggFilter] = useState('all')
     const [expandedSugg, setExpandedSugg] = useState(null)
+    const [addedSuggs, setAddedSuggs] = useState({})
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -294,6 +295,37 @@ export default function PlannerPage() {
         }
         setLoading(false)
         setLoadingProgress(0)
+    }
+
+    // Add a suggestion to a specific day
+    const addSuggestionToDay = (sugg, dayIndex) => {
+        if (!itinerary?.days?.[dayIndex]) return
+        const newItinerary = { ...itinerary, days: [...itinerary.days] }
+        const day = { ...newItinerary.days[dayIndex] }
+        const items = [...(day.items || [])]
+
+        // Convert suggestion to itinerary item
+        const newItem = {
+            timeStart: sugg.bestTimeToVisit === 'morning' ? '10:00' : sugg.bestTimeToVisit === 'afternoon' ? '14:00' : sugg.bestTimeToVisit === 'evening' ? '19:00' : '12:00',
+            timeEnd: '',
+            title: sugg.name,
+            description: sugg.aiSummary || '',
+            type: sugg.type || 'sightseeing',
+            cost: sugg.estimatedCost || '',
+            rating: sugg.rating,
+            googleMapsUrl: sugg.googleMapsUrl || '',
+            isHiddenGem: sugg.isHiddenGem || false,
+            fromSuggestion: true,
+        }
+
+        items.push(newItem)
+        // Sort by time
+        items.sort((a, b) => (a.timeStart || '').localeCompare(b.timeStart || ''))
+        day.items = items
+        newItinerary.days[dayIndex] = day
+        setItinerary(newItinerary)
+        setAddedSuggs(prev => ({ ...prev, [sugg.id || sugg.name]: dayIndex + 1 }))
+        toast.success(locale === 'tr' ? `✅ ${sugg.name} — Gün ${dayIndex + 1}'e eklendi` : `✅ ${sugg.name} added to Day ${dayIndex + 1}`)
     }
 
     const saveTrip = async () => {
@@ -953,6 +985,19 @@ export default function PlannerPage() {
                                                                     <a href={sugg.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn" onClick={e => e.stopPropagation()}>
                                                                         📍 Google Maps
                                                                     </a>
+                                                                )}
+                                                                {addedSuggs[sugg.id || sugg.name] ? (
+                                                                    <span className="ai-sugg-added" onClick={e => e.stopPropagation()}>✅ {locale === 'tr' ? `Gün ${addedSuggs[sugg.id || sugg.name]}` : `Day ${addedSuggs[sugg.id || sugg.name]}`}</span>
+                                                                ) : (
+                                                                    <div className="ai-sugg-day-picker" onClick={e => e.stopPropagation()}>
+                                                                        {itinerary.days?.map((day, di) => (
+                                                                            <button key={di}
+                                                                                className="ai-sugg-add-btn"
+                                                                                onClick={() => addSuggestionToDay(sugg, di)}>
+                                                                                ➕ {locale === 'tr' ? `Gün ${di + 1}` : `Day ${di + 1}`}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         </motion.div>

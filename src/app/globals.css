@@ -8781,6 +8781,38 @@ select.input {
   background: rgba(59, 130, 246, 0.2);
 }
 
+.ai-sugg-day-picker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.ai-sugg-add-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.08);
+  color: #10B981;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.ai-sugg-add-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10B981;
+}
+
+.ai-sugg-added {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #10B981;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.08);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    V3 — TOOL TABS (Shared styles for Packing, Phrases, Emergency, etc.)
    ═══════════════════════════════════════════════════════════════ */
