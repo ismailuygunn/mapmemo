@@ -12,7 +12,7 @@ import {
     ArrowLeft, MoreHorizontal, Calendar, Minus, Plus, FileText, MapPin,
     ChevronRight, X, Compass, Check, Search, Star, Bed, Clock, Loader2,
     Navigation, Plane, Car, Hotel, Phone, Globe, ChevronDown, ChevronUp,
-    MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves
+    MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves, Ticket
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -59,6 +59,8 @@ export default function TripPage() {
     const [carsLoading, setCarsLoading] = useState(false)
     const [airbnbListings, setAirbnbListings] = useState([])
     const [airbnbLoading, setAirbnbLoading] = useState(false)
+    const [events, setEvents] = useState([])
+    const [eventsLoading, setEventsLoading] = useState(false)
     const [serviceTab, setServiceTab] = useState('hotels')
     const [flightOrigin, setFlightOrigin] = useState('IST')
 
@@ -110,6 +112,7 @@ export default function TripPage() {
         if (serviceTab === 'flights' && flights.length === 0) fetchFlights()
         if (serviceTab === 'cars' && carAgencies.length === 0) fetchCars()
         if (serviceTab === 'airbnb' && airbnbListings.length === 0) fetchAirbnb()
+        if (serviceTab === 'events' && events.length === 0) fetchEvents()
     }, [activeTab, serviceTab, trip?.city])
 
     const fetchHotels = async () => {
@@ -160,6 +163,16 @@ export default function TripPage() {
             if (data.listings) setAirbnbListings(data.listings)
         } catch { }
         setAirbnbLoading(false)
+    }
+
+    const fetchEvents = async () => {
+        setEventsLoading(true)
+        try {
+            const res = await fetch(`/api/events?city=${encodeURIComponent(trip.city)}`)
+            const data = await res.json()
+            if (data.events) setEvents(data.events)
+        } catch { }
+        setEventsLoading(false)
     }
 
     // ── Place detail (in-app) ──
@@ -366,6 +379,7 @@ export default function TripPage() {
                                             { key: 'airbnb', icon: <Home size={15} />, label: 'Airbnb' },
                                             { key: 'flights', icon: <Plane size={15} />, label: t('Uçuşlar', 'Flights') },
                                             { key: 'cars', icon: <Car size={15} />, label: t('Araç Kiralama', 'Car Rental') },
+                                            { key: 'events', icon: <Ticket size={15} />, label: t('Etkinlikler', 'Events') },
                                         ].map(tab => (
                                             <button key={tab.key} className={`trip-service-tab ${serviceTab === tab.key ? 'active' : ''}`} onClick={() => setServiceTab(tab.key)}>{tab.icon} {tab.label}</button>
                                         ))}
@@ -513,6 +527,44 @@ export default function TripPage() {
                                                     ))}
                                                 </div>
                                             )}
+                                        </section>
+                                    )}
+
+                                    {/* ── EVENTS (etkinlik.io) ── */}
+                                    {serviceTab === 'events' && (
+                                        <section className="trip-section">
+                                            <h2 className="trip-section-title">{t(`${trip.city} Etkinlikleri`, `Events in ${trip.city}`)}</h2>
+                                            {eventsLoading ? <LoadingPlaceholder text={t('Etkinlikler aranıyor...', 'Searching events...')} /> : events.length === 0 ? <EmptyPlaceholder icon={<Ticket size={36} />} text={t('Etkinlik bulunamadı', 'No events found')} /> : (
+                                                <div className="trip-events-grid">
+                                                    {events.map(event => (
+                                                        <div key={event.id} className="trip-event-card" onClick={() => event.url && window.open(event.url, '_blank')}>
+                                                            <div className="trip-event-poster" style={{ backgroundImage: event.poster_url ? `url(${event.poster_url})` : 'none' }}>
+                                                                {!event.poster_url && <Ticket size={24} style={{ color: '#94A3B8' }} />}
+                                                                {event.is_free && <span className="trip-event-free">{t('Ücretsiz', 'Free')}</span>}
+                                                                <span className="trip-event-format">{event.emoji} {event.format || event.category}</span>
+                                                            </div>
+                                                            <div className="trip-event-info">
+                                                                <h3 className="trip-event-name">{event.name}</h3>
+                                                                {event.start && (
+                                                                    <span className="trip-event-date">
+                                                                        <Calendar size={11} />
+                                                                        {new Date(event.start).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                                    </span>
+                                                                )}
+                                                                {event.venue_name && (
+                                                                    <span className="trip-event-venue"><MapPin size={11} /> {event.venue_name}</span>
+                                                                )}
+                                                                {event.ticket_url && (
+                                                                    <a href={event.ticket_url} target="_blank" rel="noopener noreferrer" className="trip-event-ticket-btn" onClick={e => e.stopPropagation()}>
+                                                                        <Ticket size={12} /> {t('Bilet Al', 'Get Tickets')}
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            <p className="trip-events-attribution">{t('Etkinlik verileri etkinlik.io tarafından sağlanmaktadır.', 'Event data provided by etkinlik.io')}</p>
                                         </section>
                                     )}
                                 </motion.div>

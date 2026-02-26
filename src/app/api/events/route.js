@@ -1,194 +1,175 @@
-// Events API — Real events: concerts, theater, standup, workshops, exhibitions
-// Uses Ticketmaster (primary) + Google Places + custom categories
+// Events API — etkinlik.io integration
+// Türkiye'deki tüm etkinlikler: konser, tiyatro, stand-up, sergi, festival
+// API: https://etkinlik.io — Free with attribution
 import { NextResponse } from 'next/server'
 
-const TICKETMASTER_BASE = 'https://app.ticketmaster.com/discovery/v2'
+const BASE_URL = 'https://etkinlik.io/api/v2'
 
-// Event categories with emojis and search terms
-const EVENT_CATEGORIES = {
-    concert: { emoji: '🎵', name: 'Konser', tm_id: 'KZFzniwnSyZfZ7v7nJ', keywords: ['concert', 'live music', 'konser'] },
-    theater: { emoji: '🎭', name: 'Tiyatro', tm_id: 'KZFzniwnSyZfZ7v7na', keywords: ['theater', 'tiyatro', 'play'] },
-    standup: { emoji: '😂', name: 'Stand-up', tm_id: 'KZFzniwnSyZfZ7v7na', keywords: ['comedy', 'standup', 'stand-up'] },
-    workshop: { emoji: '🎨', name: 'Atölye', tm_id: '', keywords: ['workshop', 'atölye', 'class'] },
-    exhibition: { emoji: '🖼️', name: 'Sergi', tm_id: 'KZFzniwnSyZfZ7v7nn', keywords: ['exhibition', 'sergi', 'gallery', 'müze'] },
-    festival: { emoji: '🎪', name: 'Festival', tm_id: 'KZFzniwnSyZfZ7v7n1', keywords: ['festival'] },
-    sports: { emoji: '⚽', name: 'Spor', tm_id: 'KZFzniwnSyZfZ7v7nE', keywords: ['sports', 'match', 'game', 'maç'] },
-    nightlife: { emoji: '🌙', name: 'Gece Hayatı', tm_id: '', keywords: ['nightlife', 'club', 'dj', 'party'] },
+// City slug mapping for etkinlik.io
+const CITY_SLUGS = {
+    'istanbul': 'istanbul', 'İstanbul': 'istanbul',
+    'ankara': 'ankara', 'Ankara': 'ankara',
+    'izmir': 'izmir', 'İzmir': 'izmir',
+    'antalya': 'antalya', 'Antalya': 'antalya',
+    'bursa': 'bursa', 'Bursa': 'bursa',
+    'adana': 'adana', 'Adana': 'adana',
+    'eskişehir': 'eskisehir', 'Eskişehir': 'eskisehir',
+    'trabzon': 'trabzon', 'Trabzon': 'trabzon',
+    'mersin': 'mersin', 'Mersin': 'mersin',
+    'gaziantep': 'gaziantep', 'Gaziantep': 'gaziantep',
+    'kayseri': 'kayseri', 'Kayseri': 'kayseri',
+    'konya': 'konya', 'Konya': 'konya',
+    'samsun': 'samsun', 'Samsun': 'samsun',
+    'diyarbakır': 'diyarbakir', 'Diyarbakır': 'diyarbakir',
+    'muğla': 'mugla', 'Muğla': 'mugla',
+    'bodrum': 'mugla',
 }
 
-// Fetch from Ticketmaster
-async function fetchTicketmaster(city, startDate, endDate, category, apiKey) {
-    if (!apiKey) return []
-
-    const params = new URLSearchParams({
-        apikey: apiKey,
-        city: city,
-        startDateTime: `${startDate}T00:00:00Z`,
-        endDateTime: `${endDate}T23:59:59Z`,
-        size: '20',
-        sort: 'date,asc',
-        locale: '*',
-    })
-
-    const catConfig = EVENT_CATEGORIES[category]
-    if (catConfig?.tm_id) {
-        params.append('classificationId', catConfig.tm_id)
-    }
-    if (catConfig?.keywords?.[0]) {
-        params.append('keyword', catConfig.keywords[0])
-    }
-
-    try {
-        const res = await fetch(`${TICKETMASTER_BASE}/events.json?${params}`)
-        if (!res.ok) return []
-        const data = await res.json()
-
-        return (data._embedded?.events || []).map(event => ({
-            id: event.id,
-            name: event.name,
-            category: category,
-            categoryEmoji: catConfig?.emoji || '🎫',
-            categoryName: catConfig?.name || category,
-            date: event.dates?.start?.localDate || '',
-            time: event.dates?.start?.localTime || '',
-            venue: event._embedded?.venues?.[0]?.name || '',
-            address: event._embedded?.venues?.[0]?.address?.line1 || '',
-            city: event._embedded?.venues?.[0]?.city?.name || city,
-            imageUrl: event.images?.[0]?.url || '',
-            url: event.url || '',
-            priceRange: event.priceRanges ? {
-                min: event.priceRanges[0]?.min,
-                max: event.priceRanges[0]?.max,
-                currency: event.priceRanges[0]?.currency || 'TRY',
-            } : null,
-            source: 'ticketmaster',
-        }))
-    } catch (err) {
-        console.error('Ticketmaster error:', err.message)
-        return []
-    }
+// Format emoji mapping
+const FORMAT_EMOJIS = {
+    'Konser': '🎵', 'Müzik': '🎵',
+    'Tiyatro': '🎭', 'Sahne Sanatları': '🎭',
+    'Stand Up': '😂', 'Gösteri': '😂',
+    'Sergi': '🖼️', 'Sanat': '🖼️',
+    'Festival': '🎪',
+    'Spor': '⚽',
+    'Söyleşi': '💬',
+    'Sinema': '🎬',
+    'Çocuk': '👶',
+    'Eğitim': '📚', 'Workshop': '🎨', 'Atölye': '🎨',
+    'Gece Hayatı': '🌙', 'Party': '🎉',
 }
 
-// Fetch events via Google Places text search (workshops, exhibitions, local events)
-async function fetchGoogleEvents(city, category, googleKey) {
-    if (!googleKey) return []
-
-    const catConfig = EVENT_CATEGORIES[category]
-    const keywords = catConfig?.keywords || [category]
-    const query = `${keywords[0]} ${city} events`
-
-    try {
-        const params = new URLSearchParams({
-            query,
-            key: googleKey,
-            language: 'tr',
-        })
-        const res = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`)
-        if (!res.ok) return []
-        const data = await res.json()
-
-        return (data.results || []).slice(0, 10).map((place, i) => ({
-            id: `google-${place.place_id}`,
-            name: place.name,
-            category: category,
-            categoryEmoji: catConfig?.emoji || '🎫',
-            categoryName: catConfig?.name || category,
-            date: '',
-            time: '',
-            venue: place.name,
-            address: place.formatted_address || '',
-            city: city,
-            rating: place.rating || 0,
-            reviewCount: place.user_ratings_total || 0,
-            imageUrl: place.photos?.[0]
-                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${googleKey}`
-                : '',
-            url: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
-            source: 'google',
-        }))
-    } catch (err) {
-        console.error('Google events error:', err.message)
-        return []
+function getEmoji(formatName) {
+    if (!formatName) return '🎫'
+    for (const [key, emoji] of Object.entries(FORMAT_EMOJIS)) {
+        if (formatName.toLowerCase().includes(key.toLowerCase())) return emoji
     }
+    return '🎫'
+}
+
+function getCitySlug(city) {
+    if (!city) return null
+    // Direct lookup
+    if (CITY_SLUGS[city]) return CITY_SLUGS[city]
+    // Case-insensitive
+    const lower = city.toLowerCase().trim()
+    for (const [key, val] of Object.entries(CITY_SLUGS)) {
+        if (key.toLowerCase() === lower) return val
+    }
+    // Fallback: slugify
+    return lower.replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ü/g, 'u')
+        .replace(/ş/g, 's').replace(/ç/g, 'c').replace(/ğ/g, 'g')
+        .replace(/\s+/g, '-')
+}
+
+function stripHtml(html) {
+    if (!html) return ''
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
 }
 
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
         const city = searchParams.get('city')
-        const startDate = searchParams.get('start') || new Date().toISOString().split('T')[0]
-        const endDate = searchParams.get('end') || startDate
-        const category = searchParams.get('category') || 'all'
+        const format = searchParams.get('format') || ''
+        const page = searchParams.get('page') || '1'
 
         if (!city) {
             return NextResponse.json({ error: 'City is required' }, { status: 400 })
         }
 
-        const tmKey = process.env.TICKETMASTER_API_KEY
-        const googleKey = process.env.GOOGLE_PLACES_API_KEY
+        const token = process.env.ETKINLIK_TOKEN
+        if (!token) {
+            return NextResponse.json({
+                events: [], total: 0,
+                setup_required: true,
+                message: 'ETKINLIK_TOKEN not configured. Add it to .env.local',
+            })
+        }
 
-        // Determine which categories to fetch
-        const categoriesToFetch = category === 'all'
-            ? Object.keys(EVENT_CATEGORIES)
-            : [category]
+        const citySlug = getCitySlug(city)
 
-        let allEvents = []
+        // Build URL with query params
+        const params = new URLSearchParams()
+        if (citySlug) params.append('city', citySlug)
+        if (format) params.append('format', format)
+        params.append('page', page)
 
-        // Fetch from all sources in parallel
-        const fetchPromises = categoriesToFetch.flatMap(cat => [
-            fetchTicketmaster(city, startDate, endDate, cat, tmKey),
-            fetchGoogleEvents(city, cat, googleKey),
-        ])
-
-        const results = await Promise.allSettled(fetchPromises)
-        results.forEach(r => {
-            if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-                allEvents.push(...r.value)
-            }
+        const res = await fetch(`${BASE_URL}/events?${params}`, {
+            headers: {
+                'X-Etkinlik-Token': token,
+                'Accept': 'application/json',
+            },
+            next: { revalidate: 300 }, // Cache 5 min
         })
 
-        // Deduplicate by name similarity
-        const seen = new Set()
-        const uniqueEvents = allEvents.filter(e => {
-            const key = e.name.toLowerCase().replace(/[^a-zığüşöç0-9]/g, '').substring(0, 20)
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-        })
+        if (!res.ok) {
+            const errText = await res.text()
+            console.error('Etkinlik.io API error:', res.status, errText)
+            return NextResponse.json({ events: [], total: 0, error: 'Event API error' })
+        }
 
-        // Sort: events with dates first, then by date
-        uniqueEvents.sort((a, b) => {
-            if (a.date && !b.date) return -1
-            if (!a.date && b.date) return 1
-            if (a.date && b.date) return a.date.localeCompare(b.date)
-            return 0
-        })
+        const raw = await res.json()
+        const items = Array.isArray(raw) ? raw : (raw.items || raw.data || raw.events || [])
 
-        // Group by category
+        const events = items.map(event => ({
+            id: event.id,
+            name: event.name || '',
+            slug: event.slug || '',
+            description: stripHtml(event.content || ''),
+            url: event.url || `https://etkinlik.io/etkinlik/${event.id}/${event.slug}`,
+            poster_url: event.poster_url || '',
+            ticket_url: event.ticket_url || '',
+            start: event.start || '',
+            end: event.end || '',
+            is_free: event.is_free || false,
+            // Format & Category
+            format: event.format?.name || '',
+            format_slug: event.format?.slug || '',
+            category: event.category?.name || '',
+            category_slug: event.category?.slug || '',
+            emoji: getEmoji(event.format?.name || event.category?.name),
+            // Venue
+            venue_name: event.venue?.name || event.venue_data?.name || '',
+            venue_address: event.venue?.address || event.venue_data?.address || '',
+            venue_lat: parseFloat(event.venue?.lat || event.venue_data?.lat || 0),
+            venue_lng: parseFloat(event.venue?.lng || event.venue_data?.lng || 0),
+            city_name: event.venue?.city?.name || event.venue_data?.city?.name || city,
+            district: event.venue?.district?.name || event.venue_data?.district?.name || '',
+            // Contact
+            phone: event.phone || event.venue?.phone || '',
+            web_url: event.web_url || event.venue?.web_url || '',
+            // Tags
+            tags: (event.tags || []).map(t => t.name || t),
+            // Source attribution
+            source: 'etkinlik.io',
+        }))
+
+        // Group by format
         const grouped = {}
-        for (const cat of Object.keys(EVENT_CATEGORIES)) {
-            const events = uniqueEvents.filter(e => e.category === cat)
-            if (events.length > 0) {
-                grouped[cat] = {
-                    ...EVENT_CATEGORIES[cat],
-                    count: events.length,
-                    events: events.slice(0, 8),
+        for (const event of events) {
+            const key = event.format || 'Diğer'
+            if (!grouped[key]) {
+                grouped[key] = {
+                    name: key,
+                    emoji: event.emoji,
+                    events: [],
                 }
             }
+            grouped[key].events.push(event)
         }
 
         return NextResponse.json({
-            available: true,
-            city,
-            startDate,
-            endDate,
-            totalEvents: uniqueEvents.length,
-            categories: EVENT_CATEGORIES,
+            events,
             grouped,
-            events: uniqueEvents.slice(0, 30),
+            city,
+            total: events.length,
+            source: 'etkinlik.io',
+            attribution: 'Etkinlik verileri etkinlik.io tarafından sağlanmaktadır.',
         })
     } catch (err) {
         console.error('Events API error:', err)
-        return NextResponse.json({ available: false, events: [], message: err.message }, { status: 500 })
+        return NextResponse.json({ events: [], error: err.message }, { status: 500 })
     }
 }
