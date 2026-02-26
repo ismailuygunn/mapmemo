@@ -3115,4 +3115,153 @@ select.input {
   .flight-search-bar {
     flex-direction: column;
   }
+
+  .transport-links-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .alt-dates-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Phase 6: Transport Links Grid ---------- */
+.transport-links-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.transport-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.transport-link-card:hover {
+  border-color: var(--primary-1);
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateY(-2px);
+}
+
+.transport-icon {
+  font-size: 1.75rem;
+}
+
+.transport-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.transport-provider {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Phase 6: Alternative Dates ---------- */
+.alt-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.alt-date-card {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alt-date-range {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.alt-date-reason {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.alt-date-saving {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #10B981;
+  margin-top: 2px;
+}
+
+/* ---------- Phase 6: Trip Gallery ---------- */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.gallery-card {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.gallery-card:hover {
+  border-color: var(--primary-1);
+  transform: scale(1.02);
+}
+
+.gallery-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.gallery-card-info {
+  padding: 8px 12px;
+}
+
+.gallery-card-caption {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+
+.gallery-card-loc {
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gallery-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  gap: 8px;
+  padding: 20px;
+}
+
+.gallery-upload:hover {
+  border-color: var(--primary-1);
+  color: var(--primary-1);
 }

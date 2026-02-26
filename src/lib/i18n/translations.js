@@ -149,6 +149,36 @@ export const translations = {
     'flights.book': 'Book Flight',
     'flights.googleFlights': 'Search on Google Flights',
 
+    // ========== Transport ==========
+    'transport.title': 'Transport Options',
+    'transport.flights': 'Flights',
+    'transport.trains': 'Trains',
+    'transport.buses': 'Buses',
+    'transport.carRental': 'Car Rental',
+    'transport.turkishTrains': 'Turkish Railways',
+    'transport.turkishBuses': 'Turkish Bus Tickets',
+
+    // ========== Flex Dates ==========
+    'planner.departureCity': 'Departure City',
+    'planner.departureCityHint': 'e.g. Istanbul, Ankara, Izmir',
+    'planner.flexDates': 'Flexible Dates',
+    'planner.flexDatesHint': 'AI suggests cheaper alternative dates',
+    'planner.preferredTime': 'Activity Time',
+    'time.any': 'Any time',
+    'time.morning': 'Morning (07:00-15:00)',
+    'time.afternoon': 'Afternoon (11:00-19:00)',
+    'time.evening': 'Evening (14:00-23:00)',
+
+    // ========== Alt Dates ==========
+    'altDates.title': 'Cheaper Alternative Dates',
+
+    // ========== Gallery ==========
+    'gallery.title': 'Trip Gallery',
+    'gallery.upload': 'Upload Photo',
+    'gallery.caption': 'Caption',
+    'gallery.location': 'Location (optional)',
+    'gallery.setCover': 'Set as Cover',
+
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Relaxed — no rush, sleep in',
     'tempo.moderate': '🚶 Moderate — balanced sightseeing & rest',
@@ -473,6 +503,36 @@ export const translations = {
     'flights.hint': 'Kalkış havalimanınızın 3 harfli IATA kodunu girin',
     'flights.book': 'Uçuş Satın Al',
     'flights.googleFlights': 'Google Flights\'ta Ara',
+
+    // ========== Transport ==========
+    'transport.title': 'Ulaşım Seçenekleri',
+    'transport.flights': 'Uçuşlar',
+    'transport.trains': 'Trenler',
+    'transport.buses': 'Otobüsler',
+    'transport.carRental': 'Araç Kiralama',
+    'transport.turkishTrains': 'Türk Demiryolları',
+    'transport.turkishBuses': 'Türk Otobüs Biletleri',
+
+    // ========== Flex Dates ==========
+    'planner.departureCity': 'Kalkış Şehri',
+    'planner.departureCityHint': 'örn. İstanbul, Ankara, İzmir',
+    'planner.flexDates': 'Esnek Tarih',
+    'planner.flexDatesHint': 'AI daha ucuz alternatif tarihler önerir',
+    'planner.preferredTime': 'Aktivite Zamanı',
+    'time.any': 'Her saat',
+    'time.morning': 'Sabah (07:00-15:00)',
+    'time.afternoon': 'Öğleden Sonra (11:00-19:00)',
+    'time.evening': 'Akşam (14:00-23:00)',
+
+    // ========== Alt Dates ==========
+    'altDates.title': 'Daha Ucuz Alternatif Tarihler',
+
+    // ========== Gallery ==========
+    'gallery.title': 'Gezi Galerisi',
+    'gallery.upload': 'Fotoğraf Yükle',
+    'gallery.caption': 'Açıklama',
+    'gallery.location': 'Konum (opsiyonel)',
+    'gallery.setCover': 'Kapak Yap',
 
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Rahat — acele yok, geç uyan',

@@ -30,6 +30,9 @@ export async function POST(request) {
       // Phase 3 — Weather + Events
       weatherData,         // object | null — pre-fetched weather
       eventsData,          // array  | null — pre-fetched events
+      // Phase 6 — Flex Dates + Time
+      flexDates,           // boolean — suggest alternative dates
+      preferredTime,       // 'morning' | 'afternoon' | 'evening' | 'any'
     } = body
 
     // Support both single city and multi-city
@@ -153,6 +156,10 @@ Pace/Tempo: ${tempo || 'moderate'}
 Budget level: ${budget || 'moderate'}
 Interests: ${interests?.join(', ') || 'general sightseeing'}
 ${pinsContext}${transportText}${priorityText}${budgetText}${mealText}${tourText}${dateNightText}${multiCityText}${weatherContext}${eventsContext}${langText}
+${flexDates ? `
+FLEXIBLE DATES: The traveler is flexible with dates. Based on transport costs, suggest 2-3 alternative date ranges (within ±5 days) that could be cheaper for flights/transport. Add these to the JSON as "alternativeDates": [{ "dates": "Mar 17-22", "reason": "Flights 30% cheaper", "estimatedSaving": "~500 TRY" }]` : ''}
+${preferredTime && preferredTime !== 'any' ? `
+TIME PREFERENCE: Schedule activities primarily in the ${preferredTime}. ${preferredTime === 'morning' ? 'Start at 07:00-08:00, wrap up by 15:00.' : preferredTime === 'afternoon' ? 'Start at 11:00, activities until 19:00.' : 'Start at 14:00, focus on evening activities until 23:00.'}` : ''}
 
 TIME BUFFER RULES (mandatory):
 - Before flights: 2.5 hours buffer for airport
@@ -241,8 +248,8 @@ Respond ONLY with valid JSON, no markdown, no comments.`
           },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 6000,
+        temperature: 0.6,
+        max_tokens: 5000,
       }),
     })
 

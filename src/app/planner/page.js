@@ -41,6 +41,10 @@ export default function PlannerPage() {
         accessibility: [],
         guideLanguage: '',
         dateNightMode: false,
+        // Phase 6
+        flexDates: false,
+        preferredTime: 'any',
+        departureCity: '',
     })
     const [itinerary, setItinerary] = useState(null)
     const [savedTrips, setSavedTrips] = useState([])
@@ -51,11 +55,11 @@ export default function PlannerPage() {
     const [showRainPlan, setShowRainPlan] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [advancedTab, setAdvancedTab] = useState('transport')
-    // Phase 3+4 visible data
+    // Phase 3+4+6 visible data
     const [weatherInfo, setWeatherInfo] = useState(null)
     const [eventsInfo, setEventsInfo] = useState([])
     const [flightsInfo, setFlightsInfo] = useState([])
-    const [flightSearch, setFlightSearch] = useState({ origin: '', searching: false })
+    const [transportLoading, setTransportLoading] = useState(false)
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -93,15 +97,30 @@ export default function PlannerPage() {
         if (e.key === 'Enter') { e.preventDefault(); addCity() }
     }
 
-    // Flight search (Phase 4)
-    const searchFlights = async () => {
-        const cities = formData.cities.length > 0 ? formData.cities : [formData.cityInput.trim()]
-        if (!flightSearch.origin || cities.length === 0) return
-        setFlightSearch(prev => ({ ...prev, searching: true }))
+    // IATA code mapping for common cities
+    const CITY_IATA = {
+        'istanbul': 'IST', 'ankara': 'ESB', 'izmir': 'ADB', 'antalya': 'AYT', 'bodrum': 'BJV',
+        'dalaman': 'DLM', 'trabzon': 'TZX', 'adana': 'ADA', 'gaziantep': 'GZT', 'kayseri': 'ASR',
+        'london': 'LHR', 'paris': 'CDG', 'rome': 'FCO', 'barcelona': 'BCN', 'madrid': 'MAD',
+        'berlin': 'BER', 'amsterdam': 'AMS', 'vienna': 'VIE', 'prague': 'PRG', 'budapest': 'BUD',
+        'athens': 'ATH', 'dubai': 'DXB', 'new york': 'JFK', 'los angeles': 'LAX', 'tokyo': 'NRT',
+        'bangkok': 'BKK', 'singapore': 'SIN', 'bali': 'DPS', 'milan': 'MXP', 'lisbon': 'LIS',
+        'porto': 'OPO', 'zurich': 'ZRH', 'munich': 'MUC', 'stockholm': 'ARN', 'oslo': 'OSL',
+        'copenhagen': 'CPH', 'dublin': 'DUB', 'edinburgh': 'EDI', 'nice': 'NCE', 'florence': 'FLR',
+        'venice': 'VCE', 'tbilisi': 'TBS', 'baku': 'GYD', 'cairo': 'CAI', 'marrakech': 'RAK',
+    }
+    const getIATA = (city) => CITY_IATA[city?.toLowerCase()] || city?.substring(0, 3).toUpperCase()
+
+    // Auto transport search (Phase 6) — runs after plan generated
+    const autoSearchTransport = async (cities) => {
+        if (!formData.departureCity) return
+        setTransportLoading(true)
         try {
+            const originIATA = getIATA(formData.departureCity)
+            const destIATA = getIATA(cities[0])
             const qs = new URLSearchParams({
-                origin: flightSearch.origin.toUpperCase(),
-                destination: cities[0].substring(0, 3).toUpperCase(),
+                origin: originIATA,
+                destination: destIATA,
                 departure: formData.startDate || new Date().toISOString().split('T')[0],
                 adults: '2',
                 currency: formData.currency || 'TRY',
@@ -111,7 +130,7 @@ export default function PlannerPage() {
             const data = await res.json()
             if (data.flights) setFlightsInfo(data.flights)
         } catch { /* silent */ }
-        setFlightSearch(prev => ({ ...prev, searching: false }))
+        setTransportLoading(false)
     }
 
     const generatePlan = async (e) => {
@@ -181,6 +200,8 @@ export default function PlannerPage() {
                     accessibility: formData.accessibility,
                     guideLanguage: formData.guideLanguage,
                     dateNightMode: formData.dateNightMode,
+                    flexDates: formData.flexDates,
+                    preferredTime: formData.preferredTime,
                     weatherData,
                     eventsData,
                     locale,
@@ -191,6 +212,8 @@ export default function PlannerPage() {
             setItinerary(data)
             setView('result')
             setExpandedDay(0)
+            // Auto search transport in background
+            autoSearchTransport(cities)
         } catch (err) { setError(err.message) }
         setLoading(false)
     }
@@ -325,6 +348,40 @@ export default function PlannerPage() {
                                 <div className="input-group">
                                     <label>📅 {t('planner.endDate')}</label>
                                     <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} />
+                                </div>
+                            </div>
+
+                            {/* ── Departure City + Flex ── */}
+                            <div className="input-group">
+                                <label>🛫 {t('planner.departureCity')}</label>
+                                <input type="text" className="input" placeholder={t('planner.departureCityHint')}
+                                    value={formData.departureCity} onChange={(e) => update('departureCity', e.target.value)} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                {/* Flex Dates */}
+                                <div className="date-night-toggle" onClick={() => update('flexDates', !formData.flexDates)} style={{ marginBottom: 0 }}>
+                                    <div className="date-night-info">
+                                        <span>📆</span>
+                                        <div>
+                                            <span className="date-night-label">{t('planner.flexDates')}</span>
+                                            <span className="date-night-hint">{t('planner.flexDatesHint')}</span>
+                                        </div>
+                                    </div>
+                                    <div className={`toggle-pill ${formData.flexDates ? 'toggle-pill-active' : ''}`}>
+                                        <div className="toggle-pill-dot" />
+                                    </div>
+                                </div>
+
+                                {/* Time Preference */}
+                                <div className="input-group" style={{ marginBottom: 0 }}>
+                                    <label>🕐 {t('planner.preferredTime')}</label>
+                                    <select className="input" value={formData.preferredTime} onChange={(e) => update('preferredTime', e.target.value)}>
+                                        <option value="any">{t('time.any')}</option>
+                                        <option value="morning">{t('time.morning')}</option>
+                                        <option value="afternoon">{t('time.afternoon')}</option>
+                                        <option value="evening">{t('time.evening')}</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -640,72 +697,123 @@ export default function PlannerPage() {
                                 </motion.div>
                             )}
 
-                            {/* ═══ FLIGHT SEARCH ═══ */}
+                            {/* ═══ TRANSPORT OPTIONS ═══ */}
                             <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                                 <div className="planner-section-header" style={{ cursor: 'default' }}>
-                                    <Plane size={18} /> {t('flights.title')}
+                                    🚀 {t('transport.title')}
+                                    {transportLoading && <Loader2 size={14} className="spin" style={{ marginLeft: 8 }} />}
                                 </div>
                                 <div className="planner-section-body">
-                                    <div className="flight-search-bar">
-                                        <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
-                                            <label>{t('flights.origin')}</label>
-                                            <input type="text" className="input" placeholder={t('flights.originPlaceholder')}
-                                                value={flightSearch.origin}
-                                                onChange={(e) => setFlightSearch(prev => ({ ...prev, origin: e.target.value }))}
-                                                maxLength={3} style={{ textTransform: 'uppercase' }} />
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                                            <button className="btn btn-primary" onClick={searchFlights}
-                                                disabled={flightSearch.searching || !flightSearch.origin}>
-                                                {flightSearch.searching ? <Loader2 size={16} className="spin" /> : <Plane size={16} />}
-                                                {t('flights.search')}
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <p className="input-hint">{t('flights.hint')}</p>
 
                                     {/* Flight Results */}
                                     {flightsInfo.length > 0 && (
-                                        <div className="flights-list">
-                                            {flightsInfo.map((flight, i) => (
-                                                <div key={i} className="flight-card">
-                                                    <div className="flight-card-route">
-                                                        {flight.segments?.map((seg, si) => (
-                                                            <div key={si} className="flight-segment">
-                                                                {seg.segments?.map((s, ssi) => (
-                                                                    <div key={ssi} className="flight-leg">
-                                                                        <span className="flight-code">{s.departure}</span>
-                                                                        <span className="flight-arrow">✈️→</span>
-                                                                        <span className="flight-code">{s.arrival}</span>
-                                                                        <span className="flight-time">{s.departureTime?.substring(11, 16)}</span>
-                                                                        <span className="flight-carrier">{s.flightNumber}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        ))}
+                                        <>
+                                            <h4 style={{ margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <Plane size={16} /> {t('transport.flights')}
+                                            </h4>
+                                            <div className="flights-list">
+                                                {flightsInfo.slice(0, 5).map((flight, i) => (
+                                                    <div key={i} className="flight-card">
+                                                        <div className="flight-card-route">
+                                                            {flight.segments?.map((seg, si) => (
+                                                                <div key={si} className="flight-segment">
+                                                                    {seg.segments?.map((s, ssi) => (
+                                                                        <div key={ssi} className="flight-leg">
+                                                                            <span className="flight-code">{s.departure}</span>
+                                                                            <span className="flight-arrow">✈️→</span>
+                                                                            <span className="flight-code">{s.arrival}</span>
+                                                                            <span className="flight-time">{s.departureTime?.substring(11, 16)}</span>
+                                                                            <span className="flight-carrier">{s.flightNumber}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <div className="flight-card-price">
+                                                            <span className="flight-price">{Number(flight.price).toLocaleString()} {flight.currency}</span>
+                                                            <span className="flight-class">{flight.bookingClass}</span>
+                                                            <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`${formData.departureCity} to ${formData.cities[0] || formData.cityInput} ${formData.startDate}`)}`}
+                                                                target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 8 }}>
+                                                                ✈️ {t('flights.book')}
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                    <div className="flight-card-price">
-                                                        <span className="flight-price">{Number(flight.price).toLocaleString()} {flight.currency}</span>
-                                                        <span className="flight-class">{flight.bookingClass}</span>
-                                                        <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`${flightSearch.origin} to ${formData.cities[0] || formData.cityInput} ${formData.startDate}`)}`}
-                                                            target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 8 }}>
-                                                            ✈️ {t('flights.book')}
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                ))}
+                                            </div>
+                                        </>
                                     )}
 
-                                    {/* Quick booking link (always visible) */}
-                                    <div style={{ textAlign: 'center', marginTop: 16 }}>
-                                        <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`flights to ${formData.cities[0] || formData.cityInput} ${formData.startDate || ''}`)}`}
-                                            target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-                                            🔍 {t('flights.googleFlights')}
+                                    {/* Transport Links Grid */}
+                                    <div className="transport-links-grid" style={{ marginTop: flightsInfo.length > 0 ? 20 : 0 }}>
+                                        {/* Flights link */}
+                                        <a href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`${formData.departureCity || ''} to ${formData.cities[0] || formData.cityInput} ${formData.startDate || ''}`)}`}
+                                            target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">✈️</span>
+                                            <span className="transport-name">{t('transport.flights')}</span>
+                                            <span className="transport-provider">Google Flights</span>
+                                        </a>
+
+                                        {/* Trains */}
+                                        <a href={`https://www.trainline.com/search/${encodeURIComponent(formData.departureCity || 'Istanbul')}/${encodeURIComponent(formData.cities[0] || formData.cityInput)}`}
+                                            target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">🚆</span>
+                                            <span className="transport-name">{t('transport.trains')}</span>
+                                            <span className="transport-provider">Trainline</span>
+                                        </a>
+
+                                        {/* Buses */}
+                                        <a href={`https://www.flixbus.com/bus-routes?route=${encodeURIComponent(`${formData.departureCity || 'Istanbul'}-${formData.cities[0] || formData.cityInput}`)}`}
+                                            target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">🚌</span>
+                                            <span className="transport-name">{t('transport.buses')}</span>
+                                            <span className="transport-provider">FlixBus / Obilet</span>
+                                        </a>
+
+                                        {/* Car Rental */}
+                                        <a href={`https://www.kayak.com/cars/${encodeURIComponent(formData.cities[0] || formData.cityInput)}/${formData.startDate || ''}/${formData.endDate || ''}`}
+                                            target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">🚗</span>
+                                            <span className="transport-name">{t('transport.carRental')}</span>
+                                            <span className="transport-provider">Kayak</span>
+                                        </a>
+
+                                        {/* TCDD (Turkish trains) */}
+                                        <a href="https://ebilet.tcddtasimacilik.gov.tr/" target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">🚄</span>
+                                            <span className="transport-name">TCDD</span>
+                                            <span className="transport-provider">{t('transport.turkishTrains')}</span>
+                                        </a>
+
+                                        {/* Obilet (Turkish buses) */}
+                                        <a href={`https://www.obilet.com/otobus-bileti/${encodeURIComponent(formData.departureCity || 'istanbul')}-${encodeURIComponent(formData.cities[0] || formData.cityInput)}`}
+                                            target="_blank" rel="noopener noreferrer" className="transport-link-card">
+                                            <span className="transport-icon">🎫</span>
+                                            <span className="transport-name">Obilet</span>
+                                            <span className="transport-provider">{t('transport.turkishBuses')}</span>
                                         </a>
                                     </div>
                                 </div>
                             </motion.div>
+
+                            {/* ═══ ALTERNATIVE DATES ═══ */}
+                            {itinerary.alternativeDates?.length > 0 && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        📆 {t('altDates.title')}
+                                    </div>
+                                    <div className="planner-section-body">
+                                        <div className="alt-dates-grid">
+                                            {itinerary.alternativeDates.map((alt, i) => (
+                                                <div key={i} className="alt-date-card">
+                                                    <span className="alt-date-range">{alt.dates}</span>
+                                                    <span className="alt-date-reason">{alt.reason}</span>
+                                                    {alt.estimatedSaving && <span className="alt-date-saving">💰 {alt.estimatedSaving}</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* Actions */}
                             <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
