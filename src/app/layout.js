@@ -4,6 +4,7 @@ import { SpaceProvider } from '@/context/SpaceContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { ToastProvider } from '@/context/ToastContext'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata = {
   title: 'MapMemo — Couple Travel Map',
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
             </ToastProvider>
           </ThemeProvider>
         </LanguageProvider>
+        <Analytics />
       </body>
     </html>
   )
