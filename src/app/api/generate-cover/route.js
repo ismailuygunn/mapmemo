@@ -78,10 +78,11 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             }
         }
 
-        // Try primary: gemini-2.0-flash-exp (supports native image generation)
+        // Try Gemini models that support native image generation
+        // gemini-2.0-flash-exp requires responseModalities: ['IMAGE'] (not TEXT+IMAGE)
         const models = [
+            'gemini-2.0-flash-preview-image-generation',
             'gemini-2.0-flash-exp',
-            'gemini-2.0-flash',
         ]
 
         let imageData = null
@@ -97,15 +98,14 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
                     body: JSON.stringify({
                         contents: [{ parts }],
                         generationConfig: {
-                            responseModalities: ['TEXT', 'IMAGE'],
-                            temperature: 1.0,
+                            responseModalities: ['IMAGE'],
                         },
                     }),
                 })
 
                 if (!response.ok) {
                     const errText = await response.text()
-                    console.error(`Gemini ${model} error:`, response.status, errText.substring(0, 200))
+                    console.error(`Gemini ${model} error:`, response.status, errText.substring(0, 300))
                     continue // Try next model
                 }
 
