@@ -1,71 +1,60 @@
-// Car rental search API — aggregates providers with deeplinks
+// Car rental agencies — real listings from Google Places
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
         const city = searchParams.get('city')
-        const pickupDate = searchParams.get('pickup') || ''
-        const dropoffDate = searchParams.get('dropoff') || ''
 
         if (!city) {
             return NextResponse.json({ error: 'City is required' }, { status: 400 })
         }
 
-        // Return provider deeplinks with city + dates
-        const providers = [
-            {
-                id: 'enterprise',
-                name: 'Enterprise',
-                logo: '🚗',
-                color: '#007A33',
-                url: `https://www.enterprise.com/en/reserve.html?pickupCity=${encodeURIComponent(city)}&pickupDate=${pickupDate}&returnDate=${dropoffDate}`,
-                description: 'Global car rental leader',
-            },
-            {
-                id: 'sixt',
-                name: 'Sixt',
-                logo: '🏎️',
-                color: '#FF6600',
-                url: `https://www.sixt.com/car-rental/${encodeURIComponent(city.toLowerCase().replace(/\s+/g, '-'))}/?pickup=${pickupDate}&return=${dropoffDate}`,
-                description: 'Premium & sport cars',
-            },
-            {
-                id: 'europcar',
-                name: 'Europcar',
-                logo: '🚙',
-                color: '#00843D',
-                url: `https://www.europcar.com/en-us/search?location=${encodeURIComponent(city)}&pickup=${pickupDate}&return=${dropoffDate}`,
-                description: 'European coverage',
-            },
-            {
-                id: 'budget',
-                name: 'Budget',
-                logo: '💰',
-                color: '#FF6600',
-                url: `https://www.budget.com/en/reservation?pickup_location=${encodeURIComponent(city)}&pickup_date=${pickupDate}&return_date=${dropoffDate}`,
-                description: 'Affordable options',
-            },
-            {
-                id: 'rentalcars',
-                name: 'Rentalcars.com',
-                logo: '🔍',
-                color: '#003B71',
-                url: `https://www.rentalcars.com/search-results?location=${encodeURIComponent(city)}&puDay=${pickupDate}&doDay=${dropoffDate}`,
-                description: 'Compare all providers',
-            },
-            {
-                id: 'kayak',
-                name: 'Kayak',
-                logo: '🔎',
-                color: '#FF6900',
-                url: `https://www.kayak.com/cars/${encodeURIComponent(city)}/${pickupDate}/${dropoffDate}`,
-                description: 'Best price comparison',
-            },
-        ]
+        const apiKey = process.env.GOOGLE_PLACES_API_KEY
+        if (!apiKey) {
+            return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+        }
 
-        return NextResponse.json({ providers, city })
+        const params = new URLSearchParams({
+            query: `car rental in ${city}`,
+            key: apiKey,
+            language: 'tr',
+            type: 'car_rental',
+        })
+
+        const res = await fetch(
+            `https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`
+        )
+
+        if (!res.ok) {
+            return NextResponse.json({ error: 'Places API error' }, { status: 500 })
+        }
+
+        const data = await res.json()
+
+        const agencies = (data.results || []).map(place => {
+            let photoUrl = ''
+            if (place.photos?.[0]?.photo_reference) {
+                photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${place.photos[0].photo_reference}&key=${apiKey}`
+            }
+
+            return {
+                place_id: place.place_id,
+                name: place.name,
+                address: place.formatted_address || '',
+                lat: place.geometry?.location?.lat,
+                lng: place.geometry?.location?.lng,
+                rating: place.rating || 0,
+                review_count: place.user_ratings_total || 0,
+                photo_url: photoUrl,
+                open_now: place.opening_hours?.open_now ?? null,
+                price_level: place.price_level || 0,
+            }
+        })
+
+        return NextResponse.json({ agencies, city, total: agencies.length })
     } catch (err) {
+        console.error('Car rental search error:', err)
         return NextResponse.json({ error: err.message }, { status: 500 })
     }
 }
