@@ -4934,3 +4934,1072 @@ select.input {
     background-position: -200% 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════ */
+/* TRIP PLANNER — Polarsteps-style Premium iOS UI              */
+/* ═══════════════════════════════════════════════════════════ */
+
+.trip-page {
+  position: relative;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.04) 1px, transparent 0) 0 0 / 20px 20px,
+    var(--bg-primary);
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-theme="dark"] .trip-page {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0) 0 0 / 20px 20px,
+    var(--bg-primary);
+}
+
+/* ── MAP SECTION ── */
+.trip-map-section {
+  position: relative;
+  height: 220px;
+  width: 100%;
+}
+
+.trip-map {
+  width: 100%;
+  height: 100%;
+}
+
+.trip-back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #1E293B;
+  transition: transform 150ms;
+}
+
+.trip-back-btn:hover {
+  transform: scale(1.05);
+}
+
+.trip-back-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── MAP MARKERS ── */
+.trip-marker-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  cursor: pointer;
+  transition: transform 150ms;
+}
+
+.trip-map-marker:hover .trip-marker-dot {
+  transform: scale(1.2);
+}
+
+/* ── HERO CARD ── */
+.trip-hero-card {
+  position: relative;
+  margin: -40px 16px 0;
+  border-radius: 24px;
+  overflow: hidden;
+  z-index: 5;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.trip-hero-image {
+  width: 100%;
+  height: 200px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.trip-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.trip-hero-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 24px;
+  z-index: 2;
+}
+
+.trip-country-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.trip-menu-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+}
+
+.trip-city-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.trip-slogan {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0;
+}
+
+.trip-hero-fade {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--bg-primary));
+  z-index: 3;
+}
+
+/* ── DATE / NIGHTS PILL ── */
+.trip-date-pill {
+  display: flex;
+  align-items: center;
+  margin: 16px 16px 0;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-radius: 50px;
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.trip-date-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.trip-date-left svg {
+  color: var(--text-tertiary);
+}
+
+.trip-date-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  border-left: 1px solid var(--border-primary);
+  padding-left: 16px;
+}
+
+.trip-stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 150ms;
+}
+
+.trip-stepper-btn:hover {
+  background: var(--bg-primary);
+}
+
+/* ── CONTENT ── */
+.trip-content {
+  padding: 20px 16px 120px;
+}
+
+.trip-section {
+  margin-bottom: 28px;
+}
+
+.trip-section-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.trip-section-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin: -4px 0 12px;
+}
+
+.trip-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.trip-section-header .trip-section-title {
+  margin: 0;
+}
+
+/* ── NOTE CARD ── */
+.trip-note-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 200ms;
+}
+
+.trip-note-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.trip-note-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #F59E0B;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.trip-note-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  min-height: 56px;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  margin: 3px;
+}
+
+.trip-note-placeholder {
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.trip-note-text {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  flex: 1;
+  white-space: pre-wrap;
+}
+
+.trip-note-textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: none;
+  min-height: 60px;
+}
+
+.trip-note-icon {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── STAY CTA ── */
+.trip-stay-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--border-primary);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.trip-stay-cta:hover {
+  border-color: var(--primary-1);
+  color: var(--primary-1);
+  background: rgba(79, 70, 229, 0.04);
+}
+
+.trip-stay-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-primary);
+}
+
+/* ── ADD SPOT BUTTON ── */
+.trip-add-spot-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: transparent;
+  border: none;
+  color: #0D9488;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.trip-add-spot-btn:hover {
+  background: rgba(13, 148, 136, 0.08);
+}
+
+/* ── SPOT ROW ── */
+.trip-spot-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 150ms;
+  border: 1px solid transparent;
+}
+
+.trip-spot-row:hover {
+  border-color: var(--border-primary);
+}
+
+.trip-spot-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trip-spot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-spot-category {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.trip-spot-name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trip-spot-menu {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── SPOT CAROUSEL ── */
+.trip-explore-label {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin: 16px 0 8px;
+}
+
+.trip-spot-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.trip-spot-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-carousel-card {
+  flex-shrink: 0;
+  width: 140px;
+  cursor: pointer;
+}
+
+.trip-carousel-image {
+  width: 140px;
+  height: 120px;
+  border-radius: 16px;
+  background: var(--bg-tertiary);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.trip-carousel-add {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0D9488;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 150ms;
+}
+
+.trip-carousel-add:hover {
+  transform: scale(1.1);
+}
+
+.trip-carousel-category {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.trip-carousel-name {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── FLOATING TABS ── */
+.trip-floating-tabs {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-radius: 50px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+}
+
+[data-theme="dark"] .trip-floating-tabs {
+  background: rgba(30, 30, 50, 0.9);
+}
+
+.trip-tab {
+  padding: 8px 20px;
+  border-radius: 50px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.trip-tab.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ═══ MODALS ═══ */
+.trip-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.trip-modal-sheet {
+  background: var(--bg-secondary);
+  border-radius: 24px 24px 0 0;
+  padding: 16px 20px 32px;
+  max-height: 80vh;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+}
+
+.trip-modal-full {
+  max-height: 92vh;
+  padding-bottom: 48px;
+}
+
+.trip-modal-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--border-primary);
+  margin: 0 auto 16px;
+}
+
+.trip-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.trip-modal-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 20px;
+}
+
+.trip-modal-subtitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+/* ── PROVIDER LIST ── */
+.trip-provider-list {
+  border: 1px solid var(--border-primary);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.trip-provider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-primary);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 150ms;
+}
+
+.trip-provider-row:last-child {
+  border-bottom: none;
+}
+
+.trip-provider-row:hover {
+  background: var(--bg-tertiary);
+}
+
+.trip-provider-name {
+  font-weight: 700;
+  min-width: 100px;
+}
+
+.trip-provider-dates {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  text-align: right;
+}
+
+/* ── SEARCH INPUT ── */
+.trip-search-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-primary);
+  background: var(--bg-secondary);
+}
+
+.trip-search-input svg {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.trip-search-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+/* ── OR DIVIDER ── */
+.trip-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.trip-or-divider div {
+  flex: 1;
+  height: 1px;
+  background: var(--border-primary);
+}
+
+.trip-or-divider span {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.trip-modal-hint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+/* ── FORWARD BTN ── */
+.trip-forward-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  background: #0D4F4F;
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.trip-forward-btn:hover {
+  background: #0A3D3D;
+}
+
+/* ── ADD SPOT MODAL ── */
+.trip-addspot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.trip-addspot-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.trip-addspot-header button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.trip-powered-by {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  padding: 0 20px;
+  margin: 4px 0 8px;
+}
+
+.trip-addspot-list {
+  padding: 0 20px;
+  overflow-y: auto;
+}
+
+.trip-addspot-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 12px 0 8px;
+}
+
+.trip-addspot-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.trip-addspot-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+.trip-addspot-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-addspot-category {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.trip-addspot-name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trip-addspot-address {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.trip-addspot-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-primary);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 150ms;
+}
+
+.trip-addspot-btn:hover:not(.added) {
+  border-color: #0D9488;
+  color: #0D9488;
+}
+
+.trip-addspot-btn.added {
+  background: #0D9488;
+  border-color: #0D9488;
+  color: white;
+  cursor: default;
+}
+
+/* ── SPOT DETAIL ── */
+.trip-spot-detail {
+  padding: 20px;
+}
+
+.trip-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.trip-detail-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.trip-detail-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 8px 0 16px;
+  line-height: 1.2;
+}
+
+.trip-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.trip-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms;
+  text-decoration: none;
+}
+
+.trip-action-pill.active {
+  background: #0D4F4F;
+  color: white;
+}
+
+.trip-action-pill.outline {
+  background: transparent;
+  border: 1.5px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.trip-action-pill.outline:hover {
+  border-color: #0D9488;
+  color: #0D9488;
+}
+
+.trip-action-pill:not(.active):not(.outline) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* ── HOURS ── */
+.trip-detail-hours {
+  margin-bottom: 16px;
+}
+
+.trip-detail-today {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.trip-detail-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── PHOTO GALLERY ── */
+.trip-detail-gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+}
+
+.trip-detail-gallery::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-detail-photo {
+  flex-shrink: 0;
+  width: 260px;
+  height: 180px;
+  border-radius: 16px;
+  background: var(--bg-tertiary);
+  background-size: cover;
+  background-position: center;
+}
+
+.trip-detail-photo:first-child {
+  width: 300px;
+}
+
+/* ── RATING ── */
+.trip-detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.trip-detail-reviews {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+}
+
+/* ── EDITORIAL BLOCK ── */
+.trip-detail-editorial {
+  background: linear-gradient(135deg, #1E293B, #0F172A);
+  border-radius: 20px;
+  padding: 28px 24px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.trip-editorial-label {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+
+.trip-editorial-quote {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.trip-editorial-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trip-author-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ── ADDRESS ── */
+.trip-detail-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  padding: 12px 0;
+  border-top: 1px solid var(--border-primary);
+}
