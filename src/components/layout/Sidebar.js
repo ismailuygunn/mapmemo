@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Map, Compass, Calendar, Settings, LogOut } from 'lucide-react'
+import { Map, Compass, Calendar, Settings, LogOut, Gift } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 
@@ -15,6 +15,7 @@ export default function Sidebar() {
         { icon: Map, label: t('nav.map'), href: '/map' },
         { icon: Compass, label: t('nav.cities'), href: '/cities' },
         { icon: Calendar, label: t('nav.planner'), href: '/planner' },
+        { icon: Gift, label: t('nav.capsules'), href: '/capsules' },
         { icon: Settings, label: t('nav.settings'), href: '/settings' },
     ]
 

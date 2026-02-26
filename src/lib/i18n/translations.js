@@ -264,6 +264,40 @@ export const translations = {
     'result.nextTimeHint': 'Things you might want to try next visit',
     'result.conflictWarning': '⚠️ Schedule conflict detected',
 
+    // ========== Voting ==========
+    'vote.summary': 'Vote Summary',
+    'vote.bothLiked': 'Both liked',
+    'vote.disagreed': 'You disagreed',
+    'vote.waitingPartner': 'Waiting for partner votes...',
+
+    // ========== Capsules ==========
+    'capsule.title': 'Memory Capsules',
+    'capsule.subtitle': 'Seal memories and open them together later',
+    'capsule.create': 'New Capsule',
+    'capsule.new': 'Create Memory Capsule',
+    'capsule.titleLabel': 'Capsule Title',
+    'capsule.titlePlaceholder': 'e.g. Our First Anniversary',
+    'capsule.message': 'Message',
+    'capsule.messagePlaceholder': 'Write something for your future selves...',
+    'capsule.revealDate': 'Reveal Date',
+    'capsule.revealHint': 'The capsule will be locked until this date',
+    'capsule.createBtn': 'Seal Capsule',
+    'capsule.empty': 'No capsules yet',
+    'capsule.emptyDesc': 'Create a memory capsule and open it together later!',
+    'capsule.openedOn': 'Opened on',
+    'capsule.daysLeft': 'days left',
+    'capsule.readyToOpen': 'Ready to open! 🎉',
+    'capsule.open': 'Open Capsule',
+
+    // ========== Surprise Day ==========
+    'surprise.label': '🎁 Surprise Day',
+    'surprise.hint': 'Let AI plan a mystery day for your partner',
+    'surprise.forPartner': 'Surprise planned for your partner',
+    'surprise.hidden': 'This part is hidden until the day!',
+
+    // ========== Navigation ==========
+    'nav.capsules': 'Capsules',
+
     // ========== General ==========
     'general.loading': 'Loading...',
     'general.error': 'Error',
@@ -535,6 +569,40 @@ export const translations = {
     'result.nextTime': '📋 Bir Dahaki Sefere',
     'result.nextTimeHint': 'Bir sonraki ziyaretinizde deneyebileceğiniz şeyler',
     'result.conflictWarning': '⚠️ Program çakışması tespit edildi',
+
+    // ========== Voting ==========
+    'vote.summary': 'Oylama Özeti',
+    'vote.bothLiked': 'İkiniz de beğendi',
+    'vote.disagreed': 'Farklı düşünüyörsunuz',
+    'vote.waitingPartner': 'Eşinin oyları bekleniyor...',
+
+    // ========== Capsules ==========
+    'capsule.title': 'Anı Kapsülleri',
+    'capsule.subtitle': 'Anıları mühürle, birlikte açın',
+    'capsule.create': 'Yeni Kapsül',
+    'capsule.new': 'Anı Kapsülü Oluştur',
+    'capsule.titleLabel': 'Kapsül Başlığı',
+    'capsule.titlePlaceholder': 'örn. İlk Yıldönümümüz',
+    'capsule.message': 'Mesaj',
+    'capsule.messagePlaceholder': 'Gelecekteki kendinize bir şeyler yazın...',
+    'capsule.revealDate': 'Açılma Tarihi',
+    'capsule.revealHint': 'Kapsül bu tarihe kadar kilitli kalacak',
+    'capsule.createBtn': 'Kapsülü Mühürle',
+    'capsule.empty': 'Henüz kapsül yok',
+    'capsule.emptyDesc': 'Bir anı kapsülü oluştur, daha sonra birlikte aç!',
+    'capsule.openedOn': 'Açılma tarihi:',
+    'capsule.daysLeft': 'gün kaldı',
+    'capsule.readyToOpen': 'Açılmaya hazır! 🎉',
+    'capsule.open': 'Kapsülü Aç',
+
+    // ========== Surprise Day ==========
+    'surprise.label': '🎁 Sürpriz Gün',
+    'surprise.hint': 'AI eşiniz için gizemli bir gün planlasın',
+    'surprise.forPartner': 'Eşiniz için sürpriz planlandı',
+    'surprise.hidden': 'Bu kısım gün gelene kadar gizli!',
+
+    // ========== Navigation ==========
+    'nav.capsules': 'Kapsüller',
 
     // ========== General ==========
     'general.loading': 'Yükleniyor...',
