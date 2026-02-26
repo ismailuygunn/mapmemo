@@ -90,7 +90,7 @@ Respond ONLY with valid JSON.`
                     'Authorization': `Bearer ${openaiKey}`,
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o-mini',
+                    model: 'gpt-4o',
                     messages: [
                         { role: 'system', content: 'You are a route optimization assistant. Always respond with valid JSON only.' },
                         { role: 'user', content: prompt }

@@ -1,14 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { useSpace } from '@/context/SpaceContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
-import { PIN_TYPES, PIN_STATUSES, MAP_STYLES } from '@/lib/constants'
+import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import Sidebar from '@/components/layout/Sidebar'
 import PinForm from '@/components/map/PinForm'
 import PinDetail from '@/components/map/PinDetail'
@@ -16,10 +14,34 @@ import { Plus, Search, X, MapPin, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
+// Google Maps dark mode style
+const DARK_MAP_STYLE = [
+    { elementType: 'geometry', stylers: [{ color: '#1a1a2e' }] },
+    { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a2e' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#8892b0' }] },
+    { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+    { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#1e1e3a' }] },
+    { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6c7293' }] },
+    { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#1a2e1a' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+    { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#1a1a2e' }] },
+    { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3a3a5c' }] },
+    { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2a2a4a' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0e1a2b' }] },
+    { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4a5568' }] },
+]
+
+const LIGHT_MAP_STYLE = [
+    { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
+    { featureType: 'poi.medical', stylers: [{ visibility: 'off' }] },
+]
+
 export default function MapPage() {
     const mapContainer = useRef(null)
-    const map = useRef(null)
+    const mapRef = useRef(null)
     const markersRef = useRef([])
+    const autocompleteService = useRef(null)
+    const placesService = useRef(null)
     const [pins, setPins] = useState([])
     const [filteredPins, setFilteredPins] = useState([])
     const [selectedPin, setSelectedPin] = useState(null)
@@ -45,62 +67,96 @@ export default function MapPage() {
         }
     }, [space, spaceLoading, user, dbError])
 
-    // Initialize Mapbox
+    // Load Google Maps script
     useEffect(() => {
-        if (map.current || !mapContainer.current) return
+        if (mapRef.current || !mapContainer.current) return
 
-        mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+        if (!apiKey) {
+            console.error('Google Maps API key not set')
+            return
+        }
 
-        map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: theme === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light,
-            center: [28.9784, 41.0082], // Istanbul default
+        // Check if already loaded
+        if (window.google?.maps) {
+            initMap()
+            return
+        }
+
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&v=weekly`
+        script.async = true
+        script.defer = true
+        script.onload = initMap
+        document.head.appendChild(script)
+
+        return () => {
+            // Cleanup
+        }
+    }, [])
+
+    function initMap() {
+        if (!mapContainer.current || mapRef.current) return
+
+        const google = window.google
+
+        const map = new google.maps.Map(mapContainer.current, {
+            center: { lat: 41.0082, lng: 28.9784 }, // Istanbul default
             zoom: 3,
-            attributionControl: false,
+            styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
+            disableDefaultUI: true,
+            zoomControl: true,
+            zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_BOTTOM },
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            gestureHandling: 'greedy',
+            clickableIcons: false,
         })
 
-        map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
-        map.current.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-left')
+        mapRef.current = map
+        autocompleteService.current = new google.maps.places.AutocompleteService()
+        placesService.current = new google.maps.places.PlacesService(map)
 
-        map.current.on('load', () => {
+        map.addListener('tilesloaded', () => {
             setMapLoaded(true)
         })
 
         // Click on map to add pin with auto reverse-geocode
-        map.current.on('click', async (e) => {
-            if (!document.querySelector('.pin-detail-card')) {
-                const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng }
-                setNewPinCoords(coords)
-                setNewPinLocation(null)
-                // Reverse geocode to get city/country
-                try {
-                    const res = await fetch(
-                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${e.lngLat.lng},${e.lngLat.lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=place,locality,region,country&limit=1`
-                    )
-                    const data = await res.json()
-                    if (data.features?.length > 0) {
-                        const feature = data.features[0]
-                        const context = feature.context || []
-                        const city = feature.text || ''
-                        const country = context.find(c => c.id.startsWith('country'))?.text || ''
-                        setNewPinLocation({ city, country, placeName: feature.place_name })
-                    }
-                } catch { /* silent */ }
-            }
-        })
+        map.addListener('click', async (e) => {
+            if (document.querySelector('.pin-detail-card')) return
 
-        return () => {
-            if (map.current) {
-                map.current.remove()
-                map.current = null
-            }
-        }
-    }, [])
+            const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+            setNewPinCoords(coords)
+            setNewPinLocation(null)
+
+            // Reverse geocode using Google Geocoding API
+            try {
+                const geocoder = new google.maps.Geocoder()
+                const { results } = await geocoder.geocode({ location: e.latLng })
+
+                if (results?.[0]) {
+                    const components = results[0].address_components
+                    const city = components.find(c => c.types.includes('locality'))?.long_name
+                        || components.find(c => c.types.includes('administrative_area_level_1'))?.long_name
+                        || ''
+                    const country = components.find(c => c.types.includes('country'))?.long_name || ''
+                    setNewPinLocation({
+                        city,
+                        country,
+                        placeName: results[0].formatted_address,
+                    })
+                }
+            } catch { /* silent */ }
+        })
+    }
 
     // Update map style on theme change
     useEffect(() => {
-        if (!map.current || !mapLoaded) return
-        map.current.setStyle(theme === 'dark' ? MAP_STYLES.dark : MAP_STYLES.light)
+        if (!mapRef.current || !mapLoaded) return
+        mapRef.current.setOptions({
+            styles: theme === 'dark' ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
+        })
     }, [theme, mapLoaded])
 
     // Load pins
@@ -136,35 +192,62 @@ export default function MapPage() {
         setFilteredPins(result)
     }, [pins, activeFilters])
 
-    // Render markers
+    // Render Google Maps markers
     useEffect(() => {
-        if (!map.current || !mapLoaded) return
+        if (!mapRef.current || !mapLoaded || !window.google) return
 
         // Clear existing markers
-        markersRef.current.forEach(m => m.remove())
+        markersRef.current.forEach(m => m.setMap(null))
         markersRef.current = []
 
         filteredPins.forEach(pin => {
             const pinType = PIN_TYPES[pin.type] || PIN_TYPES.memory
-            const el = document.createElement('div')
-            el.className = 'pin-marker'
-            el.style.background = pinType.color
-            el.innerHTML = `<span class="pin-marker-inner">${pinType.emoji}</span>`
 
-            el.addEventListener('click', (e) => {
-                e.stopPropagation()
-                setSelectedPin(pin)
-            })
+            // Create custom marker element
+            const markerDiv = document.createElement('div')
+            markerDiv.className = 'pin-marker'
+            markerDiv.style.background = pinType.color
+            markerDiv.innerHTML = `<span class="pin-marker-inner">${pinType.emoji}</span>`
 
-            const marker = new mapboxgl.Marker({ element: el })
-                .setLngLat([pin.lng, pin.lat])
-                .addTo(map.current)
+            // Use AdvancedMarkerElement if available, fallback to regular Marker
+            let marker
+            if (window.google.maps.marker?.AdvancedMarkerElement) {
+                marker = new window.google.maps.marker.AdvancedMarkerElement({
+                    map: mapRef.current,
+                    position: { lat: pin.lat, lng: pin.lng },
+                    content: markerDiv,
+                })
+                marker.addListener('click', () => {
+                    setSelectedPin(pin)
+                })
+            } else {
+                // Fallback: use standard marker with custom icon
+                marker = new window.google.maps.Marker({
+                    map: mapRef.current,
+                    position: { lat: pin.lat, lng: pin.lng },
+                    label: {
+                        text: pinType.emoji,
+                        fontSize: '18px',
+                    },
+                    icon: {
+                        path: window.google.maps.SymbolPath.CIRCLE,
+                        scale: 18,
+                        fillColor: pinType.color,
+                        fillOpacity: 0.9,
+                        strokeColor: '#fff',
+                        strokeWeight: 2,
+                    },
+                })
+                marker.addListener('click', () => {
+                    setSelectedPin(pin)
+                })
+            }
 
             markersRef.current.push(marker)
         })
     }, [filteredPins, mapLoaded])
 
-    // Search places
+    // Search places using Google Places Autocomplete
     const handleSearch = useCallback(async (query) => {
         setSearchQuery(query)
         if (query.length < 2) {
@@ -172,20 +255,47 @@ export default function MapPage() {
             return
         }
 
+        if (!autocompleteService.current) {
+            setSearchResults([])
+            return
+        }
+
         try {
-            const res = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&types=place,locality,address&limit=5`
-            )
-            const data = await res.json()
-            setSearchResults(data.features || [])
+            const request = {
+                input: query,
+                types: ['(cities)'],
+            }
+
+            autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                    setSearchResults(predictions.map(p => ({
+                        id: p.place_id,
+                        place_name: p.description,
+                        place_id: p.place_id,
+                    })))
+                } else {
+                    setSearchResults([])
+                }
+            })
         } catch {
             setSearchResults([])
         }
     }, [])
 
     const selectSearchResult = (result) => {
-        const [lng, lat] = result.center
-        map.current.flyTo({ center: [lng, lat], zoom: 12, essential: true })
+        if (!placesService.current) return
+
+        // Get place details to get coordinates
+        placesService.current.getDetails(
+            { placeId: result.place_id, fields: ['geometry', 'name'] },
+            (place, status) => {
+                if (status === window.google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+                    mapRef.current.panTo(place.geometry.location)
+                    mapRef.current.setZoom(12)
+                }
+            }
+        )
+
         setSearchQuery(result.place_name)
         setSearchResults([])
     }
