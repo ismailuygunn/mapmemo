@@ -273,24 +273,26 @@ TIME BUFFER RULES (mandatory):
 
 Respond ONLY in this EXACT JSON format:
 {
-  "overview": "2-3 sentence trip summary",
+  "overview": "3-4 sentence trip summary with highlights and what makes this trip special",
   "suggestions": [
     {
       "id": "unique-id",
       "name": "Place/Restaurant/Attraction Name",
       "type": "sightseeing|food|activity|transport|rest|shopping|nightlife",
       "category": "Müze|Restoran|Kafe|Park|Tarihi Yer|Aktivite|...",
-      "aiSummary": "2-3 sentence summary written by AI. Why this place is special, what to expect, insider tips.",
+      "aiSummary": "3-4 sentences written as if by a local friend. Include WHY this place is special, best time to go, what to order/see, and a personal insider tip.",
       "estimatedDuration": "1-2 saat",
       "estimatedCost": "${currency || 'TRY'} XX",
+      "priceRange": "free|budget|moderate|expensive",
       "rating": 4.5,
       "reviewCount": 1200,
       "googleMapsUrl": "https://maps.google.com/?q=Place+Name+City",
       "address": "Approximate address",
+      "openHours": "09:00-18:00",
       "isHiddenGem": false,
       "bestTimeToVisit": "morning|afternoon|evening|any",
       "suggestedDay": 1,
-      "tags": ["romantic", "family-friendly", "instagram", "budget"]
+      "tags": ["romantic", "family-friendly", "instagram", "budget", "free-entry", "sunset-spot"]
     }
   ],
   "days": [
@@ -298,6 +300,7 @@ Respond ONLY in this EXACT JSON format:
       "dayNumber": 1,
       "date": "${startDate || 'Day 1'}",
       "theme": "Day theme",
+      "dailyBudget": "${currency || 'TRY'} XXX (breakdown: transport X, food X, activities X)",
       "dressCode": {
         "morning": "Outfit suggestion for morning activities",
         "evening": "Outfit suggestion for evening",
@@ -312,11 +315,12 @@ Respond ONLY in this EXACT JSON format:
           "type": "sightseeing|food|activity|transport|rest",
           "estimatedCost": "${currency || 'TRY'} XX",
           "isEstimated": true,
-          "transportNote": "How to get here from previous stop",
+          "transportNote": "Detailed: how to get here (metro line X → station Y, then walk 5 min). Or: take bus 42A from Z stop. Include fare cost.",
           "rating": 4.5,
           "reviewCount": 1200,
           "googleMapsUrl": "https://maps.google.com/?q=Place+Name+City",
-          "isHiddenGem": false
+          "isHiddenGem": false,
+          "proTip": "An insider tip for this specific stop"
         }
       ]
     }
@@ -326,9 +330,45 @@ Respond ONLY in this EXACT JSON format:
     "food": "${currency || 'TRY'} XXX",
     "activities": "${currency || 'TRY'} XXX",
     "transport": "${currency || 'TRY'} XXX",
-    "total": "${currency || 'TRY'} XXX"
+    "total": "${currency || 'TRY'} XXX",
+    "perPersonPerDay": "${currency || 'TRY'} XXX"
   },
-  "tips": ["tip 1", "tip 2"],
+  "tips": [
+    "Tip 1: specific, actionable travel tip",
+    "Tip 2: money-saving hack for this city",
+    "Tip 3: safety/comfort tip",
+    "Tip 4: cultural etiquette",
+    "Tip 5: best photo spots and times",
+    "Tip 6: local customs to know",
+    "Tip 7: wifi/internet advice",
+    "Tip 8: shopping bargaining tips"
+  ],
+  "transportGuide": {
+    "overview": "City transport system overview (metro, bus, tram, ferry etc.)",
+    "transportCard": "Which transport card to buy, where to get it, cost, how to top up",
+    "fromAirport": "How to get from airport to city center (options with prices)",
+    "metroLines": ["Line name: key stations"],
+    "apps": ["App name — what it does, why useful"],
+    "taxiTips": "Taxi app recommendations, average costs, scam warnings",
+    "walkingTips": "Best walking routes, pedestrian areas"
+  },
+  "cheapEats": [
+    {
+      "name": "Restaurant/Street Food Name",
+      "type": "street-food|local-restaurant|bakery|market",
+      "dish": "Famous dish to try",
+      "cost": "${currency || 'TRY'} XX",
+      "area": "Neighborhood/street name",
+      "tip": "Why it's good, when to go"
+    }
+  ],
+  "travelHacks": [
+    "Hack 1: A specific money-saving trick for this city",
+    "Hack 2: A time-saving shortcut",
+    "Hack 3: A comfort hack",
+    "Hack 4: A local secret",
+    "Hack 5: A free activity most tourists miss"
+  ],
   "rainPlan": {
     "overview": "What to do if weather is bad",
     "alternatives": [
@@ -341,7 +381,9 @@ Respond ONLY in this EXACT JSON format:
     "cautionAreas": ["Area — what to watch for"],
     "tipping": "Tipping culture summary",
     "closingHours": "General closing hours, Sunday status",
-    "scamWarnings": ["Scam type: how to avoid"]
+    "scamWarnings": ["Scam type: how to avoid"],
+    "emergencyNumbers": "Police, ambulance, tourist police",
+    "pharmacyInfo": "24-hour pharmacy areas, common medicine brands"
   },
   "alternatives": [
     {
@@ -358,11 +400,17 @@ Respond ONLY in this EXACT JSON format:
 }
 
 IMPORTANT for suggestions array:
-- Include 15-25 unique suggestions covering: top attractions, restaurants, cafes, hidden gems, activities, nightlife
-- Each suggestion MUST have a unique, compelling aiSummary (2-3 sentences, written as if by a local friend giving advice)
-- Suggestions should cover ALL days of the trip
+- Include 20-30 unique suggestions covering: top attractions, restaurants, cafes, hidden gems, activities, nightlife, street food spots
+- Each suggestion MUST have a unique, compelling aiSummary (3-4 sentences, written as a knowledgeable local friend)
 - Include suggestedDay so users know which day each place fits best
-- Tag each place appropriately (romantic, family-friendly, instagram, budget, etc.)
+- Tag each place appropriately (romantic, family-friendly, instagram, budget, free-entry, sunset-spot, etc.)
+- Include at least 5 budget-friendly/free options
+- Include at least 3 hidden gems with isHiddenGem: true
+- tips array MUST have 8-12 specific, actionable tips (not generic travel advice)
+- cheapEats MUST have 5-8 affordable dining options with specific dishes and costs
+- travelHacks MUST have 5 city-specific hacks
+- transportGuide MUST include real transport card name, metro lines, and airport transfer details
+- Each day item MUST include a detailed transportNote explaining how to get there
 
 Respond ONLY with valid JSON, no markdown, no comments.`
 

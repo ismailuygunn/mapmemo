@@ -1323,6 +1323,105 @@ export default function PlannerPage() {
                                 </motion.div>
                             )}
 
+                            {/* ═══ TRANSPORT GUIDE ═══ */}
+                            {itinerary.transportGuide && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        🚇 {locale === 'tr' ? 'Ulaşım Rehberi' : 'Transport Guide'}
+                                    </div>
+                                    <div className="planner-section-body">
+                                        {itinerary.transportGuide.overview && <p style={{ marginBottom: 10, fontSize: '0.82rem' }}>{itinerary.transportGuide.overview}</p>}
+                                        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+                                            {itinerary.transportGuide.transportCard && (
+                                                <div style={{ padding: '10px 12px', background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)' }}>
+                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 2 }}>💳 {locale === 'tr' ? 'Ulaşım Kartı' : 'Transport Card'}</div>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{itinerary.transportGuide.transportCard}</div>
+                                                </div>
+                                            )}
+                                            {itinerary.transportGuide.fromAirport && (
+                                                <div style={{ padding: '10px 12px', background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)' }}>
+                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 2 }}>✈️ {locale === 'tr' ? 'Havalimanından' : 'From Airport'}</div>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{itinerary.transportGuide.fromAirport}</div>
+                                                </div>
+                                            )}
+                                            {itinerary.transportGuide.taxiTips && (
+                                                <div style={{ padding: '10px 12px', background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)' }}>
+                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 2 }}>🚕 {locale === 'tr' ? 'Taksi İpuçları' : 'Taxi Tips'}</div>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 600 }}>{itinerary.transportGuide.taxiTips}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {itinerary.transportGuide.apps?.length > 0 && (
+                                            <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                {itinerary.transportGuide.apps.map((app, i) => (
+                                                    <span key={i} style={{ fontSize: '0.72rem', padding: '3px 10px', background: 'rgba(99,102,241,0.1)', color: 'var(--primary-1)', borderRadius: 20, fontWeight: 600 }}>📱 {app}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ═══ CHEAP EATS ═══ */}
+                            {itinerary.cheapEats?.length > 0 && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        🍜 {locale === 'tr' ? 'Ucuz & Lezzetli Yerler' : 'Cheap Eats'}
+                                    </div>
+                                    <div className="planner-section-body">
+                                        <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+                                            {itinerary.cheapEats.map((eat, i) => (
+                                                <div key={i} style={{ padding: '10px 12px', background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)' }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 3 }}>{eat.name}</div>
+                                                    {eat.dish && <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>🍽️ {eat.dish}</div>}
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                                                        {eat.cost && <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10B981' }}>💰 {eat.cost}</span>}
+                                                        {eat.area && <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>📍 {eat.area}</span>}
+                                                    </div>
+                                                    {eat.tip && <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginTop: 3, fontStyle: 'italic' }}>💡 {eat.tip}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ═══ TRAVEL HACKS ═══ */}
+                            {itinerary.travelHacks?.length > 0 && (
+                                <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}>
+                                    <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                        🧠 {locale === 'tr' ? 'Seyahat Hileleri' : 'Travel Hacks'}
+                                    </div>
+                                    <div className="planner-section-body">
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                            {itinerary.travelHacks.map((hack, i) => (
+                                                <div key={i} style={{ padding: '8px 12px', background: 'var(--bg-primary)', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: '0.8rem', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                    <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>💡</span>
+                                                    <span>{hack}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* ═══ AIRBNB LINK ═══ */}
+                            <motion.div className="planner-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.44 }}>
+                                <div className="planner-section-header" style={{ cursor: 'default' }}>
+                                    🏠 Airbnb
+                                </div>
+                                <div className="planner-section-body">
+                                    <a href={`https://www.airbnb.com/s/${encodeURIComponent(formData.cities[0] || formData.cityInput)}/homes?checkin=${formData.startDate || ''}&checkout=${formData.endDate || ''}`}
+                                        target="_blank" rel="noopener noreferrer" className="transport-link-card" style={{ display: 'flex', gap: 12, alignItems: 'center', textDecoration: 'none' }}>
+                                        <span className="transport-icon">🏠</span>
+                                        <div>
+                                            <span className="transport-name" style={{ display: 'block' }}>{locale === 'tr' ? `${formData.cities[0] || formData.cityInput} Airbnb İlanları` : `Airbnb in ${formData.cities[0] || formData.cityInput}`}</span>
+                                            <span className="transport-provider">{locale === 'tr' ? 'Konaklama seçenekleri için tıkla' : 'Click to browse stays'}</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </motion.div>
+
                             {/* Actions — Space selector + Save */}
                             <div className="plan-save-section">
                                 <div className="plan-save-row">

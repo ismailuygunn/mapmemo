@@ -90,11 +90,12 @@ export default function TripPage() {
     const t = (tr, en) => locale === 'tr' ? tr : en
 
     // ── Load trip ──
-    useEffect(() => { if (id && space) loadTrip() }, [id, space])
+    useEffect(() => { if (id) loadTrip() }, [id])
 
     const loadTrip = async () => {
         setLoading(true)
-        const { data: tripData } = await supabase.from('trips').select('*').eq('id', id).eq('space_id', space.id).single()
+        // Load trip by ID only — don't require active space match
+        const { data: tripData } = await supabase.from('trips').select('*').eq('id', id).single()
         if (tripData) { setTrip(tripData); setNotes(tripData.notes || '') }
         const { data: spotsData } = await supabase.from('trip_spots').select('*').eq('trip_id', id).order('sort_order', { ascending: true })
         if (spotsData) setSpots(spotsData)
