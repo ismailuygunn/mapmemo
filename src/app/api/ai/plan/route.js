@@ -392,38 +392,54 @@ Respond ONLY with valid JSON, no markdown, no comments.`
 
 // ── Gemini API Call ──
 async function callGemini(apiKey, prompt, locale) {
-  const model = 'gemini-2.5-flash'
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+  // Try multiple models in case some aren't available for this API key
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash']
 
   const systemInstruction = locale === 'tr'
     ? 'Sen uzman bir seyahat planlayıcısınsın. Her zaman geçerli JSON ile yanıt ver. Yalnızca gerçek, var olan mekanları, restoranları ve turistik yerleri öner. Emin olmadığın bir şey varsa, tahmini olarak işaretle. Pratik ve gerçekçi ol. Konumun coğrafyasına sadık kal.'
     : 'You are an expert travel planner. Always respond with valid JSON only. Only suggest real, existing places, restaurants, and attractions. When uncertain, mark as estimated. Be practical and realistic. Stay faithful to the location geography.'
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemInstruction }] },
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 16384,
-        responseMimeType: 'application/json',
-      },
-    }),
-  })
+  for (const model of models) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
-  if (!response.ok) {
-    const errText = await response.text()
-    throw new Error(`Gemini error: ${errText}`)
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemInstruction }] },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 16384,
+            responseMimeType: 'application/json',
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errText = await response.text()
+        console.error(`Gemini ${model} error:`, response.status, errText.substring(0, 200))
+        continue // Try next model
+      }
+
+      const data = await response.json()
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+      if (!content) {
+        console.error(`Gemini ${model}: empty response`)
+        continue
+      }
+
+      console.log(`Gemini ${model}: success`)
+      return JSON.parse(content)
+    } catch (err) {
+      console.error(`Gemini ${model} exception:`, err.message)
+      continue
+    }
   }
 
-  const data = await response.json()
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-
-  if (!content) throw new Error('Empty Gemini response')
-
-  return JSON.parse(content)
+  throw new Error('All Gemini models failed')
 }
 
 // ── OpenAI Fallback ──
