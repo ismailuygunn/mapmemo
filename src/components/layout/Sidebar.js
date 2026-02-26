@@ -31,6 +31,7 @@ export default function Sidebar() {
         { icon: Map, label: t('nav.map'), href: '/map' },
         { icon: Compass, label: t('nav.cities'), href: '/cities' },
         { icon: Calendar, label: t('nav.planner'), href: '/planner' },
+        { icon: MapPin, label: t('nav.nearby') || 'Yakında', href: '/nearby' },
         { icon: CalendarDays, label: t('nav.meetups') || 'Meetups', href: '/meetups' },
         { icon: Gift, label: t('nav.capsules'), href: '/capsules' },
         { icon: Settings, label: t('nav.settings'), href: '/settings' },

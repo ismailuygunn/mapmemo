@@ -16,7 +16,8 @@ import {
     ChevronRight, X, Compass, Check, Search, Star, Bed, Clock, Loader2,
     Navigation, Plane, Car, Hotel, Phone, Globe, ChevronDown, ChevronUp,
     MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves, Ticket,
-    UtensilsCrossed, DollarSign, ListChecks
+    UtensilsCrossed, DollarSign, ListChecks, Backpack, Languages, Shield,
+    Upload, Camera, Copy, MapPinned
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -633,16 +634,56 @@ export default function TripPage() {
                                     <ExpenseTracker tripId={id} spaceId={space?.id} locale={locale} />
                                 </motion.div>
                             )}
+
+                            {/* ═══ PACKING LIST TAB ═══ */}
+                            {activeTab === 'packing' && (
+                                <motion.div key="packing" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <PackingListTab city={trip?.city} startDate={trip?.start_date} endDate={trip?.end_date} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ PHRASEBOOK TAB ═══ */}
+                            {activeTab === 'phrases' && (
+                                <motion.div key="phrases" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <PhrasebookTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ EMERGENCY TAB ═══ */}
+                            {activeTab === 'emergency' && (
+                                <motion.div key="emergency" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <EmergencyTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ PHOTO SPOTS TAB ═══ */}
+                            {activeTab === 'photospots' && (
+                                <motion.div key="photospots" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <PhotoSpotsTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ MENU TRANSLATOR TAB ═══ */}
+                            {activeTab === 'menu' && (
+                                <motion.div key="menu" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <MenuTranslatorTab locale={locale} />
+                                </motion.div>
+                            )}
                         </AnimatePresence>
                     </div>
 
                     {/* ═══ FLOATING TABS ═══ */}
-                    <div className="trip-floating-tabs">
+                    <div className="trip-floating-tabs" style={{ flexWrap: 'wrap', gap: 4 }}>
                         <button className={`trip-tab ${activeTab === 'plan' ? 'active' : ''}`} onClick={() => setActiveTab('plan')}><MapPin size={15} /> {t('Plan', 'Plan')}</button>
                         <button className={`trip-tab ${activeTab === 'discover' ? 'active' : ''}`} onClick={() => setActiveTab('discover')}><Compass size={15} /> {t('Keşfet', 'Discover')}</button>
                         <button className={`trip-tab ${activeTab === 'itinerary' ? 'active' : ''}`} onClick={() => setActiveTab('itinerary')}><ListChecks size={15} /> {t('Program', 'Schedule')}</button>
                         <button className={`trip-tab ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}><MessageCircle size={15} /> {t('Sohbet', 'Chat')}</button>
                         <button className={`trip-tab ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}><DollarSign size={15} /> {t('Masraf', 'Expenses')}</button>
+                        <button className={`trip-tab ${activeTab === 'packing' ? 'active' : ''}`} onClick={() => setActiveTab('packing')}>🎒 {t('Bavul', 'Pack')}</button>
+                        <button className={`trip-tab ${activeTab === 'phrases' ? 'active' : ''}`} onClick={() => setActiveTab('phrases')}>🗣️ {t('Cümleler', 'Phrases')}</button>
+                        <button className={`trip-tab ${activeTab === 'emergency' ? 'active' : ''}`} onClick={() => setActiveTab('emergency')}>🆘 {t('Güvenlik', 'Safety')}</button>
+                        <button className={`trip-tab ${activeTab === 'photospots' ? 'active' : ''}`} onClick={() => setActiveTab('photospots')}>📸 {t('Spot', 'Spots')}</button>
+                        <button className={`trip-tab ${activeTab === 'menu' ? 'active' : ''}`} onClick={() => setActiveTab('menu')}>🍽️ {t('Menü', 'Menu')}</button>
                     </div>
                 </div>
             </div>
@@ -812,4 +853,437 @@ function LoadingPlaceholder({ text }) {
 }
 function EmptyPlaceholder({ icon, text }) {
     return (<div className="trip-placeholder">{icon}<p>{text}</p></div>)
+}
+
+// ══════════════════════════════════════════════════
+//  PACKING LIST TAB
+// ══════════════════════════════════════════════════
+function PackingListTab({ city, startDate, endDate, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [checked, setChecked] = useState({})
+    const [expandedCat, setExpandedCat] = useState(null)
+
+    const days = startDate && endDate ? Math.ceil((new Date(endDate) - new Date(startDate)) / 864e5) + 1 : 3
+
+    const generate = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/ai/packing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, days, locale }) })
+            const d = await res.json()
+            if (d.categories) setData(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) generate() }, [city])
+
+    const toggle = (catIdx, itemIdx) => {
+        const key = `${catIdx}-${itemIdx}`
+        setChecked(prev => ({ ...prev, [key]: !prev[key] }))
+    }
+
+    const totalItems = data?.categories?.reduce((s, c) => s + c.items.length, 0) || 0
+    const checkedCount = Object.values(checked).filter(Boolean).length
+
+    if (loading) return <LoadingPlaceholder text={locale === 'tr' ? 'AI bavul listesi oluşturuyor...' : 'Generating packing list...'} />
+
+    if (!data) return (
+        <div className="trip-placeholder">
+            <span style={{ fontSize: '3rem' }}>🎒</span>
+            <p>{locale === 'tr' ? 'Bavul listesi henüz oluşturulmadı' : 'No packing list generated yet'}</p>
+            <button className="btn btn-primary btn-sm" onClick={generate}>{locale === 'tr' ? 'Oluştur' : 'Generate'}</button>
+        </div>
+    )
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header">
+                <h3>🎒 {locale === 'tr' ? 'Bavul Listesi' : 'Packing List'}</h3>
+                <span className="tool-badge">{checkedCount}/{totalItems}</span>
+            </div>
+            {/* Progress bar */}
+            <div className="tool-progress"><div className="tool-progress-fill" style={{ width: `${totalItems > 0 ? (checkedCount / totalItems) * 100 : 0}%` }} /></div>
+            {/* Weather tips */}
+            {data.weatherTips?.length > 0 && (
+                <div className="tool-tips">{data.weatherTips.map((tip, i) => <div key={i} className="tool-tip">🌤️ {tip}</div>)}</div>
+            )}
+            {/* Categories */}
+            {data.categories?.map((cat, ci) => (
+                <div key={ci} className="tool-category">
+                    <button className="tool-cat-header" onClick={() => setExpandedCat(expandedCat === ci ? null : ci)}>
+                        <span>{cat.emoji} {cat.name}</span>
+                        <span className="tool-cat-count">{cat.items?.length || 0}</span>
+                    </button>
+                    <AnimatePresence>
+                        {(expandedCat === ci || expandedCat === null) && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                                {cat.items?.map((item, ii) => (
+                                    <div key={ii} className={`tool-check-item ${checked[`${ci}-${ii}`] ? 'checked' : ''}`} onClick={() => toggle(ci, ii)}>
+                                        <div className={`tool-checkbox ${checked[`${ci}-${ii}`] ? 'active' : ''}`}>{checked[`${ci}-${ii}`] && <Check size={12} />}</div>
+                                        <span className="tool-item-emoji">{item.emoji}</span>
+                                        <span className="tool-item-name">{item.name}</span>
+                                        {item.quantity > 1 && <span className="tool-item-qty">×{item.quantity}</span>}
+                                        <span className={`tool-priority ${item.priority}`}>{item.priority === 'must' ? '❗' : item.priority === 'nice' ? '👍' : '💭'}</span>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            ))}
+            {data.localTips?.length > 0 && (
+                <div className="tool-tips" style={{ marginTop: 12 }}>{data.localTips.map((tip, i) => <div key={i} className="tool-tip">💡 {tip}</div>)}</div>
+            )}
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  PHRASEBOOK TAB
+// ══════════════════════════════════════════════════
+function PhrasebookTab({ city, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [expandedCat, setExpandedCat] = useState(0)
+    const [copied, setCopied] = useState(null)
+
+    const generate = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/ai/phrases', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
+            const d = await res.json()
+            if (d.categories) setData(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) generate() }, [city])
+
+    const copyPhrase = (text, idx) => {
+        navigator.clipboard?.writeText(text)
+        setCopied(idx)
+        setTimeout(() => setCopied(null), 1500)
+    }
+
+    if (loading) return <LoadingPlaceholder text={locale === 'tr' ? 'Cümle defteri hazırlanıyor...' : 'Generating phrasebook...'} />
+    if (!data) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>🗣️</span><p>{locale === 'tr' ? 'Cümle defteri hazır değil' : 'Phrasebook not ready'}</p><button className="btn btn-primary btn-sm" onClick={generate}>{locale === 'tr' ? 'Oluştur' : 'Generate'}</button></div>
+    )
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header">
+                <h3>🗣️ {locale === 'tr' ? 'Cümle Defteri' : 'Phrasebook'}</h3>
+                <span className="tool-badge">{data.localLanguage} ({data.localLanguageNative})</span>
+            </div>
+            {/* Cultural notes */}
+            {data.culturalNotes?.length > 0 && (
+                <div className="tool-tips">{data.culturalNotes.map((n, i) => <div key={i} className="tool-tip">🌏 {n}</div>)}</div>
+            )}
+            {/* Emergency phrases at top */}
+            {data.emergencyPhrases?.length > 0 && (
+                <div className="phrase-emergency">
+                    <h4>🆘 {locale === 'tr' ? 'Acil Cümleler' : 'Emergency Phrases'}</h4>
+                    {data.emergencyPhrases.map((p, i) => (
+                        <div key={i} className="phrase-card emergency" onClick={() => copyPhrase(p.translated, `e${i}`)}>
+                            <div className="phrase-original">{p.original}</div>
+                            <div className="phrase-translated">{p.translated}</div>
+                            <div className="phrase-pronunciation">🔊 {p.pronunciation}</div>
+                            {copied === `e${i}` && <span className="phrase-copied">✅</span>}
+                        </div>
+                    ))}
+                </div>
+            )}
+            {/* Categories */}
+            {data.categories?.map((cat, ci) => (
+                <div key={ci} className="tool-category">
+                    <button className="tool-cat-header" onClick={() => setExpandedCat(expandedCat === ci ? null : ci)}>
+                        <span>{cat.emoji} {cat.name}</span>
+                        <span className="tool-cat-count">{cat.phrases?.length || 0}</span>
+                    </button>
+                    <AnimatePresence>
+                        {expandedCat === ci && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                                {cat.phrases?.map((p, pi) => (
+                                    <div key={pi} className="phrase-card" onClick={() => copyPhrase(p.translated, `${ci}-${pi}`)}>
+                                        <div className="phrase-original">{p.original}</div>
+                                        <div className="phrase-translated">{p.translated}</div>
+                                        <div className="phrase-pronunciation">🔊 {p.pronunciation}</div>
+                                        {p.context && <div className="phrase-context">💡 {p.context}</div>}
+                                        {copied === `${ci}-${pi}` && <span className="phrase-copied">✅</span>}
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            ))}
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  EMERGENCY TAB
+// ══════════════════════════════════════════════════
+function EmergencyTab({ city, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+
+    const generate = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/emergency', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
+            const d = await res.json()
+            if (d.emergencyNumbers) setData(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) generate() }, [city])
+
+    if (loading) return <LoadingPlaceholder text={locale === 'tr' ? 'Güvenlik bilgileri alınıyor...' : 'Getting safety info...'} />
+    if (!data) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>🆘</span><p>{locale === 'tr' ? 'Güvenlik bilgisi yok' : 'No safety info'}</p><button className="btn btn-primary btn-sm" onClick={generate}>{locale === 'tr' ? 'Yükle' : 'Load'}</button></div>
+    )
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>🆘 {locale === 'tr' ? 'Güvenlik & Acil' : 'Safety & Emergency'}</h3></div>
+
+            {/* Emergency Numbers */}
+            <div className="emer-numbers">
+                {data.emergencyNumbers?.map((n, i) => (
+                    <a key={i} href={`tel:${n.number}`} className="emer-num-card">
+                        <span className="emer-emoji">{n.emoji}</span>
+                        <span className="emer-service">{n.service}</span>
+                        <span className="emer-number">{n.number}</span>
+                    </a>
+                ))}
+            </div>
+
+            {/* Embassy */}
+            {data.embassy && (
+                <div className="emer-section">
+                    <h4>🏛️ {locale === 'tr' ? 'Büyükelçilik' : 'Embassy'}</h4>
+                    <div className="emer-embassy-card">
+                        <strong>{data.embassy.name}</strong>
+                        <p>📍 {data.embassy.address}</p>
+                        {data.embassy.phone && <p>📞 <a href={`tel:${data.embassy.phone}`}>{data.embassy.phone}</a></p>}
+                        {data.embassy.workingHours && <p>🕐 {data.embassy.workingHours}</p>}
+                        {data.embassy.googleMapsUrl && <a href={data.embassy.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn">📍 Google Maps</a>}
+                    </div>
+                </div>
+            )}
+
+            {/* Hospitals */}
+            {data.hospitals?.length > 0 && (
+                <div className="emer-section">
+                    <h4>🏥 {locale === 'tr' ? 'Hastaneler' : 'Hospitals'}</h4>
+                    {data.hospitals.map((h, i) => (
+                        <div key={i} className="emer-hospital-card">
+                            <strong>{h.name}</strong>
+                            <p className="emer-addr">📍 {h.address}</p>
+                            {h.phone && <a href={`tel:${h.phone}`} className="emer-phone">📞 {h.phone}</a>}
+                            <div className="emer-tags">
+                                {h.hasER && <span className="emer-tag er">🚨 {locale === 'tr' ? 'Acil' : 'ER'}</span>}
+                                <span className={`emer-tag ${h.isPublic ? 'public' : 'private'}`}>{h.isPublic ? '🏛️ Devlet' : '🏢 Özel'}</span>
+                            </div>
+                            {h.googleMapsUrl && <a href={h.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn" style={{ marginTop: 6 }}>📍 Harita</a>}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Safe Areas */}
+            {data.safeAreas?.length > 0 && (
+                <div className="emer-section">
+                    <h4>✅ {locale === 'tr' ? 'Güvenli Bölgeler' : 'Safe Areas'}</h4>
+                    {data.safeAreas.map((a, i) => <div key={i} className="emer-area safe">{a.emoji} <strong>{a.name}</strong> — {a.description}</div>)}
+                </div>
+            )}
+
+            {/* Caution Areas */}
+            {data.cautionAreas?.length > 0 && (
+                <div className="emer-section">
+                    <h4>⚠️ {locale === 'tr' ? 'Dikkat Bölgeleri' : 'Caution Areas'}</h4>
+                    {data.cautionAreas.map((a, i) => <div key={i} className="emer-area caution">{a.emoji} <strong>{a.name}</strong> — {a.description}</div>)}
+                </div>
+            )}
+
+            {/* Scam Warnings */}
+            {data.scamWarnings?.length > 0 && (
+                <div className="emer-section">
+                    <h4>🚨 {locale === 'tr' ? 'Dolandırıcılık Uyarıları' : 'Scam Warnings'}</h4>
+                    {data.scamWarnings.map((s, i) => <div key={i} className="emer-area caution">{s.emoji} <strong>{s.type}</strong> — {s.description}</div>)}
+                </div>
+            )}
+
+            {/* Tipping */}
+            {data.tipping && (
+                <div className="emer-section">
+                    <h4>💰 {locale === 'tr' ? 'Bahşiş Kültürü' : 'Tipping'}</h4>
+                    <div className="emer-tipping">
+                        <div>🍽️ {locale === 'tr' ? 'Restoran' : 'Restaurant'}: {data.tipping.restaurants}</div>
+                        <div>🏨 {locale === 'tr' ? 'Otel' : 'Hotel'}: {data.tipping.hotels}</div>
+                        <div>🚕 Taksi: {data.tipping.taxis}</div>
+                        {data.tipping.guides && <div>🎙️ Rehber: {data.tipping.guides}</div>}
+                    </div>
+                </div>
+            )}
+
+            {/* Health */}
+            {data.healthInfo && (
+                <div className="emer-section">
+                    <h4>🏥 {locale === 'tr' ? 'Sağlık' : 'Health'}</h4>
+                    <div className="emer-tipping">
+                        <div>💧 {data.healthInfo.waterSafety}</div>
+                        <div>💊 {data.healthInfo.pharmacyHours}</div>
+                        {data.healthInfo.insuranceTip && <div>🛡️ {data.healthInfo.insuranceTip}</div>}
+                    </div>
+                </div>
+            )}
+
+            {/* General Tips */}
+            {data.generalTips?.length > 0 && (
+                <div className="tool-tips">{data.generalTips.map((tip, i) => <div key={i} className="tool-tip">💡 {tip}</div>)}</div>
+            )}
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  PHOTO SPOTS TAB
+// ══════════════════════════════════════════════════
+function PhotoSpotsTab({ city, locale }) {
+    const [spots, setSpots] = useState([])
+    const [loading, setLoading] = useState(false)
+
+    const load = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch(`/api/photospots?city=${encodeURIComponent(city)}`)
+            const d = await res.json()
+            if (d.spots) setSpots(d.spots)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && spots.length === 0) load() }, [city])
+
+    if (loading) return <LoadingPlaceholder text={locale === 'tr' ? 'Fotoğraf noktaları aranıyor...' : 'Searching photo spots...'} />
+    if (spots.length === 0) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>📸</span><p>{locale === 'tr' ? 'Fotoğraf noktası bulunamadı' : 'No photo spots found'}</p><button className="btn btn-primary btn-sm" onClick={load}>{locale === 'tr' ? 'Ara' : 'Search'}</button></div>
+    )
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>📸 {locale === 'tr' ? 'Fotoğraf Noktaları' : 'Photo Spots'}</h3><span className="tool-badge">{spots.length}</span></div>
+            <div className="photo-spots-grid">
+                {spots.map((spot, i) => (
+                    <motion.div key={spot.place_id} className="photo-spot-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                        <div className="photo-spot-img" style={{ backgroundImage: spot.photo_url ? `url(${spot.photo_url})` : 'none' }}>
+                            {!spot.photo_url && <span style={{ fontSize: '2rem' }}>📸</span>}
+                            {spot.rating > 0 && <span className="photo-spot-rating">⭐ {spot.rating}</span>}
+                        </div>
+                        <div className="photo-spot-info">
+                            <h4>{spot.name}</h4>
+                            {spot.review_count > 0 && <span className="photo-spot-reviews">{spot.review_count.toLocaleString()} {locale === 'tr' ? 'yorum' : 'reviews'}</span>}
+                            <a href={spot.map_url} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn" style={{ marginTop: 4, fontSize: '0.68rem' }}>📍 Google Maps</a>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  MENU TRANSLATOR TAB
+// ══════════════════════════════════════════════════
+function MenuTranslatorTab({ locale }) {
+    const [result, setResult] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [preview, setPreview] = useState(null)
+    const fileRef = useRef(null)
+
+    const handleFile = async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        setPreview(URL.createObjectURL(file))
+        setLoading(true)
+        try {
+            const fd = new FormData()
+            fd.append('image', file)
+            fd.append('locale', locale)
+            const res = await fetch('/api/ai/translate-menu', { method: 'POST', body: fd })
+            const d = await res.json()
+            if (d.sections) setResult(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>🍽️ {locale === 'tr' ? 'Menü Çevirici' : 'Menu Translator'}</h3></div>
+
+            {/* Upload Area */}
+            <div className="menu-upload" onClick={() => fileRef.current?.click()}>
+                {preview ? (
+                    <img src={preview} alt="Menu" className="menu-preview" />
+                ) : (
+                    <>
+                        <Camera size={32} style={{ color: 'var(--text-tertiary)' }} />
+                        <p>{locale === 'tr' ? 'Menü fotoğrafı çek veya yükle' : 'Take or upload a menu photo'}</p>
+                    </>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
+            </div>
+
+            {loading && <LoadingPlaceholder text={locale === 'tr' ? 'AI menüyü analiz ediyor...' : 'AI analyzing menu...'} />}
+
+            {result && (
+                <div className="menu-result">
+                    <div className="menu-result-header">
+                        <span>🍳 {result.restaurantType}</span>
+                        <span className="tool-badge">{result.detectedLanguage}</span>
+                    </div>
+                    {/* Top Picks */}
+                    {result.topPicks?.length > 0 && (
+                        <div className="menu-top-picks">
+                            <h4>⭐ {locale === 'tr' ? 'Öneriler' : 'Top Picks'}</h4>
+                            <div className="menu-picks">{result.topPicks.map((p, i) => <span key={i} className="menu-pick">🌟 {p}</span>)}</div>
+                        </div>
+                    )}
+                    {/* Sections */}
+                    {result.sections?.map((sec, si) => (
+                        <div key={si} className="menu-section">
+                            <h4>{sec.emoji} {sec.name}</h4>
+                            {sec.items?.map((item, ii) => (
+                                <div key={ii} className="menu-item">
+                                    <div className="menu-item-top">
+                                        <strong>{item.translatedName}</strong>
+                                        {item.price && <span className="menu-price">{item.price}</span>}
+                                    </div>
+                                    <div className="menu-item-original">{item.originalName}</div>
+                                    {item.description && <p className="menu-item-desc">{item.description}</p>}
+                                    <div className="menu-item-tags">
+                                        {item.isVegetarian && <span className="menu-tag veg">🌿 Vejetaryen</span>}
+                                        {item.isVegan && <span className="menu-tag vegan">🌱 Vegan</span>}
+                                        {item.isSpicy && <span className="menu-tag spicy">🌶️ Acı</span>}
+                                        {item.allergens?.map(a => <span key={a} className="menu-tag allergen">⚠️ {a}</span>)}
+                                    </div>
+                                    {item.recommendation && <div className="menu-recommendation">{item.recommendation}</div>}
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    {result.budgetTip && <div className="tool-tip" style={{ marginTop: 12 }}>💰 {result.budgetTip}</div>}
+                    <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => { setResult(null); setPreview(null) }}>
+                        📸 {locale === 'tr' ? 'Başka Menü Tara' : 'Scan Another Menu'}
+                    </button>
+                </div>
+            )}
+        </div>
+    )
 }
