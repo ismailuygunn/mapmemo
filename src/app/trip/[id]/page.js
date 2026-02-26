@@ -12,7 +12,7 @@ import {
     ArrowLeft, MoreHorizontal, Calendar, Minus, Plus, FileText, MapPin,
     ChevronRight, X, Compass, Check, Search, Star, Bed, Clock, Loader2,
     Navigation, Plane, Car, Hotel, Phone, Globe, ChevronDown, ChevronUp,
-    MessageCircle, User
+    MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -57,6 +57,8 @@ export default function TripPage() {
     const [flightsLoading, setFlightsLoading] = useState(false)
     const [carAgencies, setCarAgencies] = useState([])
     const [carsLoading, setCarsLoading] = useState(false)
+    const [airbnbListings, setAirbnbListings] = useState([])
+    const [airbnbLoading, setAirbnbLoading] = useState(false)
     const [serviceTab, setServiceTab] = useState('hotels')
     const [flightOrigin, setFlightOrigin] = useState('IST')
 
@@ -107,6 +109,7 @@ export default function TripPage() {
         if (serviceTab === 'hotels' && hotels.length === 0) fetchHotels()
         if (serviceTab === 'flights' && flights.length === 0) fetchFlights()
         if (serviceTab === 'cars' && carAgencies.length === 0) fetchCars()
+        if (serviceTab === 'airbnb' && airbnbListings.length === 0) fetchAirbnb()
     }, [activeTab, serviceTab, trip?.city])
 
     const fetchHotels = async () => {
@@ -146,10 +149,29 @@ export default function TripPage() {
         setCarsLoading(false)
     }
 
+    const fetchAirbnb = async () => {
+        setAirbnbLoading(true)
+        try {
+            const p = new URLSearchParams({ city: trip.city })
+            if (trip.start_date) p.append('checkin', trip.start_date)
+            if (trip.end_date) p.append('checkout', trip.end_date)
+            const res = await fetch(`/api/airbnb?${p}`)
+            const data = await res.json()
+            if (data.listings) setAirbnbListings(data.listings)
+        } catch { }
+        setAirbnbLoading(false)
+    }
+
     // ── Place detail (in-app) ──
     const openDetail = async (item) => {
         setSelectedItem(item)
         setItemDetail(null)
+        // Airbnb listings don't use Google Places detail
+        if (item.type && item.price_per_night !== undefined) {
+            // It's an Airbnb listing — show directly, no API call
+            setItemDetail(item)
+            return
+        }
         if (!item.place_id) return
         setDetailLoading(true)
         try {
@@ -341,6 +363,7 @@ export default function TripPage() {
                                     <div className="trip-service-tabs">
                                         {[
                                             { key: 'hotels', icon: <Hotel size={15} />, label: t('Oteller', 'Hotels') },
+                                            { key: 'airbnb', icon: <Home size={15} />, label: 'Airbnb' },
                                             { key: 'flights', icon: <Plane size={15} />, label: t('Uçuşlar', 'Flights') },
                                             { key: 'cars', icon: <Car size={15} />, label: t('Araç Kiralama', 'Car Rental') },
                                         ].map(tab => (
@@ -434,6 +457,43 @@ export default function TripPage() {
                                         </section>
                                     )}
 
+                                    {/* ── AIRBNB ── */}
+                                    {serviceTab === 'airbnb' && (
+                                        <section className="trip-section">
+                                            <h2 className="trip-section-title">{t(`${trip.city} Airbnb`, `Airbnb in ${trip.city}`)}</h2>
+                                            {airbnbLoading ? <LoadingPlaceholder text={t('Airbnb ilanları aranıyor...', 'Searching Airbnb...')} /> : airbnbListings.length === 0 ? (
+                                                <div className="trip-placeholder">
+                                                    <Home size={36} />
+                                                    <p>{t('Airbnb ilanı bulunamadı', 'No Airbnb listings found')}</p>
+                                                    <p style={{ fontSize: '0.75rem', maxWidth: 260 }}>{t('RAPIDAPI_KEY eklemen gerekiyor. Aşağıdaki adımları izle.', 'Add RAPIDAPI_KEY to .env.local')}</p>
+                                                </div>
+                                            ) : (
+                                                <div className="trip-airbnb-grid">
+                                                    {airbnbListings.map(listing => (
+                                                        <div key={listing.id} className="trip-airbnb-card" onClick={() => openDetail(listing)}>
+                                                            <div className="trip-airbnb-image" style={{ backgroundImage: listing.photo_url ? `url(${listing.photo_url})` : 'none' }}>
+                                                                {listing.is_superhost && <span className="trip-airbnb-superhost">★ Superhost</span>}
+                                                                <div className="trip-airbnb-price-badge">{listing.price_per_night ? `${listing.price_per_night.toLocaleString()} ${listing.currency}` : ''}<span>/ {t('gece', 'night')}</span></div>
+                                                            </div>
+                                                            <div className="trip-airbnb-info">
+                                                                <span className="trip-airbnb-type">{listing.type}</span>
+                                                                <h3 className="trip-airbnb-name">{listing.name}</h3>
+                                                                <div className="trip-airbnb-meta">
+                                                                    {listing.rating > 0 && <RatingBar rating={listing.rating} count={listing.review_count} />}
+                                                                    <span className="trip-airbnb-specs">
+                                                                        {listing.bedrooms > 0 && <><Bed size={12} /> {listing.bedrooms}</>}
+                                                                        {listing.beds > 0 && <> · {listing.beds} {t('yatak', 'beds')}</>}
+                                                                        {listing.bathrooms > 0 && <> · <Bath size={12} /> {listing.bathrooms}</>}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </section>
+                                    )}
+
                                     {/* ── CARS ── */}
                                     {serviceTab === 'cars' && (
                                         <section className="trip-section">
@@ -502,15 +562,41 @@ export default function TripPage() {
                                     <div className="trip-detail-meta-row">
                                         {detail.rating > 0 && <RatingBar rating={detail.rating} count={detail.review_count || 0} />}
                                         {detail.price_level > 0 && <PriceStars level={detail.price_level} />}
+                                        {detail.price_per_night > 0 && <span className="trip-airbnb-price-inline">{detail.price_per_night.toLocaleString()} {detail.currency} / {t('gece', 'night')}</span>}
                                     </div>
+
+                                    {/* Airbnb specs */}
+                                    {detail.bedrooms !== undefined && (
+                                        <div className="trip-airbnb-detail-specs">
+                                            <span className="trip-spec-item"><Bed size={15} /> {detail.bedrooms} {t('oda', 'bedrooms')}</span>
+                                            <span className="trip-spec-item"><Users size={15} /> {detail.max_guests || '—'} {t('misafir', 'guests')}</span>
+                                            <span className="trip-spec-item"><Bath size={15} /> {detail.bathrooms} {t('banyo', 'bath')}</span>
+                                            {detail.beds > 0 && <span className="trip-spec-item"><Bed size={15} /> {detail.beds} {t('yatak', 'beds')}</span>}
+                                        </div>
+                                    )}
+
+                                    {/* Amenities */}
+                                    {detail.amenities?.length > 0 && (
+                                        <div className="trip-airbnb-amenities">
+                                            {detail.amenities.slice(0, 8).map((a, i) => <span key={i} className="trip-amenity-chip">{a}</span>)}
+                                        </div>
+                                    )}
+
+                                    {/* Host */}
+                                    {detail.host_name && (
+                                        <div className="trip-airbnb-host">
+                                            <div className="trip-host-avatar" style={{ backgroundImage: detail.host_avatar ? `url(${detail.host_avatar})` : 'none' }}>{!detail.host_avatar && <User size={16} />}</div>
+                                            <div><strong>{detail.host_name}</strong>{detail.is_superhost && <span className="trip-superhost-badge">★ Superhost</span>}</div>
+                                        </div>
+                                    )}
 
                                     {/* Action pills */}
                                     <div className="trip-detail-actions">
-                                        {spots.some(s => s.place_id === (detail.place_id || selectedItem.place_id)) ? (
+                                        {detail.place_id && spots.some(s => s.place_id === detail.place_id) ? (
                                             <button className="trip-action-pill planned"><Check size={14} /> {t('Planlandı', 'Planned')}</button>
-                                        ) : (
+                                        ) : detail.place_id ? (
                                             <button className="trip-action-pill add" onClick={() => addSpot(detail)}><Plus size={14} /> {t('Plana ekle', 'Add to plan')}</button>
-                                        )}
+                                        ) : null}
                                     </div>
 
                                     {/* Contact info */}
