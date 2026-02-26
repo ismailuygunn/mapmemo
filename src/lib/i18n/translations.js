@@ -179,6 +179,17 @@ export const translations = {
     'gallery.location': 'Location (optional)',
     'gallery.setCover': 'Set as Cover',
 
+    // ========== Cover Generator ==========
+    'cover.title': '✨ AI Cover Image',
+    'cover.generate': 'Generate Cover',
+    'cover.generating': 'Generating...',
+    'cover.style': 'Cover Style',
+    'cover.reference': 'Reference Photo',
+    'cover.referenceHint': 'Upload a photo for AI reference (optional)',
+    'cover.setAsCover': 'Set as Cover',
+    'cover.download': 'Download',
+    'cover.regenerate': 'Regenerate',
+
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Relaxed — no rush, sleep in',
     'tempo.moderate': '🚶 Moderate — balanced sightseeing & rest',
@@ -533,6 +544,17 @@ export const translations = {
     'gallery.caption': 'Açıklama',
     'gallery.location': 'Konum (opsiyonel)',
     'gallery.setCover': 'Kapak Yap',
+
+    // ========== Cover Generator ==========
+    'cover.title': '✨ AI Kapak Görseli',
+    'cover.generate': 'Kapak Oluştur',
+    'cover.generating': 'Oluşturuluyor...',
+    'cover.style': 'Kapak Stili',
+    'cover.reference': 'Referans Fotoğraf',
+    'cover.referenceHint': 'AI referansı için fotoğraf yükleyin (opsiyonel)',
+    'cover.setAsCover': 'Kapak Yap',
+    'cover.download': 'İndir',
+    'cover.regenerate': 'Yeniden Oluştur',
 
     // ========== Tempos ==========
     'tempo.relaxed': '🧘 Rahat — acele yok, geç uyan',

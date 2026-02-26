@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { openAlbumForPrint } from '@/lib/albumGenerator'
 import TripGallery from '@/components/planner/TripGallery'
+import CoverGenerator from '@/components/planner/CoverGenerator'
 
 export default function PlannerPage() {
     const [view, setView] = useState('form')
@@ -840,6 +841,14 @@ export default function PlannerPage() {
                                     setItinerary(prev => ({ ...prev, coverPhoto: url }))
                                 }} />
                             )}
+
+                            {/* Cover Image Generator */}
+                            <CoverGenerator
+                                city={formData.cities.join(', ') || formData.cityInput}
+                                startDate={formData.startDate}
+                                endDate={formData.endDate}
+                                onCoverSelect={(url) => setItinerary(prev => ({ ...prev, coverPhoto: url }))}
+                            />
 
                             {/* Days */}
                             {itinerary.days?.map((day, di) => (
