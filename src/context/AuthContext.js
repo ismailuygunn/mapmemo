@@ -14,19 +14,27 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         // Get initial session
         const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            setUser(user)
-            if (user) {
-                const { data } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single()
-                setProfile(data)
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                setUser(user)
+                if (user) {
+                    const { data } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single()
+                    setProfile(data)
+                }
+            } catch (err) {
+                console.error('Auth check failed:', err)
+                setUser(null)
             }
             setLoading(false)
         }
         getUser()
+
+        // Safety timeout — never stay on loading forever
+        const timeout = setTimeout(() => setLoading(false), 8000)
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -45,7 +53,7 @@ export function AuthProvider({ children }) {
             }
         )
 
-        return () => subscription.unsubscribe()
+        return () => { subscription.unsubscribe(); clearTimeout(timeout) }
     }, [])
 
     const signUp = async (email, password, displayName) => {
