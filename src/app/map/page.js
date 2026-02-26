@@ -37,15 +37,12 @@ export default function MapPage() {
     const supabase = createClient()
     const router = useRouter()
 
-    // Redirect if needed
+    // Redirect only if not logged in
     useEffect(() => {
-        if (!spaceLoading && !space && !dbError && user) {
-            router.push('/onboarding')
-        }
         if (!spaceLoading && !user) {
             router.push('/login')
         }
-    }, [space, spaceLoading, user, dbError])
+    }, [spaceLoading, user])
 
     // Initialize Mapbox
     useEffect(() => {
