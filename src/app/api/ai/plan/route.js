@@ -135,6 +135,91 @@ Cities in order: ${cityList.join(' → ')}
       eventsContext = `\nLOCAL EVENTS DURING TRIP:\n${eventsData.slice(0, 10).map(e => `- ${e.date || 'TBD'}: ${e.title} (${e.category})${e.venue ? ` at ${e.venue}` : ''}`).join('\n')}\nIncorporate relevant events as optional activities.`
     }
 
+    // ── Fetch REAL Google Places data ──
+    let placesContext = ''
+    const googleApiKey = process.env.GOOGLE_PLACES_API_KEY
+    if (googleApiKey) {
+      try {
+        const mainCity = cityList[0]
+        const PLACES_BASE = 'https://maps.googleapis.com/maps/api/place'
+
+        // Geocode the city
+        const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(mainCity)}&key=${googleApiKey}`)
+        const geoData = await geoRes.json()
+        const coords = geoData.results?.[0]?.geometry?.location
+
+        if (coords) {
+          // Fetch restaurants, attractions, cafes in parallel
+          const fetchPlaces = async (type, keyword = '') => {
+            const params = new URLSearchParams({
+              location: `${coords.lat},${coords.lng}`,
+              radius: '8000',
+              type,
+              key: googleApiKey,
+              language: locale === 'tr' ? 'tr' : 'en',
+            })
+            if (keyword) params.append('keyword', keyword)
+            const res = await fetch(`${PLACES_BASE}/nearbysearch/json?${params}`)
+            const data = await res.json()
+            return (data.results || [])
+              .filter(p => p.rating && p.user_ratings_total)
+              .sort((a, b) => (b.rating * Math.log10(b.user_ratings_total + 1)) - (a.rating * Math.log10(a.user_ratings_total + 1)))
+          }
+
+          const fetchTextPlaces = async (query) => {
+            const params = new URLSearchParams({ query: `${query} ${mainCity}`, key: googleApiKey, language: locale === 'tr' ? 'tr' : 'en' })
+            const res = await fetch(`${PLACES_BASE}/textsearch/json?${params}`)
+            const data = await res.json()
+            return (data.results || []).filter(p => p.rating).sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          }
+
+          const [restaurants, attractions, cafes, localFood, nightlife] = await Promise.all([
+            fetchPlaces('restaurant'),
+            fetchPlaces('tourist_attraction'),
+            fetchPlaces('cafe'),
+            fetchTextPlaces('yerel yemek local food traditional'),
+            fetchPlaces('bar', 'nightlife rooftop'),
+          ])
+
+          const formatForPrompt = (places, count = 10) => places.slice(0, count).map(p => {
+            const price = p.price_level != null ? ' | Fiyat: ' + '₺'.repeat(p.price_level || 1) : ''
+            return `  • ${p.name} — ⭐${p.rating} (${p.user_ratings_total} yorum)${price} | ${p.vicinity || p.formatted_address || ''}`
+          }).join('\n')
+
+          placesContext = `
+
+═══ GOOGLE PLACES REAL DATA (USE THESE!) ═══
+The following are REAL places from Google Maps with real ratings. You MUST prioritize these in your plan.
+
+🍽️ TOP RESTAURANTS:
+${formatForPrompt(restaurants, 12)}
+
+🏛️ TOP ATTRACTIONS:
+${formatForPrompt(attractions, 12)}
+
+☕ TOP CAFES:
+${formatForPrompt(cafes, 8)}
+
+🍖 LOCAL FOOD & TRADITIONAL:
+${formatForPrompt(localFood, 8)}
+
+🌙 NIGHTLIFE & BARS:
+${formatForPrompt(nightlife, 6)}
+
+📌 HIDDEN GEMS (high rating, fewer reviews — include 2-3 of these):
+${formatForPrompt(restaurants.filter(p => p.rating >= 4.4 && p.user_ratings_total < 300 && p.user_ratings_total >= 15), 5)}
+${formatForPrompt(cafes.filter(p => p.rating >= 4.4 && p.user_ratings_total < 200 && p.user_ratings_total >= 10), 3)}
+
+IMPORTANT: Use the EXACT restaurant/cafe names from above. Include ratings when mentioning them.
+For each meal in the plan, pick from the real restaurants listed above.
+For attractions, use the real ones listed above.
+Include 2-3 hidden gems as "niş öneri" (niche suggestion) markers.`
+        }
+      } catch (placesErr) {
+        console.warn('Google Places fetch failed, continuing without:', placesErr.message)
+      }
+    }
+
     // ── Build Mega-Prompt ──
     const prompt = `You are an expert travel planner. Create a detailed ${days}-day itinerary for: ${destinationText}.
 
@@ -171,7 +256,7 @@ You MUST be 100% accurate about ${destinationText}. Follow these rules STRICTLY:
 5. TRANSPORT ACCURACY:
    - Only mention transport systems that ACTUALLY exist (e.g. Ankara has metro/bus, no tram; Istanbul has metro/tram/ferry/metrobüs).
    - Use real line numbers, station names, and fare information.
-${pinsContext}${transportText}${priorityText}${budgetText}${mealText}${tourText}${dateNightText}${multiCityText}${weatherContext}${eventsContext}${langText}
+${pinsContext}${transportText}${priorityText}${budgetText}${mealText}${tourText}${dateNightText}${multiCityText}${weatherContext}${eventsContext}${placesContext}${langText}
 ${flexDates ? `
 FLEXIBLE DATES: Suggest 2-3 alternative date ranges (within ±5 days) that could be cheaper. Add to JSON as "alternativeDates": [{ "dates": "Mar 17-22", "reason": "Flights 30% cheaper", "estimatedSaving": "~500 TRY" }]` : ''}
 ${preferredTime && preferredTime !== 'any' ? `
@@ -206,7 +291,11 @@ Respond ONLY in this EXACT JSON format:
           "type": "sightseeing|food|activity|transport|rest",
           "estimatedCost": "${currency || 'TRY'} XX",
           "isEstimated": true,
-          "transportNote": "How to get here from previous stop"
+          "transportNote": "How to get here from previous stop",
+          "rating": 4.5,
+          "reviewCount": 1200,
+          "googleMapsUrl": "https://maps.google.com/?q=Place+Name+City",
+          "isHiddenGem": false
         }
       ]
     }

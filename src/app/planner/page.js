@@ -1056,7 +1056,26 @@ export default function PlannerPage() {
                                                             {item.timeStart}{item.timeEnd ? `–${item.timeEnd}` : ''}
                                                         </div>
                                                         <div style={{ flex: 1 }}>
-                                                            <h4>{item.title}</h4>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                                <h4 style={{ margin: 0 }}>{item.title}</h4>
+                                                                {item.isHiddenGem && (
+                                                                    <span style={{ fontSize: '0.625rem', padding: '2px 6px', borderRadius: 99, background: 'rgba(168, 85, 247, 0.15)', color: '#A855F7', fontWeight: 600 }}>
+                                                                        💎 {locale === 'tr' ? 'Niş Öneri' : 'Hidden Gem'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {item.rating && (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                                                                    <span style={{ color: '#FBBF24' }}>⭐ {item.rating}</span>
+                                                                    {item.reviewCount && <span>({item.reviewCount.toLocaleString()} {locale === 'tr' ? 'yorum' : 'reviews'})</span>}
+                                                                    {item.googleMapsUrl && (
+                                                                        <a href={item.googleMapsUrl} target="_blank" rel="noopener noreferrer"
+                                                                            style={{ color: 'var(--primary-1)', textDecoration: 'none', marginLeft: 4 }}>
+                                                                            📍 Google Maps
+                                                                        </a>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                             <p>{item.description}</p>
                                                             {item.transportNote && (
                                                                 <p className="transport-note">🚌 {item.transportNote}</p>
