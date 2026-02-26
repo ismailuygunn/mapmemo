@@ -72,6 +72,7 @@ export default function PlannerPage() {
     const [suggFilter, setSuggFilter] = useState('all')
     const [expandedSugg, setExpandedSugg] = useState(null)
     const [addedSuggs, setAddedSuggs] = useState({})
+    const [editingItem, setEditingItem] = useState(null) // {di, ii} — day index, item index
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -221,7 +222,7 @@ export default function PlannerPage() {
             setLoadingStep(locale === 'tr' ? 'Hava durumu alınıyor...' : 'Fetching weather...')
             let weatherData = null
             try {
-                const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}`)
+                const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}&lang=${locale}`)
                 weatherData = await weatherRes.json()
                 if (weatherData?.available) setWeatherInfo(weatherData)
             } catch { /* silent */ }
@@ -326,6 +327,37 @@ export default function PlannerPage() {
         setItinerary(newItinerary)
         setAddedSuggs(prev => ({ ...prev, [sugg.id || sugg.name]: dayIndex + 1 }))
         toast.success(locale === 'tr' ? `✅ ${sugg.name} — Gün ${dayIndex + 1}'e eklendi` : `✅ ${sugg.name} added to Day ${dayIndex + 1}`)
+    }
+
+    // Edit an item in the itinerary
+    const updateItem = (di, ii, field, value) => {
+        const newIt = { ...itinerary, days: [...itinerary.days] }
+        const day = { ...newIt.days[di], items: [...newIt.days[di].items] }
+        day.items[ii] = { ...day.items[ii], [field]: value }
+        newIt.days[di] = day
+        setItinerary(newIt)
+    }
+
+    // Delete an item
+    const deleteItem = (di, ii) => {
+        const newIt = { ...itinerary, days: [...itinerary.days] }
+        const day = { ...newIt.days[di], items: [...newIt.days[di].items] }
+        day.items.splice(ii, 1)
+        newIt.days[di] = day
+        setItinerary(newIt)
+        setEditingItem(null)
+        toast.success(locale === 'tr' ? 'Silindi' : 'Deleted')
+    }
+
+    // Move item up/down
+    const moveItem = (di, ii, direction) => {
+        const newIt = { ...itinerary, days: [...itinerary.days] }
+        const day = { ...newIt.days[di], items: [...newIt.days[di].items] }
+        const newIndex = ii + direction
+        if (newIndex < 0 || newIndex >= day.items.length) return
+            ;[day.items[ii], day.items[newIndex]] = [day.items[newIndex], day.items[ii]]
+        newIt.days[di] = day
+        setItinerary(newIt)
     }
 
     const saveTrip = async () => {
@@ -1050,37 +1082,52 @@ export default function PlannerPage() {
                                     </div>
                                     <div className="planner-section-body">
                                         <div className="events-list">
-                                            {eventsInfo.slice(0, 8).map((event, i) => (
-                                                <div key={i} className="event-card">
-                                                    <div className="event-card-left">
-                                                        <div className="event-date-badge">
-                                                            <span className="event-date-day">{event.date ? new Date(event.date).getDate() : '?'}</span>
-                                                            <span className="event-date-month">{event.date ? new Date(event.date).toLocaleDateString(locale, { month: 'short' }) : ''}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="event-card-body">
-                                                        <h4>{event.title}</h4>
-                                                        <div className="event-meta">
-                                                            <span className="event-category">{event.category}</span>
-                                                            {event.venue && <span>📍 {event.venue}</span>}
-                                                            {event.time && <span>🕐 {event.time}</span>}
-                                                        </div>
-                                                        {event.description && <p className="event-desc">{event.description.substring(0, 120)}...</p>}
-                                                    </div>
-                                                    <div className="event-card-action">
-                                                        {event.url ? (
-                                                            <a href={event.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
-                                                                🎟️ {t('events.getTickets')}
-                                                            </a>
-                                                        ) : (
-                                                            <a href={`https://www.google.com/search?q=${encodeURIComponent(event.title + ' ' + (event.venue || '') + ' tickets')}`}
-                                                                target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">
-                                                                🔍 {t('events.search')}
-                                                            </a>
+                                            {eventsInfo.slice(0, 12).map((event, i) => {
+                                                const startDate = event.start ? new Date(event.start) : null
+                                                const startTime = startDate ? startDate.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : null
+                                                const startDay = startDate ? startDate.getDate() : '?'
+                                                const startMonth = startDate ? startDate.toLocaleDateString(locale, { month: 'short' }) : ''
+                                                return (
+                                                    <div key={event.id || i} className="event-card">
+                                                        {/* Poster */}
+                                                        {event.poster_url && (
+                                                            <div className="event-poster" style={{ backgroundImage: `url(${event.poster_url})` }} />
                                                         )}
+                                                        <div className="event-card-left">
+                                                            <div className="event-date-badge">
+                                                                <span className="event-date-day">{startDay}</span>
+                                                                <span className="event-date-month">{startMonth}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="event-card-body">
+                                                            <h4>{event.emoji || '🎫'} {event.name}</h4>
+                                                            <div className="event-meta">
+                                                                {event.format && <span className="event-category">{event.format}</span>}
+                                                                {event.venue_name && <span>📍 {event.venue_name}</span>}
+                                                                {event.district && <span>🏘️ {event.district}</span>}
+                                                                {startTime && <span>🕐 {startTime}</span>}
+                                                                {event.is_free && <span className="event-free">🆓 {locale === 'tr' ? 'Ücretsiz' : 'Free'}</span>}
+                                                            </div>
+                                                            {event.description && <p className="event-desc">{event.description.substring(0, 150)}...</p>}
+                                                            {event.tags?.length > 0 && (
+                                                                <div className="event-tags">{event.tags.slice(0, 4).map((t, ti) => <span key={ti} className="event-tag-chip">#{t}</span>)}</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="event-card-action">
+                                                            {event.url ? (
+                                                                <a href={event.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-primary">
+                                                                    🎟️ {t('events.getTickets')}
+                                                                </a>
+                                                            ) : (
+                                                                <a href={`https://www.google.com/search?q=${encodeURIComponent((event.name || '') + ' ' + (event.venue_name || '') + ' tickets')}`}
+                                                                    target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-secondary">
+                                                                    🔍 {t('events.search')}
+                                                                </a>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                )
+                                            })}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -1266,44 +1313,76 @@ export default function PlannerPage() {
                                                     </div>
                                                 )}
 
-                                                {day.items?.map((item, ii) => (
-                                                    <div key={ii} className="itinerary-item">
-                                                        <div className="itinerary-time">
-                                                            {item.timeStart}{item.timeEnd ? `–${item.timeEnd}` : ''}
-                                                        </div>
-                                                        <div style={{ flex: 1 }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                                                <h4 style={{ margin: 0 }}>{item.title}</h4>
-                                                                {item.isHiddenGem && (
-                                                                    <Badge variant="gem" icon="💎">
-                                                                        {locale === 'tr' ? 'Niş Öneri' : 'Hidden Gem'}
-                                                                    </Badge>
+                                                {day.items?.map((item, ii) => {
+                                                    const isEditing = editingItem?.di === di && editingItem?.ii === ii
+                                                    return (
+                                                        <div key={ii} className={`itinerary-item ${isEditing ? 'editing' : ''}`}>
+                                                            {/* Time — editable */}
+                                                            <div className="itinerary-time">
+                                                                {isEditing ? (
+                                                                    <input type="time" className="edit-time-input" value={item.timeStart || ''}
+                                                                        onChange={e => updateItem(di, ii, 'timeStart', e.target.value)} />
+                                                                ) : (
+                                                                    <span onClick={() => setEditingItem({ di, ii })} style={{ cursor: 'pointer' }}>
+                                                                        {item.timeStart}{item.timeEnd ? `–${item.timeEnd}` : ''}
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            {item.rating && (
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>
-                                                                    <span style={{ color: '#FBBF24' }}>⭐ {item.rating}</span>
-                                                                    {item.reviewCount && <span>({item.reviewCount.toLocaleString()} {locale === 'tr' ? 'yorum' : 'reviews'})</span>}
-                                                                    {item.googleMapsUrl && (
-                                                                        <a href={item.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-                                                                            style={{ color: 'var(--primary-1)', textDecoration: 'none', marginLeft: 4 }}>
-                                                                            📍 Google Maps
-                                                                        </a>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                                                    {isEditing ? (
+                                                                        <input className="edit-title-input" value={item.title || ''}
+                                                                            onChange={e => updateItem(di, ii, 'title', e.target.value)} />
+                                                                    ) : (
+                                                                        <h4 style={{ margin: 0, cursor: 'pointer' }} onClick={() => setEditingItem({ di, ii })}>{item.title}</h4>
+                                                                    )}
+                                                                    {item.isHiddenGem && (
+                                                                        <Badge variant="gem" icon="💎">
+                                                                            {locale === 'tr' ? 'Niş Öneri' : 'Hidden Gem'}
+                                                                        </Badge>
                                                                     )}
                                                                 </div>
-                                                            )}
-                                                            <p>{item.description}</p>
-                                                            {item.transportNote && (
-                                                                <p className="transport-note">🚌 {item.transportNote}</p>
-                                                            )}
-                                                            {item.estimatedCost && (
-                                                                <span className="cost-badge">
-                                                                    💰 {item.estimatedCost} {item.isEstimated && t('planner.estimated')}
-                                                                </span>
-                                                            )}
+                                                                {item.rating && (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                                                                        <span style={{ color: '#FBBF24' }}>⭐ {item.rating}</span>
+                                                                        {item.reviewCount && <span>({item.reviewCount.toLocaleString()} {locale === 'tr' ? 'yorum' : 'reviews'})</span>}
+                                                                        {item.googleMapsUrl && (
+                                                                            <a href={item.googleMapsUrl} target="_blank" rel="noopener noreferrer"
+                                                                                style={{ color: 'var(--primary-1)', textDecoration: 'none', marginLeft: 4 }}>
+                                                                                📍 Google Maps
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                                {isEditing ? (
+                                                                    <textarea className="edit-desc-input" value={item.description || ''}
+                                                                        onChange={e => updateItem(di, ii, 'description', e.target.value)} rows={2} />
+                                                                ) : (
+                                                                    <p>{item.description}</p>
+                                                                )}
+                                                                {item.transportNote && (
+                                                                    <p className="transport-note">🚌 {item.transportNote}</p>
+                                                                )}
+                                                                {item.estimatedCost && (
+                                                                    <span className="cost-badge">
+                                                                        💰 {item.estimatedCost} {item.isEstimated && t('planner.estimated')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {/* Edit toolbar */}
+                                                            <div className="item-edit-actions">
+                                                                {isEditing ? (
+                                                                    <button className="item-edit-btn done" onClick={() => setEditingItem(null)}>✅</button>
+                                                                ) : (
+                                                                    <button className="item-edit-btn" onClick={() => setEditingItem({ di, ii })}>✏️</button>
+                                                                )}
+                                                                <button className="item-edit-btn" onClick={() => moveItem(di, ii, -1)} disabled={ii === 0}>⬆️</button>
+                                                                <button className="item-edit-btn" onClick={() => moveItem(di, ii, 1)} disabled={ii === day.items.length - 1}>⬇️</button>
+                                                                <button className="item-edit-btn del" onClick={() => deleteItem(di, ii)}>🗑️</button>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    )
+                                                })}
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
@@ -1443,54 +1522,57 @@ export default function PlannerPage() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </motion.div>
-                    )}
+                        </motion.div >
+                    )
+                    }
 
                     {/* ═══════════════════ SAVED TRIPS ═══════════════════ */}
-                    {view === 'trips' && (
-                        <div>
-                            {savedTrips.length === 0 ? (
-                                <div className="empty-state">
-                                    <Plane size={48} className="empty-state-icon" />
-                                    <h3>{t('planner.noTrips')}</h3>
-                                    <p>{t('planner.noTripsDesc')}</p>
-                                    <button className="btn btn-primary" onClick={() => setView('form')}>{t('planner.createPlan')}</button>
-                                </div>
-                            ) : (
-                                <div className="pin-grid">
-                                    {savedTrips.map((trip, i) => (
-                                        <motion.div key={trip.id} className="pin-card card-hover"
-                                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.05 }}
-                                            onClick={() => {
-                                                setItinerary(trip.itinerary_data)
-                                                setFormData(prev => ({ ...prev, cities: trip.city.split(' → ') }))
-                                                setView('result'); setExpandedDay(0)
-                                            }}
-                                            style={{ cursor: 'pointer' }}>
-                                            <div className="pin-card-body">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                                    <Plane size={18} style={{ color: 'var(--primary-1)' }} />
-                                                    <h4 className="pin-card-title" style={{ margin: 0 }}>{trip.city}</h4>
+                    {
+                        view === 'trips' && (
+                            <div>
+                                {savedTrips.length === 0 ? (
+                                    <div className="empty-state">
+                                        <Plane size={48} className="empty-state-icon" />
+                                        <h3>{t('planner.noTrips')}</h3>
+                                        <p>{t('planner.noTripsDesc')}</p>
+                                        <button className="btn btn-primary" onClick={() => setView('form')}>{t('planner.createPlan')}</button>
+                                    </div>
+                                ) : (
+                                    <div className="pin-grid">
+                                        {savedTrips.map((trip, i) => (
+                                            <motion.div key={trip.id} className="pin-card card-hover"
+                                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                onClick={() => {
+                                                    setItinerary(trip.itinerary_data)
+                                                    setFormData(prev => ({ ...prev, cities: trip.city.split(' → ') }))
+                                                    setView('result'); setExpandedDay(0)
+                                                }}
+                                                style={{ cursor: 'pointer' }}>
+                                                <div className="pin-card-body">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                                        <Plane size={18} style={{ color: 'var(--primary-1)' }} />
+                                                        <h4 className="pin-card-title" style={{ margin: 0 }}>{trip.city}</h4>
+                                                    </div>
+                                                    {trip.start_date && (
+                                                        <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                                                            {new Date(trip.start_date).toLocaleDateString()} — {trip.end_date ? new Date(trip.end_date).toLocaleDateString() : ''}
+                                                        </p>
+                                                    )}
+                                                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                                        <span className="badge badge-primary">{trip.tempo}</span>
+                                                        <span className="badge badge-gold">{trip.budget}</span>
+                                                    </div>
                                                 </div>
-                                                {trip.start_date && (
-                                                    <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                                                        {new Date(trip.start_date).toLocaleDateString()} — {trip.end_date ? new Date(trip.end_date).toLocaleDateString() : ''}
-                                                    </p>
-                                                )}
-                                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                                                    <span className="badge badge-primary">{trip.tempo}</span>
-                                                    <span className="badge badge-gold">{trip.budget}</span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }
+                </div >
+            </div >
             <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
         </>
     )

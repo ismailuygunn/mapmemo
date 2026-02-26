@@ -35,11 +35,18 @@ export default function NearbyPage() {
 
     const getLocation = () => {
         setLocErr('')
-        if (!navigator.geolocation) { setLocErr(locale === 'tr' ? 'Konum desteklenmiyor' : 'Geolocation not supported'); return }
+        if (!navigator.geolocation) { setLocErr(locale === 'tr' ? 'Tarayıcınız konum desteklemiyor' : 'Geolocation not supported'); return }
         navigator.geolocation.getCurrentPosition(
             (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => setLocErr(locale === 'tr' ? 'Konum izni verilmedi' : 'Location permission denied'),
-            { enableHighAccuracy: true, timeout: 10000 }
+            (err) => {
+                const messages = {
+                    1: locale === 'tr' ? 'Konum izni reddedildi. Tarayıcı ayarlarından izin verin.' : 'Location permission denied. Enable in browser settings.',
+                    2: locale === 'tr' ? 'Konum alınamadı. İnternet bağlantınızı kontrol edin.' : 'Position unavailable. Check your connection.',
+                    3: locale === 'tr' ? 'Konum zaman aşımı. WiFi veya GPS açık mı?' : 'Location timed out. Is WiFi/GPS enabled?',
+                }
+                setLocErr(messages[err.code] || (locale === 'tr' ? 'Konum hatası' : 'Location error'))
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
         )
     }
 

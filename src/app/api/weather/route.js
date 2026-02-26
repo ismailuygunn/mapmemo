@@ -25,10 +25,12 @@ export async function GET(request) {
 
         // Build URL based on params
         const baseUrl = 'https://api.openweathermap.org/data/2.5/forecast'
+        const lang = searchParams.get('lang') || 'tr'
         const params = new URLSearchParams({
             appid: apiKey,
             units: 'metric',
             cnt: 40, // 5 days × 8 (3-hour intervals)
+            lang, // localized descriptions
         })
 
         if (city) params.append('q', city)

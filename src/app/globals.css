@@ -8781,6 +8781,131 @@ select.input {
   background: rgba(59, 130, 246, 0.2);
 }
 
+/* ═══ PLAN EDITING ═══ */
+.itinerary-item {
+  position: relative;
+  transition: all 150ms;
+}
+
+.itinerary-item.editing {
+  background: rgba(129, 140, 248, 0.04);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.edit-time-input {
+  width: 80px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+}
+
+.edit-title-input {
+  flex: 1;
+  min-width: 150px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.edit-desc-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  resize: vertical;
+  margin-top: 4px;
+}
+
+.item-edit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 4px;
+  opacity: 0;
+  transition: opacity 150ms;
+}
+
+.itinerary-item:hover .item-edit-actions,
+.itinerary-item.editing .item-edit-actions {
+  opacity: 1;
+}
+
+.item-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 100ms;
+}
+
+.item-edit-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.item-edit-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.item-edit-btn.del:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.item-edit-btn.done {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* ═══ EVENT ENHANCEMENTS ═══ */
+.event-poster {
+  width: 64px;
+  height: 80px;
+  border-radius: 10px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-free {
+  color: #10B981;
+  font-weight: 600;
+}
+
+.event-tags {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.event-tag-chip {
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(129, 140, 248, 0.08);
+  color: #818CF8;
+  font-weight: 500;
+}
+
 .ai-sugg-day-picker {
   display: flex;
   gap: 4px;
