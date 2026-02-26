@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
+import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import {
@@ -75,7 +76,10 @@ export default function PlannerPage() {
     const [editingItem, setEditingItem] = useState(null) // {di, ii} — day index, item index
     const [planVote, setPlanVote] = useState(null) // 'up' | 'down'
     const [shareLink, setShareLink] = useState('')
-    const { space } = useSpace()
+    const [userSpaces, setUserSpaces] = useState([])
+    const [selectedSpaceId, setSelectedSpaceId] = useState(null)
+    const { space, createSpace } = useSpace()
+    const { user } = useAuth()
     const { t, locale } = useLanguage()
     const supabase = createClient()
     const FORM_STEPS = [
@@ -92,6 +96,33 @@ export default function PlannerPage() {
     }, [formData.startDate, formData.endDate])
 
     useEffect(() => { if (space) loadTrips() }, [space])
+
+    // Load all user spaces for save selector
+    useEffect(() => {
+        const loadUserSpaces = async () => {
+            try {
+                const { data: memberships } = await supabase
+                    .from('space_members')
+                    .select('space_id, role')
+                    .eq('user_id', user?.id)
+                if (memberships && memberships.length > 0) {
+                    const spaceIds = memberships.map(m => m.space_id)
+                    const { data: spacesData } = await supabase
+                        .from('spaces')
+                        .select('id, name')
+                        .in('id', spaceIds)
+                    if (spacesData) {
+                        setUserSpaces(spacesData)
+                        // Default to current active space, or first space
+                        setSelectedSpaceId(space?.id || spacesData[0]?.id || null)
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load spaces:', err)
+            }
+        }
+        if (user?.id) loadUserSpaces()
+    }, [user?.id, space?.id])
 
     // Auto search transport when dates and cities change
     useEffect(() => {
@@ -364,13 +395,21 @@ export default function PlannerPage() {
     }
 
     const saveTrip = async () => {
-        if (!itinerary || !space) return
+        if (!itinerary) return
         setSaving(true)
         try {
+            let targetSpaceId = selectedSpaceId
+            // If no spaces exist, auto-create one
+            if (!targetSpaceId) {
+                const newSpace = await createSpace(locale === 'tr' ? 'Seyahat Planlarım' : 'My Travel Plans')
+                targetSpaceId = newSpace.id
+                setUserSpaces(prev => [...prev, { id: newSpace.id, name: newSpace.name }])
+                setSelectedSpaceId(newSpace.id)
+            }
             const { data: trip, error: e } = await supabase
                 .from('trips')
                 .insert({
-                    space_id: space.id,
+                    space_id: targetSpaceId,
                     city: formData.cities.join(' → ') || formData.cityInput,
                     start_date: formData.startDate || null,
                     end_date: formData.endDate || null,
@@ -382,8 +421,9 @@ export default function PlannerPage() {
             if (e) throw e
             setSavedTrips(prev => [trip, ...prev])
             setSavedTripId(trip.id)
+            const spaceName = userSpaces.find(s => s.id === targetSpaceId)?.name || ''
             toast.success(locale === 'tr' ? '💾 Plan kaydedildi!' : '💾 Plan saved!', {
-                description: locale === 'tr' ? 'Kayıtlı planlarınızdan erişebilirsiniz' : 'Access it from your saved plans'
+                description: spaceName ? `${spaceName} ${locale === 'tr' ? 'grubuna eklendi' : 'group'}` : ''
             })
         } catch (err) {
             setError(err.message)
@@ -1283,11 +1323,36 @@ export default function PlannerPage() {
                                 </motion.div>
                             )}
 
-                            {/* Actions */}
+                            {/* Actions — Space selector + Save */}
+                            <div className="plan-save-section">
+                                <div className="plan-save-row">
+                                    <div className="plan-save-space-picker">
+                                        <label style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginBottom: 2, display: 'block' }}>
+                                            👥 {locale === 'tr' ? 'Kaydet:' : 'Save to:'}
+                                        </label>
+                                        {userSpaces.length > 0 ? (
+                                            <select
+                                                className="input"
+                                                style={{ fontSize: '0.82rem', padding: '6px 10px', minWidth: 140 }}
+                                                value={selectedSpaceId || ''}
+                                                onChange={e => setSelectedSpaceId(e.target.value)}
+                                            >
+                                                {userSpaces.map(s => (
+                                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+                                                {locale === 'tr' ? 'Otomatik grup oluşturulacak' : 'Auto-create group'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <button className="btn btn-primary" onClick={saveTrip} disabled={saving}>
+                                        <Save size={16} /> {saving ? t('planner.savingTrip') : t('planner.saveTrip')}
+                                    </button>
+                                </div>
+                            </div>
                             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                                <button className="btn btn-primary" onClick={saveTrip} disabled={saving}>
-                                    <Save size={16} /> {saving ? t('planner.savingTrip') : t('planner.saveTrip')}
-                                </button>
                                 <button className="btn btn-secondary" onClick={() => setShowRainPlan(!showRainPlan)}>
                                     <CloudRain size={16} /> {t('planner.rainPlan')}
                                 </button>

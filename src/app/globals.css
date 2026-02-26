@@ -8781,6 +8781,35 @@ select.input {
   background: rgba(59, 130, 246, 0.2);
 }
 
+/* ═══ PLAN SAVE SECTION ═══ */
+.plan-save-section {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+  margin-bottom: 12px;
+}
+
+.plan-save-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.plan-save-space-picker {
+  flex: 1;
+  min-width: 140px;
+}
+
+.plan-save-space-picker select {
+  width: 100%;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
 /* ═══ PLAN VOTE & SHARE ═══ */
 .plan-vote-section {
   padding: 12px 16px;
