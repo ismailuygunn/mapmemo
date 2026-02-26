@@ -8560,3 +8560,223 @@ select.input {
   color: #818CF8;
   font-weight: 700;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   AI SUGGESTIONS PANEL
+   ═══════════════════════════════════════════════════════════════ */
+.ai-sugg-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.ai-sugg-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-sugg-count {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.ai-sugg-desc {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin: 4px 0 14px;
+}
+
+.ai-sugg-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.ai-sugg-filter {
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.ai-sugg-filter.active {
+  border-color: #818CF8;
+  background: rgba(129, 140, 248, 0.12);
+  color: #818CF8;
+  font-weight: 700;
+}
+
+.ai-sugg-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-sugg-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.ai-sugg-card:hover {
+  border-color: rgba(129, 140, 248, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ai-sugg-card.expanded {
+  border-color: #818CF8;
+  background: rgba(129, 140, 248, 0.03);
+}
+
+.ai-sugg-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ai-sugg-type-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.ai-sugg-card-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-sugg-name {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ai-sugg-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.ai-sugg-rating {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #FBBF24;
+}
+
+.ai-sugg-category {
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.1);
+  color: #818CF8;
+  font-weight: 500;
+}
+
+.ai-sugg-day {
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-sugg-summary {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 8px 0 0;
+}
+
+.ai-sugg-details {
+  overflow: hidden;
+}
+
+.ai-sugg-address {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin: 8px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-sugg-info-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ai-sugg-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 6px 0;
+}
+
+.ai-sugg-tag {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.ai-sugg-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ai-sugg-maps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 150ms;
+}
+
+.ai-sugg-maps-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}

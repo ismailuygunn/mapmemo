@@ -272,6 +272,25 @@ TIME BUFFER RULES (mandatory):
 Respond ONLY in this EXACT JSON format:
 {
   "overview": "2-3 sentence trip summary",
+  "suggestions": [
+    {
+      "id": "unique-id",
+      "name": "Place/Restaurant/Attraction Name",
+      "type": "sightseeing|food|activity|transport|rest|shopping|nightlife",
+      "category": "Müze|Restoran|Kafe|Park|Tarihi Yer|Aktivite|...",
+      "aiSummary": "2-3 sentence summary written by AI. Why this place is special, what to expect, insider tips.",
+      "estimatedDuration": "1-2 saat",
+      "estimatedCost": "${currency || 'TRY'} XX",
+      "rating": 4.5,
+      "reviewCount": 1200,
+      "googleMapsUrl": "https://maps.google.com/?q=Place+Name+City",
+      "address": "Approximate address",
+      "isHiddenGem": false,
+      "bestTimeToVisit": "morning|afternoon|evening|any",
+      "suggestedDay": 1,
+      "tags": ["romantic", "family-friendly", "instagram", "budget"]
+    }
+  ],
   "days": [
     {
       "dayNumber": 1,
@@ -336,6 +355,13 @@ Respond ONLY in this EXACT JSON format:
   ]
 }
 
+IMPORTANT for suggestions array:
+- Include 15-25 unique suggestions covering: top attractions, restaurants, cafes, hidden gems, activities, nightlife
+- Each suggestion MUST have a unique, compelling aiSummary (2-3 sentences, written as if by a local friend giving advice)
+- Suggestions should cover ALL days of the trip
+- Include suggestedDay so users know which day each place fits best
+- Tag each place appropriately (romantic, family-friendly, instagram, budget, etc.)
+
 Respond ONLY with valid JSON, no markdown, no comments.`
 
     // ── Try Gemini first (consistent with cover gen) ──
@@ -364,7 +390,7 @@ Respond ONLY with valid JSON, no markdown, no comments.`
 
 // ── Gemini API Call ──
 async function callGemini(apiKey, prompt, locale) {
-  const model = 'gemini-2.5-flash-preview-05-20'
+  const model = 'gemini-2.5-flash'
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
   const systemInstruction = locale === 'tr'

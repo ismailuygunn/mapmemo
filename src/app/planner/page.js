@@ -69,6 +69,8 @@ export default function PlannerPage() {
     const [eventsInfo, setEventsInfo] = useState([])
     const [flightsInfo, setFlightsInfo] = useState([])
     const [transportLoading, setTransportLoading] = useState(false)
+    const [suggFilter, setSuggFilter] = useState('all')
+    const [expandedSugg, setExpandedSugg] = useState(null)
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -893,6 +895,74 @@ export default function PlannerPage() {
                                 <h3>📋 {t('planner.overview')}</h3>
                                 <p>{itinerary.overview}</p>
                             </div>
+
+                            {/* ═══ AI SUGGESTIONS ═══ */}
+                            {itinerary.suggestions?.length > 0 && (
+                                <motion.div className="ai-sugg-section" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                                    <div className="ai-sugg-header">
+                                        <h3>🤖 {locale === 'tr' ? 'AI Önerileri' : 'AI Suggestions'} <span className="ai-sugg-count">{itinerary.suggestions.length} {locale === 'tr' ? 'yer' : 'places'}</span></h3>
+                                        <p className="ai-sugg-desc">{locale === 'tr' ? 'Programınıza eklemek için kartlara tıklayın' : 'Click cards to add to your schedule'}</p>
+                                    </div>
+                                    <div className="ai-sugg-filters">
+                                        {[
+                                            { key: 'all', emoji: '✨', label: locale === 'tr' ? 'Hepsi' : 'All' },
+                                            { key: 'sightseeing', emoji: '🏛️', label: locale === 'tr' ? 'Gezi' : 'Visit' },
+                                            { key: 'food', emoji: '🍽️', label: locale === 'tr' ? 'Yemek' : 'Food' },
+                                            { key: 'activity', emoji: '🎯', label: locale === 'tr' ? 'Aktivite' : 'Activity' },
+                                            { key: 'shopping', emoji: '🛍️', label: locale === 'tr' ? 'Alışveriş' : 'Shopping' },
+                                            { key: 'nightlife', emoji: '🌙', label: locale === 'tr' ? 'Gece' : 'Nightlife' },
+                                        ].map(f => (
+                                            <button key={f.key} className={`ai-sugg-filter ${suggFilter === f.key ? 'active' : ''}`}
+                                                onClick={() => setSuggFilter(f.key)}>{f.emoji} {f.label}</button>
+                                        ))}
+                                    </div>
+                                    <div className="ai-sugg-grid">
+                                        {(suggFilter === 'all' ? itinerary.suggestions : itinerary.suggestions.filter(s => s.type === suggFilter)).map((sugg, i) => (
+                                            <motion.div key={sugg.id || i} className={`ai-sugg-card ${expandedSugg === i ? 'expanded' : ''}`}
+                                                layout onClick={() => setExpandedSugg(expandedSugg === i ? null : i)}
+                                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                                                <div className="ai-sugg-card-top">
+                                                    <div className="ai-sugg-type-badge">{sugg.type === 'food' ? '🍽️' : sugg.type === 'sightseeing' ? '🏛️' : sugg.type === 'activity' ? '🎯' : sugg.type === 'nightlife' ? '🌙' : sugg.type === 'shopping' ? '🛍️' : '📌'}</div>
+                                                    <div className="ai-sugg-card-main">
+                                                        <h4 className="ai-sugg-name">{sugg.name}</h4>
+                                                        <div className="ai-sugg-meta">
+                                                            {sugg.rating && <span className="ai-sugg-rating">⭐ {sugg.rating}</span>}
+                                                            {sugg.category && <span className="ai-sugg-category">{sugg.category}</span>}
+                                                            {sugg.isHiddenGem && <Badge variant="gem" icon="💎">{locale === 'tr' ? 'Gizli Cevher' : 'Hidden Gem'}</Badge>}
+                                                        </div>
+                                                    </div>
+                                                    {sugg.suggestedDay && <span className="ai-sugg-day">{locale === 'tr' ? 'Gün' : 'Day'} {sugg.suggestedDay}</span>}
+                                                </div>
+                                                <p className="ai-sugg-summary">{sugg.aiSummary}</p>
+                                                <AnimatePresence>
+                                                    {expandedSugg === i && (
+                                                        <motion.div className="ai-sugg-details" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                                                            {sugg.address && <p className="ai-sugg-address"><MapPin size={12} /> {sugg.address}</p>}
+                                                            <div className="ai-sugg-info-row">
+                                                                {sugg.estimatedDuration && <span>⏱️ {sugg.estimatedDuration}</span>}
+                                                                {sugg.estimatedCost && <span>💰 {sugg.estimatedCost}</span>}
+                                                                {sugg.bestTimeToVisit && sugg.bestTimeToVisit !== 'any' && <span>🕐 {sugg.bestTimeToVisit === 'morning' ? '☀️ Sabah' : sugg.bestTimeToVisit === 'afternoon' ? '⛅ Öğleden sonra' : '🌙 Akşam'}</span>}
+                                                            </div>
+                                                            {sugg.tags?.length > 0 && (
+                                                                <div className="ai-sugg-tags">
+                                                                    {sugg.tags.map(tag => <span key={tag} className="ai-sugg-tag">#{tag}</span>)}
+                                                                </div>
+                                                            )}
+                                                            <div className="ai-sugg-actions">
+                                                                {sugg.googleMapsUrl && (
+                                                                    <a href={sugg.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn" onClick={e => e.stopPropagation()}>
+                                                                        📍 Google Maps
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* ═══ WEATHER FORECAST ═══ */}
                             {weatherInfo?.forecasts?.length > 0 && (
