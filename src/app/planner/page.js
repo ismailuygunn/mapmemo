@@ -73,6 +73,8 @@ export default function PlannerPage() {
     const [expandedSugg, setExpandedSugg] = useState(null)
     const [addedSuggs, setAddedSuggs] = useState({})
     const [editingItem, setEditingItem] = useState(null) // {di, ii} — day index, item index
+    const [planVote, setPlanVote] = useState(null) // 'up' | 'down'
+    const [shareLink, setShareLink] = useState('')
     const { space } = useSpace()
     const { t, locale } = useLanguage()
     const supabase = createClient()
@@ -269,6 +271,7 @@ export default function PlannerPage() {
                     photoStops: formData.photoStops,
                     shoppingStop: formData.shoppingStop,
                     accessibility: formData.accessibility,
+                    wishlist: formData.wishlist || [],
                     guideLanguage: formData.guideLanguage,
                     dateNightMode: formData.dateNightMode,
                     flexDates: formData.flexDates,
@@ -592,6 +595,35 @@ export default function PlannerPage() {
                                                 <button type="button" className="btn btn-secondary" onClick={addCity} style={{ flexShrink: 0 }}>
                                                     <Plus size={16} /> {t('planner.addCity')}
                                                 </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Wishlist / Trip Style */}
+                                        <div className="input-group" style={{ marginTop: 16 }}>
+                                            <label>✨ {locale === 'tr' ? 'Seyahat Tarzı' : 'Trip Style'}</label>
+                                            <p className="input-hint">{locale === 'tr' ? 'İstek listeni seç, AI buna göre plan yapsın' : 'Select your wishlist, AI will plan accordingly'}</p>
+                                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                {[
+                                                    { key: 'romantic', emoji: '💕', tr: 'Romantik', en: 'Romantic' },
+                                                    { key: 'adventure', emoji: '🧗', tr: 'Macera', en: 'Adventure' },
+                                                    { key: 'culture', emoji: '🏛️', tr: 'Kültür', en: 'Culture' },
+                                                    { key: 'gastro', emoji: '🍽️', tr: 'Gastronomi', en: 'Gastronomy' },
+                                                    { key: 'nature', emoji: '🌿', tr: 'Doğa', en: 'Nature' },
+                                                    { key: 'party', emoji: '🎉', tr: 'Parti', en: 'Party' },
+                                                    { key: 'family', emoji: '👨‍👩‍👧', tr: 'Aile', en: 'Family' },
+                                                    { key: 'business', emoji: '💼', tr: 'İş', en: 'Business' },
+                                                    { key: 'relax', emoji: '🧘', tr: 'Huzur', en: 'Relaxation' },
+                                                    { key: 'shopping', emoji: '🛍️', tr: 'Alışveriş', en: 'Shopping' },
+                                                ].map(w => (
+                                                    <Chip key={w.key}
+                                                        active={(formData.wishlist || []).includes(w.key)}
+                                                        onClick={() => {
+                                                            const cur = formData.wishlist || []
+                                                            update('wishlist', cur.includes(w.key) ? cur.filter(x => x !== w.key) : [...cur, w.key])
+                                                        }}>
+                                                        {w.emoji} {locale === 'tr' ? w.tr : w.en}
+                                                    </Chip>
+                                                ))}
                                             </div>
                                         </div>
 
@@ -1252,7 +1284,7 @@ export default function PlannerPage() {
                             )}
 
                             {/* Actions */}
-                            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                                 <button className="btn btn-primary" onClick={saveTrip} disabled={saving}>
                                     <Save size={16} /> {saving ? t('planner.savingTrip') : t('planner.saveTrip')}
                                 </button>
@@ -1265,6 +1297,32 @@ export default function PlannerPage() {
                                 <button className="btn btn-ghost" onClick={() => openAlbumForPrint({ city: formData.cities.join(' → ') || formData.cityInput, start_date: formData.startDate, end_date: formData.endDate, itinerary_data: itinerary }, [], '')}>
                                     📸 {t('planner.printAlbum')}
                                 </button>
+                            </div>
+
+                            {/* ═══ PLAN VOTE & SHARE ═══ */}
+                            <div className="plan-vote-section">
+                                <div className="plan-vote-row">
+                                    <span className="plan-vote-label">{locale === 'tr' ? 'Bu planı nasıl buldun?' : 'How do you like this plan?'}</span>
+                                    <div className="plan-vote-btns">
+                                        <button className={`plan-vote-btn ${planVote === 'up' ? 'voted-up' : ''}`}
+                                            onClick={() => setPlanVote(planVote === 'up' ? null : 'up')}>👍</button>
+                                        <button className={`plan-vote-btn ${planVote === 'down' ? 'voted-down' : ''}`}
+                                            onClick={() => setPlanVote(planVote === 'down' ? null : 'down')}>👎</button>
+                                    </div>
+                                    <button className="plan-share-btn" onClick={() => {
+                                        const url = window.location.href
+                                        navigator.clipboard?.writeText(url)
+                                        setShareLink(url)
+                                        toast.success(locale === 'tr' ? '📋 Link kopyalandı!' : '📋 Link copied!')
+                                    }}>
+                                        📤 {locale === 'tr' ? 'Paylaş' : 'Share'}
+                                    </button>
+                                </div>
+                                {planVote === 'down' && (
+                                    <p className="plan-vote-hint">
+                                        💡 {locale === 'tr' ? '"Yeni Plan" ile farklı tercihlerle tekrar dene!' : 'Try "New Plan" with different preferences!'}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Gallery (after saving) */}

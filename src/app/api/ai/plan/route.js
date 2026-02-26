@@ -27,6 +27,7 @@ export async function POST(request) {
       guideLanguage,       // 'tr' | 'en' | 'other'
       dateNightMode,       // boolean
       locale,              // 'tr' | 'en' — response language
+      wishlist,            // string[] — ['romantic', 'adventure', 'culture', etc.]
       weatherData,         // object | null
       eventsData,          // array  | null
       flexDates,           // boolean
@@ -101,6 +102,7 @@ ${photoStops ? `- Photo stops: ${photoStops === 'few' ? 'minimal' : photoStops =
 ${shoppingStop ? `- Shopping stops: ${shoppingStop === 'no' ? 'NO SHOPPING STOPS (very important!)' : shoppingStop === 'yes' ? 'include shopping' : 'optional only'}` : ''}
 ${guideLanguage ? `- Guide language: ${guideLanguage}` : ''}
 ${accessibility?.length > 0 ? `- Accessibility: ${accessibility.join(', ')}` : ''}
+${wishlist?.length > 0 ? `- Trip style / wishlist: ${wishlist.join(', ')} — STRONGLY tailor the plan to these themes` : ''}
 When suggesting tours, respect ALL these preferences strictly.`
       : ''
 
