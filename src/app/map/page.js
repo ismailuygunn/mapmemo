@@ -67,8 +67,19 @@ export default function MapPage() {
         }
     }, [space, spaceLoading, user, dbError])
 
-    // Load Google Maps script
+    // Load Google Maps script with preconnect for speed
     useEffect(() => {
+        // Preconnect to Google Maps servers for faster loading
+        const preconnect = document.createElement('link')
+        preconnect.rel = 'preconnect'
+        preconnect.href = 'https://maps.googleapis.com'
+        document.head.appendChild(preconnect)
+        const preconnect2 = document.createElement('link')
+        preconnect2.rel = 'preconnect'
+        preconnect2.href = 'https://maps.gstatic.com'
+        preconnect2.crossOrigin = 'anonymous'
+        document.head.appendChild(preconnect2)
+
         if (mapRef.current || !mapContainer.current) return
 
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
@@ -83,16 +94,17 @@ export default function MapPage() {
             return
         }
 
+        // Use callback-based loading for speed
+        window.initGoogleMap = initMap
         const script = document.createElement('script')
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&loading=async`
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly&callback=initGoogleMap`
         script.async = true
         script.defer = true
-        script.onload = initMap
         script.onerror = () => console.error('Google Maps script failed to load')
         document.head.appendChild(script)
 
         return () => {
-            // Cleanup
+            delete window.initGoogleMap
         }
     }, [])
 

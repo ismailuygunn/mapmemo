@@ -78,77 +78,61 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             }
         }
 
-        const model = 'gemini-2.0-flash-preview-image-generation'
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+        // Try primary: gemini-2.0-flash-exp (supports native image generation)
+        const models = [
+            'gemini-2.0-flash-exp',
+            'gemini-2.0-flash',
+        ]
 
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts }],
-                generationConfig: {
-                    responseModalities: ['TEXT', 'IMAGE'],
-                    temperature: 1.0,
-                },
-            }),
-        })
-
-        if (!response.ok) {
-            const errText = await response.text()
-            console.error('Gemini image gen error:', response.status, errText)
-            // Try fallback model
-            const fallbackModel = 'gemini-2.0-flash-exp-image-generation'
-            const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent?key=${apiKey}`
-            const fallbackResponse = await fetch(fallbackEndpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts }],
-                    generationConfig: {
-                        responseModalities: ['TEXT', 'IMAGE'],
-                        temperature: 1.0,
-                    },
-                }),
-            })
-            if (!fallbackResponse.ok) {
-                const fbErr = await fallbackResponse.text()
-                console.error('Gemini fallback error:', fbErr)
-                return NextResponse.json({ error: `Image generation failed (${response.status}). Gemini API might not support image generation for this key. Error: ${errText.substring(0, 200)}` }, { status: 500 })
-            }
-            // Use fallback response
-            const fbData = await fallbackResponse.json()
-            let fbImage = null, fbMime = 'image/png'
-            for (const c of (fbData.candidates || [])) {
-                for (const p of (c.content?.parts || [])) {
-                    if (p.inlineData) { fbImage = p.inlineData.data; fbMime = p.inlineData.mimeType || 'image/png'; break }
-                }
-                if (fbImage) break
-            }
-            if (fbImage) return NextResponse.json({ imageUrl: `data:${fbMime};base64,${fbImage}`, city, style: style || 'romantic', model: fallbackModel })
-            return NextResponse.json({ error: 'No image generated from fallback model.' }, { status: 500 })
-        }
-
-        const data = await response.json()
-
-        // Extract image from response
-        const candidates = data.candidates || []
         let imageData = null
         let mimeType = 'image/png'
+        let usedModel = null
 
-        for (const candidate of candidates) {
-            const contentParts = candidate.content?.parts || []
-            for (const part of contentParts) {
-                if (part.inlineData) {
-                    imageData = part.inlineData.data
-                    mimeType = part.inlineData.mimeType || 'image/png'
-                    break
+        for (const model of models) {
+            try {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts }],
+                        generationConfig: {
+                            responseModalities: ['TEXT', 'IMAGE'],
+                            temperature: 1.0,
+                        },
+                    }),
+                })
+
+                if (!response.ok) {
+                    const errText = await response.text()
+                    console.error(`Gemini ${model} error:`, response.status, errText.substring(0, 200))
+                    continue // Try next model
                 }
+
+                const data = await response.json()
+                for (const candidate of (data.candidates || [])) {
+                    for (const part of (candidate.content?.parts || [])) {
+                        if (part.inlineData) {
+                            imageData = part.inlineData.data
+                            mimeType = part.inlineData.mimeType || 'image/png'
+                            usedModel = model
+                            break
+                        }
+                    }
+                    if (imageData) break
+                }
+
+                if (imageData) break
+            } catch (err) {
+                console.error(`Gemini ${model} exception:`, err.message)
+                continue
             }
-            if (imageData) break
         }
 
         if (!imageData) {
-            return NextResponse.json({ error: 'No image generated. Try a different style.' }, { status: 500 })
+            return NextResponse.json({
+                error: 'Image generation not available. Your Gemini API key may not have image generation access. Try enabling the Generative Language API in Google Cloud Console.',
+            }, { status: 500 })
         }
 
         const imageUrl = `data:${mimeType};base64,${imageData}`
@@ -157,7 +141,7 @@ Make this look like it belongs on the cover of Condé Nast Traveler magazine. Th
             imageUrl,
             city,
             style: style || 'romantic',
-            model,
+            model: usedModel,
         })
     } catch (err) {
         console.error('Cover generation error:', err)

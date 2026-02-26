@@ -45,6 +45,7 @@ export default function PlannerPage() {
         accessibility: [],
         guideLanguage: '',
         dateNightMode: false,
+        groupType: 'friends', // solo, couple, friends, family
         flexDates: false,
         preferredTime: 'any',
         departureCity: '',
@@ -366,7 +367,7 @@ export default function PlannerPage() {
     // Step validation
     const canProceedStep = (step) => {
         if (step === 0) return formData.cities.length > 0 || formData.cityInput.trim().length > 0
-        if (step === 1) return true // dates optional
+        if (step === 1) return formData.startDate && formData.endDate // dates required!
         if (step === 2) return true // style has defaults
         return true
     }
@@ -537,12 +538,44 @@ export default function PlannerPage() {
                                         {/* Dates */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <div className="input-group">
-                                                <label>📅 {t('planner.startDate')}</label>
-                                                <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} />
+                                                <label>📅 {t('planner.startDate')} <span style={{ color: 'var(--error)', fontSize: '0.75rem' }}>*</span></label>
+                                                <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} required />
                                             </div>
                                             <div className="input-group">
-                                                <label>📅 {t('planner.endDate')}</label>
-                                                <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} />
+                                                <label>📅 {t('planner.endDate')} <span style={{ color: 'var(--error)', fontSize: '0.75rem' }}>*</span></label>
+                                                <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} required />
+                                            </div>
+                                        </div>
+
+                                        {/* Group Type Selector */}
+                                        <div className="input-group" style={{ marginTop: 16 }}>
+                                            <label>👥 {locale === 'tr' ? 'Grup Tipi' : 'Group Type'}</label>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                                                {[
+                                                    { id: 'solo', emoji: '🧑', label: locale === 'tr' ? 'Solo' : 'Solo' },
+                                                    { id: 'couple', emoji: '💑', label: locale === 'tr' ? 'Çift' : 'Couple' },
+                                                    { id: 'friends', emoji: '👫', label: locale === 'tr' ? 'Arkadaşlar' : 'Friends' },
+                                                    { id: 'family', emoji: '👨‍👩‍👧‍👦', label: locale === 'tr' ? 'Aile' : 'Family' },
+                                                ].map(g => (
+                                                    <button key={g.id} type="button"
+                                                        onClick={() => update('groupType', g.id)}
+                                                        style={{
+                                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                                                            padding: '12px 8px', borderRadius: 'var(--radius-md)',
+                                                            border: formData.groupType === g.id
+                                                                ? '2px solid var(--primary-1)'
+                                                                : '1px solid var(--border-primary)',
+                                                            background: formData.groupType === g.id
+                                                                ? 'rgba(79, 70, 229, 0.1)'
+                                                                : 'var(--bg-tertiary)',
+                                                            cursor: 'pointer', transition: 'all 150ms',
+                                                            color: 'var(--text-primary)', fontSize: '0.8rem',
+                                                        }}
+                                                    >
+                                                        <span style={{ fontSize: '1.5rem' }}>{g.emoji}</span>
+                                                        <span style={{ fontWeight: formData.groupType === g.id ? 600 : 400 }}>{g.label}</span>
+                                                    </button>
+                                                ))}
                                             </div>
                                         </div>
                                         {/* Trip duration indicator */}
