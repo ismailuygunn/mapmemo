@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { openAlbumForPrint } from '@/lib/albumGenerator'
+import TripGallery from '@/components/planner/TripGallery'
 
 export default function PlannerPage() {
     const [view, setView] = useState('form')
@@ -50,6 +51,7 @@ export default function PlannerPage() {
     const [savedTrips, setSavedTrips] = useState([])
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [savedTripId, setSavedTripId] = useState(null)
     const [error, setError] = useState('')
     const [expandedDay, setExpandedDay] = useState(null)
     const [showRainPlan, setShowRainPlan] = useState(false)
@@ -236,6 +238,7 @@ export default function PlannerPage() {
                 .select().single()
             if (e) throw e
             setSavedTrips(prev => [trip, ...prev])
+            setSavedTripId(trip.id)
         } catch (err) { setError(err.message) }
         setSaving(false)
     }
@@ -830,6 +833,13 @@ export default function PlannerPage() {
                                     📸 {t('planner.printAlbum')}
                                 </button>
                             </div>
+
+                            {/* Gallery (after saving) */}
+                            {savedTripId && (
+                                <TripGallery tripId={savedTripId} onCoverChange={(url) => {
+                                    setItinerary(prev => ({ ...prev, coverPhoto: url }))
+                                }} />
+                            )}
 
                             {/* Days */}
                             {itinerary.days?.map((day, di) => (

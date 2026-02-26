@@ -42,9 +42,9 @@ export async function GET(request) {
 async function fetchPredictHQ(city, startDate, endDate, category, apiKey) {
     const params = new URLSearchParams({
         q: city,
-        limit: 20,
+        limit: 50,
         sort: 'rank',
-        'rank.gte': 50,
+        'rank.gte': 30,
     })
 
     if (startDate) params.append('start.gte', startDate)
@@ -83,7 +83,7 @@ async function fetchTicketmaster(city, startDate, endDate, category, apiKey) {
     const params = new URLSearchParams({
         apikey: apiKey,
         city: city,
-        size: 20,
+        size: 50,
         sort: 'relevance,desc',
     })
 
