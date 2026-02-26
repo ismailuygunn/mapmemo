@@ -38,6 +38,7 @@ export async function middleware(request) {
         return NextResponse.redirect(url)
     }
 
+    // Logged-in users on login/register → redirect to map
     if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
         const url = request.nextUrl.clone()
         url.pathname = '/map'

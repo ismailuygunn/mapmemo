@@ -12,7 +12,6 @@ export function AuthProvider({ children }) {
     const supabase = createClient()
 
     useEffect(() => {
-        // Get initial session
         const getUser = async () => {
             try {
                 const { data: { user } } = await supabase.auth.getUser()
@@ -33,10 +32,8 @@ export function AuthProvider({ children }) {
         }
         getUser()
 
-        // Safety timeout — never stay on loading forever
         const timeout = setTimeout(() => setLoading(false), 8000)
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 setUser(session?.user ?? null)
@@ -57,7 +54,13 @@ export function AuthProvider({ children }) {
     }, [])
 
     const signUp = async (email, password, displayName) => {
-        const { data, error } = await supabase.auth.signUp({ email, password })
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { display_name: displayName }
+            }
+        })
         if (error) throw error
 
         if (data.user) {
@@ -72,6 +75,17 @@ export function AuthProvider({ children }) {
 
     const signIn = async (email, password) => {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
+        return data
+    }
+
+    const signInWithGoogle = async () => {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/onboarding`,
+            }
+        })
         if (error) throw error
         return data
     }
@@ -97,7 +111,7 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={{
-            user, profile, loading, signUp, signIn, signOut, updateProfile
+            user, profile, loading, signUp, signIn, signInWithGoogle, signOut, updateProfile
         }}>
             {children}
         </AuthContext.Provider>
