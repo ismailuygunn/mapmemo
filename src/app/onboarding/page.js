@@ -203,7 +203,7 @@ export default function OnboardingPage() {
                         <Plane size={32} color="white" />
                     </div>
                     <h1 style={{ color: 'white', fontSize: '1.5rem', marginBottom: 8 }}>
-                        {t('MapMemo\'ya Hoş Geldin! ✈️', 'Welcome to MapMemo! ✈️')}
+                        {t('NAVISO\'ya Hoş Geldin! ✈️', 'Welcome to NAVISO! ✈️')}
                     </h1>
                     <p style={{ color: '#94A3B8', fontSize: '0.88rem', lineHeight: 1.5 }}>
                         {t(

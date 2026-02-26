@@ -27,16 +27,15 @@ export default function Sidebar() {
     }
 
     const navItems = [
-        { icon: LayoutDashboard, label: t('nav.dashboard') || 'Dashboard', href: '/dashboard' },
-        { icon: Map, label: t('nav.map'), href: '/map' },
-        { icon: Compass, label: t('nav.cities'), href: '/cities' },
-        { icon: Calendar, label: t('nav.planner'), href: '/planner' },
-        { icon: MapPin, label: t('nav.nearby') || 'Yakında', href: '/nearby' },
-        { icon: Users, label: t('nav.spaces') || 'Gruplar', href: '/spaces' },
-        { icon: CalendarDays, label: t('nav.meetups') || 'Meetups', href: '/meetups' },
+        { icon: LayoutDashboard, label: t('nav.dashboard') || 'Panel', href: '/dashboard' },
+        { icon: Map, label: t('nav.map') || 'Harita', href: '/map' },
+        { icon: Compass, label: t('nav.cities') || 'Şehirler', href: '/cities' },
+        { icon: Calendar, label: t('nav.planner') || 'Planla', href: '/planner' },
+        { icon: MapPin, label: 'Yakındakiler', href: '/nearby' },
+        { icon: Users, label: 'Gruplar', href: '/spaces' },
         { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
-        { icon: Gift, label: t('nav.capsules'), href: '/capsules' },
-        { icon: Settings, label: t('nav.settings'), href: '/settings' },
+        { icon: Gift, label: t('nav.capsules') || 'Kapsüller', href: '/capsules' },
+        { icon: Settings, label: t('nav.settings') || 'Ayarlar', href: '/settings' },
     ]
 
     const handleLogout = async () => {
@@ -67,7 +66,7 @@ export default function Sidebar() {
                                     exit={{ opacity: 0, width: 0 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    MapMemo
+                                    NAVISO
                                 </motion.span>
                             )}
                         </AnimatePresence>

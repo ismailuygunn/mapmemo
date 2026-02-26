@@ -27,7 +27,7 @@ export function generateAlbumHtml(trip, pins, spaceName) {
                 ${trip.start_date ? new Date(trip.start_date).toLocaleDateString() : ''} 
                 ${trip.end_date ? '– ' + new Date(trip.end_date).toLocaleDateString() : ''}
             </p>
-            <p style="font-size:1rem;opacity:0.6;margin-top:24px;">${spaceName || 'MapMemo'}</p>
+            <p style="font-size:1rem;opacity:0.6;margin-top:24px;">${spaceName || 'NAVISO'}</p>
         </div>
     `
 
@@ -108,7 +108,7 @@ export function generateAlbumHtml(trip, pins, spaceName) {
         <html><head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
-            <title>${trip.city || 'Trip'} — MapMemo Album</title>
+            <title>${trip.city || 'Trip'} — NAVISO Album</title>
             <style>
                 * { margin:0; padding:0; box-sizing:border-box; }
                 body { font-family:'Inter',system-ui,sans-serif; color:#111827; }

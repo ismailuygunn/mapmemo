@@ -64,7 +64,7 @@ export default function LoginPage() {
                     <div className="auth-brand-icon">
                         <Plane size={32} />
                     </div>
-                    <h1 className="auth-brand-title">MapMemo</h1>
+                    <h1 className="auth-brand-title">NAVISO</h1>
                     <p className="auth-brand-subtitle">
                         {locale === 'tr'
                             ? 'Seyahat grubunla giriş yap, planlamaya devam et.'

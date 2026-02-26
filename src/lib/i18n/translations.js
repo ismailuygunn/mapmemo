@@ -1,10 +1,10 @@
-// MapMemo — Translation Dictionaries (TR / EN)
+// NAVISO — Translation Dictionaries (TR / EN)
 
 export const translations = {
   en: {
     // ========== Auth ==========
     'auth.welcomeBack': 'Welcome back',
-    'auth.signInSubtitle': 'Sign in to your MapMemo account',
+    'auth.signInSubtitle': 'Sign in to your NAVISO account',
     'auth.email': 'Email',
     'auth.emailPlaceholder': 'you@example.com',
     'auth.password': 'Password',
@@ -386,7 +386,7 @@ export const translations = {
   tr: {
     // ========== Auth ==========
     'auth.welcomeBack': 'Tekrar hoş geldin',
-    'auth.signInSubtitle': 'MapMemo hesabına giriş yap',
+    'auth.signInSubtitle': 'NAVISO hesabına giriş yap',
     'auth.email': 'E-posta',
     'auth.emailPlaceholder': 'sen@ornek.com',
     'auth.password': 'Şifre',

@@ -26,7 +26,7 @@ export default function Home() {
         }}>
           📍
         </div>
-        <h2 style={{ marginBottom: 8 }}>MapMemo</h2>
+        <h2 style={{ marginBottom: 8 }}>NAVISO</h2>
         <p style={{ color: '#94A3B8' }}>Loading...</p>
       </div>
     </div>

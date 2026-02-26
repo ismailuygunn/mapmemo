@@ -7,7 +7,7 @@ import { ToastProvider } from '@/context/ToastContext'
 import { Toaster } from 'sonner'
 
 export const metadata = {
-  title: 'MapMemo — Travel Together',
+  title: 'NAVISO — Travel Together',
   description: 'Pin your travel memories together. Explore, plan, and remember every moment.',
   manifest: '/manifest.json',
 }

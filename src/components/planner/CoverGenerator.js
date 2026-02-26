@@ -102,7 +102,7 @@ export default function CoverGenerator({ city, startDate, endDate, onCoverSelect
             }
             const a = document.createElement('a')
             a.href = url
-            a.download = `mapmemo-${city.toLowerCase().replace(/\s+/g, '-')}-${selectedStyle}-cover.png`
+            a.download = `naviso-${city.toLowerCase().replace(/\s+/g, '-')}-${selectedStyle}-cover.png`
             a.click()
             if (!generatedImage.startsWith('data:')) URL.revokeObjectURL(url)
             toast.success('İndiriliyor...')
