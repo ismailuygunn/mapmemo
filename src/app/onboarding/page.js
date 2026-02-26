@@ -63,21 +63,24 @@ export default function OnboardingPage() {
         setLoading(true)
         setError('')
         try {
-            const { error: updateError } = await supabase
+            console.log('[Onboarding] Saving profile for user:', user.id)
+            const { data, error: updateError } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: user.id,
                     full_name: profileData.fullName.trim(),
                     display_name: profileData.fullName.trim(),
                     home_city: profileData.homeCity.trim() || null,
                     bio: profileData.bio.trim() || null,
-                })
-                .eq('id', user.id)
+                }, { onConflict: 'id' })
 
+            console.log('[Onboarding] Upsert result:', { data, error: updateError })
             if (updateError) throw new Error(updateError.message)
             setProfileSaved(true)
             setStep(1)
         } catch (err) {
-            setError(err.message)
+            console.error('[Onboarding] Profile save error:', err)
+            setError(err.message || (locale === 'tr' ? 'Profil kaydedilemedi' : 'Failed to save profile'))
         }
         setLoading(false)
     }
