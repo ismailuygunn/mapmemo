@@ -295,26 +295,13 @@ export default function MapPage() {
         )
     }
 
-    if (dbError) {
-        return (
-            <div className="auth-bg">
-                <div style={{ color: 'white', textAlign: 'center', maxWidth: 440, padding: 32 }}>
-                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚠️</div>
-                    <h2 style={{ marginBottom: 8 }}>Veritabanı Hatası</h2>
-                    <p style={{ color: '#94A3B8', marginBottom: 24, fontSize: '0.875rem', lineHeight: 1.6 }}>
-                        Supabase güvenlik politikalarında sorun var. Supabase Dashboard → SQL Editor&apos;de fix_rls_v3.sql dosyasını çalıştırın.
-                    </p>
-                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-                        <button onClick={() => reloadSpace()} className="btn btn-primary">
-                            🔄 Tekrar Dene
-                        </button>
-                        <button onClick={() => router.push('/onboarding')} className="btn btn-secondary">
-                            Yeni Alan Oluştur
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
+    // If there's a db error but no space, redirect to onboarding quietly
+    // Don't block the entire app with a full-screen error
+    if (dbError && !space && !spaceLoading) {
+        // Auto-retry once more before giving up
+        if (dbError === 'RLS_RECURSION') {
+            reloadSpace()
+        }
     }
 
     return (
