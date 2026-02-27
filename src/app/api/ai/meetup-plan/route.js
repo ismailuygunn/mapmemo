@@ -1,6 +1,38 @@
 // SOS Plan — AI Meetup Plan Generator (Scenario-based)
 import { NextResponse } from 'next/server'
 
+// ── JSON Repair for truncated AI responses ──
+function repairJSON(text) {
+    if (!text) return null
+    // Try direct parse first
+    try { return JSON.parse(text) } catch (_) { }
+    // Remove trailing incomplete entries
+    let fixed = text.trim()
+    // Remove trailing comma after last valid item
+    fixed = fixed.replace(/,\s*$/, '')
+    // Close unclosed strings
+    const dq = (fixed.match(/"/g) || []).length
+    if (dq % 2 !== 0) fixed += '"'
+    // Close unclosed arrays and objects
+    const opens = { '{': 0, '[': 0 }
+    const closes = { '}': '{', ']': '[' }
+    for (const ch of fixed) {
+        if (ch in opens) opens[ch]++
+        if (ch in closes) opens[closes[ch]]--
+    }
+    // Remove trailing comma before closing
+    fixed = fixed.replace(/,\s*$/, '')
+    for (let i = 0; i < opens['[']; i++) fixed += ']'
+    for (let i = 0; i < opens['{']; i++) fixed += '}'
+    try { return JSON.parse(fixed) } catch (_) { }
+    // Last resort: find last valid closing brace
+    const lastBrace = fixed.lastIndexOf('}')
+    if (lastBrace > 0) {
+        try { return JSON.parse(fixed.substring(0, lastBrace + 1)) } catch (_) { }
+    }
+    return null
+}
+
 // ── Scenario Definitions ──
 const SCENARIOS = {
     anniversary: {
@@ -250,7 +282,7 @@ KRİTİK:
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
                 temperature: 0.85,
-                maxOutputTokens: 8192,
+                maxOutputTokens: 12288,
                 responseMimeType: 'application/json',
             },
         }
@@ -273,7 +305,7 @@ KRİTİK:
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.85, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+                        generationConfig: { temperature: 0.85, maxOutputTokens: 12288, responseMimeType: 'application/json' },
                     }),
                 }
             )
@@ -285,11 +317,13 @@ KRİTİK:
             const fallbackData = await fallbackRes.json()
             const fallbackContent = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text
             if (fallbackContent) {
-                const result = JSON.parse(fallbackContent)
-                result._scenario = scenario
-                result._city = city
-                result._generatedAt = new Date().toISOString()
-                return NextResponse.json(result)
+                const result = repairJSON(fallbackContent)
+                if (result) {
+                    result._scenario = scenario
+                    result._city = city
+                    result._generatedAt = new Date().toISOString()
+                    return NextResponse.json(result)
+                }
             }
             return NextResponse.json({ error: 'AI boş yanıt döndü. Tekrar deneyin.' }, { status: 500 })
         }
@@ -302,7 +336,11 @@ KRİTİK:
             return NextResponse.json({ error: 'AI boş yanıt döndü. Tekrar deneyin.' }, { status: 500 })
         }
 
-        const result = JSON.parse(content)
+        const result = repairJSON(content)
+        if (!result) {
+            console.error('SOS Plan: Failed to parse JSON', content.substring(0, 500))
+            return NextResponse.json({ error: 'AI yanıtı işlenemedi. Tekrar deneyin.' }, { status: 500 })
+        }
         result._scenario = scenario
         result._city = city
         result._generatedAt = new Date().toISOString()
