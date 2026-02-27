@@ -29,32 +29,192 @@ const OCCASIONS = [
     { key: 'other', label: 'Diğer', emoji: '📌', icon: Star, color: '#64748B', suggestions: ['Planı kaydet', 'Detayları sonra ekle'] },
 ]
 
-// ═══ CURATED NICHE SPOTS ═══
-const NICHE_SPOTS = {
-    couples: [
-        { name: 'Kız Kulesi Sunset', city: 'İstanbul', desc: 'Kız Kulesi\'nde günbatımı yemeği — eşsiz Boğaz manzarası', emoji: '🌅', category: 'Romantik', vibe: '💕' },
-        { name: 'Pierre Loti Tepesi', city: 'İstanbul', desc: 'Haliç manzaralı Türk kahvesi, teleferikle ulaşım', emoji: '☕', category: 'Manzara', vibe: '🪷' },
-        { name: 'Balat Sokakları', city: 'İstanbul', desc: 'Rengarenk evler arasında yürüyüş, vintage kafeler', emoji: '🎨', category: 'Keşif', vibe: '🌈' },
-        { name: 'Bebek Sahili Yürüyüş', city: 'İstanbul', desc: 'Boğaz kıyısında yürüyüş, waffle ve dondurma molası', emoji: '🍦', category: 'Yürüyüş', vibe: '😍' },
-        { name: 'Sarıyer Korusu', city: 'İstanbul', desc: 'Gizli orman yolu ve şelale — şehirden kaçış', emoji: '🌲', category: 'Doğa', vibe: '🧘' },
-        { name: 'Büyükada Bisiklet', city: 'İstanbul', desc: 'Ada\'da bisiklet turu, deniz kenarında öğle yemeği', emoji: '🚲', category: 'Macera', vibe: '✈️' },
-        { name: 'Kuruçeşme Barlar', city: 'İstanbul', desc: 'Gece Boğaz\'da ışıklı köprü manzarası + sahil barları', emoji: '🌃', category: 'Gece', vibe: '✨' },
-        { name: 'Kapadokya Piknik', city: 'Kapadokya', desc: 'Peri bacaları arasında piknik ve şarap', emoji: '🍷', category: 'Romantik', vibe: '🌅' },
-        { name: 'Lavanta Tarlaları', city: 'Isparta', desc: 'Mor tarlalarda fotoğraf ve piknik (Haziran-Temmuz)', emoji: '💜', category: 'Fotoğraf', vibe: '🌺' },
-        { name: 'Kaş Cam Tekne', city: 'Kaş', desc: 'Batık şehir üzerinde cam teknede günbatımı', emoji: '🚤', category: 'Deniz', vibe: '🌊' },
-    ],
-    friends: [
-        { name: 'Kadıköy Bar Sokak', city: 'İstanbul', desc: 'Canlı müzik, sokak yemeği, craft bira — haftanın her günü canlı', emoji: '🍺', category: 'Gece', vibe: '🎉' },
-        { name: 'Escape Room Macera', city: 'İstanbul', desc: 'Takım halinde kapalı oda macerası — 60 dk adrenalin', emoji: '🔑', category: 'Macera', vibe: '😱' },
-        { name: 'Emirgan Korusu Piknik', city: 'İstanbul', desc: 'Lale bahçeleri, Boğaz manzaralı çim, mangal alanı', emoji: '🇩🇪', category: 'Piknik', vibe: '☀️' },
-        { name: 'Maçka Parkı Spor', city: 'İstanbul', desc: 'Outdoor fitness, koşu parkuru ve ardından kahve', emoji: '🏃', category: 'Spor', vibe: '💪' },
-        { name: 'Çiçek Pasajı Meze', city: 'İstanbul', desc: 'Tarihi pasajda meze, rakı ve muhabbet', emoji: '🍽️', category: 'Yemek', vibe: '🌟' },
-        { name: 'Ortaköy Waffle Walk', city: 'İstanbul', desc: 'Waffle + kuymak + Boğaz manzarası yürüyüşü', emoji: '🧇', category: 'Yürüyüş', vibe: '😋' },
-        { name: 'Tekne Partisi', city: 'İstanbul', desc: 'Özel tekne kirala, DJ + denize atlama + Boğaz turu', emoji: '🚢', category: 'Parti', vibe: '🌊' },
-        { name: 'Kapadokya ATV Safari', city: 'Kapadokya', desc: 'Peri bacaları arasında ATV turu ve gece ışık show', emoji: '🏎️', category: 'Macera', vibe: '⚡' },
-        { name: 'Alaçatı Windsurf', city: 'Alaçatı', desc: 'Rüzgar sörfü + taş sokaklar + brunch', emoji: '🏄', category: 'Spor', vibe: '🌊' },
-        { name: 'Pamukkale Antik Havuz', city: 'Pamukkale', desc: 'Antik havuzda yüzme + travertenler üzerinde fotoğraf', emoji: '💧', category: 'Doğa', vibe: '✨' },
-    ],
+// ═══ CITIES ═══
+const CITIES = [
+    { key: 'istanbul', name: 'İstanbul', emoji: '🌉' },
+    { key: 'ankara', name: 'Ankara', emoji: '🏛️' },
+    { key: 'izmir', name: 'İzmir', emoji: '🌊' },
+    { key: 'antalya', name: 'Antalya', emoji: '🏖️' },
+    { key: 'bursa', name: 'Bursa', emoji: '🏔️' },
+    { key: 'kapadokya', name: 'Kapadokya', emoji: '🎈' },
+]
+
+// ═══ CURATED A→Z PLANS (City-based) ═══
+const CITY_PLANS = {
+    istanbul: {
+        couples: [
+            {
+                title: '💕 Romantik Boğaz Akşamı',
+                subtitle: 'Kız arkadaşınla unutulmaz bir akşam — A\'dan Z\'ye',
+                duration: '~5 saat', budget: '₺800–1.500', emoji: '🌹',
+                steps: [
+                    { time: '17:00', emoji: '🌹', action: 'Çiçek Al', detail: 'Nişantaşı Çiçekçi veya Bloom & Fresh — kırmızı güller + küçük buket', tip: 'Online sipariş ver, yolda al' },
+                    { time: '17:30', emoji: '👗', action: 'Hazırlan', detail: 'Smart casual giyinin. Blazer + parfüm = +10 puan', tip: 'Ayakkabılar rahat olsun, yürüyüş var' },
+                    { time: '18:00', emoji: '🚕', action: 'Buluşma', detail: 'Bebek Parkı girişinde buluşun', tip: 'Uber/Bitaksi ile gidin, park derdi olmaz' },
+                    { time: '18:15', emoji: '🚶', action: 'Bebek→Rumelihisarı', detail: '2 km sahil yürüyüşü — Boğaz\'ın en güzel kesimi. Güneş batarken fotoğraf durakları', tip: 'Sol taraftaki bankta oturup çay için' },
+                    { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Rumelihisarı İskele Restaurant — Boğaz manzaralı balık. Veya daha butik: Mangerie Bebek', tip: 'Cum-Ct 2 gün önce rezervasyon şart!' },
+                    { time: '20:30', emoji: '🍷', action: 'After-dinner', detail: 'Kuruçeşme sahil barları veya Bebek Hotel bar', tip: 'Kokteyl + Boğaz ışıkları = büyü' },
+                    { time: '22:00', emoji: '🌃', action: 'Gece Finali', detail: 'Ortaköy Meydanı + Köprü ışıkları altında son yürüyüş', tip: 'Kumpir yiyebilirsiniz (klasik!)' },
+                ],
+            },
+            {
+                title: '☕ Balat & Karaköy Keşif Günü',
+                subtitle: 'Sanatsal ve vintage bir gün',
+                duration: '~6 saat', budget: '₺400–800', emoji: '🎨',
+                steps: [
+                    { time: '11:00', emoji: '☕', action: 'Brunch', detail: 'Karaköy Lokantası veya Kronotrop — specialty kahve + peynirli börek', tip: 'Haftasonları kuyruğa hazır olun' },
+                    { time: '12:00', emoji: '🎨', action: 'Sanat Galerisi', detail: 'SALT Galata veya İstanbul Modern — sergi gezisi + müze shop', tip: 'İstanbul Kart ile indirim' },
+                    { time: '13:30', emoji: '🚶', action: 'Balat Yürüyüşü', detail: 'Merdivenli Yokuş → Renkli evler → Iron Church', tip: 'Her köşe Instagram değerinde' },
+                    { time: '15:00', emoji: '🍰', action: 'Kahve Molası', detail: 'Forno Balat (İtalyan fırın) — brownie + latte', tip: 'Bahçeli mekanları tercih edin' },
+                    { time: '16:00', emoji: '🛍️', action: 'Vintage Shopping', detail: 'Balat antikacıları + plak dükkanları + el yapımı takılar', tip: 'Hediye alabilirsiniz!' },
+                    { time: '17:30', emoji: '🌅', action: 'Günbatımı', detail: 'Pierre Loti Tepesi — teleferikle çıkın, Türk kahvesi', tip: 'Teleferik 18:00\'de kapanır' },
+                ],
+            },
+        ],
+        friends: [
+            {
+                title: '🍺 4 Kanka: İstanbul Eğlence Günü',
+                subtitle: 'Sabahtan geceye erkek günü — A\'dan Z\'ye',
+                duration: 'Tam gün', budget: '₺500–1.000/kişi', emoji: '🎯',
+                steps: [
+                    { time: '10:00', emoji: '🏋️', action: 'Spor/Aktivite', detail: 'Levent CrossFit veya Maçka Parkı outdoor workout', tip: 'Yedek tişört getirin' },
+                    { time: '11:30', emoji: '🍳', action: 'Brunch', detail: 'House Café Ortaköy — kocaman serpme kahvaltı', tip: '4 kişilik sipariş edin' },
+                    { time: '13:00', emoji: '🎮', action: 'Escape Room', detail: 'Kadıköy Enigma veya Tuzla Paintball — takım olarak savaşın', tip: '2 saat blok ayırın, rez şart' },
+                    { time: '15:30', emoji: '🎱', action: 'Bilardo', detail: 'Funloft Beşiktaş — bilardo + bowling + arcade', tip: 'Turnuva: kaybeden akşamı ısmarlasın!' },
+                    { time: '17:30', emoji: '⚽', action: 'Halısaha', detail: 'Levent Halısaha — 2v2 mini maç', tip: 'Krampon+forma getirin' },
+                    { time: '19:30', emoji: '🍖', action: 'Akşam Yemeği', detail: 'Nusr-Et Etiler veya Çiya Sofrası Kadıköy', tip: 'Aç karnına en güzel yenir' },
+                    { time: '21:30', emoji: '🍺', action: 'Bar Crawl', detail: 'Kadıköy: Arkaoda → Karga → Viktor Levi → Bira Fabrikası', tip: '4 mekan minimum, yürüyerek gezilebilir' },
+                    { time: '00:00', emoji: '🌙', action: 'Gece Finali', detail: 'Ortaköy ıslak hamburger + Galata Köprüsü', tip: 'Son vapur 00:30!' },
+                ],
+            },
+            {
+                title: '🏖️ Adalar Günübirlik',
+                subtitle: 'Deniz, bisiklet, balık — tam gün',
+                duration: 'Tam gün', budget: '₺300–600/kişi', emoji: '🚢',
+                steps: [
+                    { time: '09:00', emoji: '⛴️', action: 'Vapur', detail: 'Kabataş→Büyükada vapuru — simit + çay al', tip: 'İstanbulkart ile ucuz, 1.5 saat' },
+                    { time: '10:30', emoji: '🚲', action: 'Bisiklet', detail: 'Ada girişinden bisiklet kirala — tandem de var', tip: 'Kask iste' },
+                    { time: '11:00', emoji: '🗺️', action: 'Ada Turu', detail: 'Yörükali → Aya Yorgi tepesi → Dilburnu', tip: 'Aya Yorgi çıkışı 30 dk ama manzara efsane' },
+                    { time: '13:00', emoji: '🐟', action: 'Balık Öğle', detail: 'Yörükali — deniz kenarında taze balık + rakı', tip: 'Levrek ızgara + deniz börülcesi' },
+                    { time: '15:00', emoji: '🏊', action: 'Deniz', detail: 'Yörükali plajında denize girin', tip: 'Havlu + mayo getirin' },
+                    { time: '17:00', emoji: '🍦', action: 'Dondurma', detail: 'Ada meydanında Maraş dondurmacısı', tip: 'Sakızlı + fıstıklı' },
+                    { time: '18:30', emoji: '⛴️', action: 'Dönüş', detail: 'Rıhtımda günbatımı → son vapur', tip: 'Vapur üstü çay = mükemmel kapanış' },
+                ],
+            },
+        ],
+    },
+    ankara: {
+        couples: [{
+            title: '🌃 Başkent Romantik Akşam', subtitle: 'Ankara\'da zarif bir gece', duration: '~4 saat', budget: '₺600–1.200', emoji: '💐',
+            steps: [
+                { time: '18:00', emoji: '💐', action: 'Çiçek', detail: 'Tunalı Hilmi çiçekçiler', tip: 'Ciceksepeti ile eve teslim de olur' },
+                { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Trilye (Kavakdere) veya JW Marriott terası', tip: 'Smart casual, rez şart' },
+                { time: '21:00', emoji: '🎵', action: 'Canlı Müzik', detail: 'IF Performance Hall — caz geceleri', tip: 'Agenda\'yı kontrol edin' },
+                { time: '22:30', emoji: '🌙', action: 'Gece Yürüyüşü', detail: 'Kale\'den şehir manzarası', tip: 'Anıtkabir aydınlatması görülebilir' },
+            ],
+        }],
+        friends: [{
+            title: '🎯 Ankara Erkekler Günü', subtitle: 'Başkent eğlence maratonu', duration: 'Tam gün', budget: '₺400–800/kişi', emoji: '🎮',
+            steps: [
+                { time: '10:00', emoji: '🏋️', action: 'Spor', detail: 'ODTÜ ormanında koşu veya halısaha', tip: 'Sabah = boş saha' },
+                { time: '12:00', emoji: '🍖', action: 'Öğle', detail: 'Uludağ Kebapçısı — efsane İskender', tip: 'İskender + ayran combo' },
+                { time: '14:00', emoji: '🎮', action: 'VR/Oyun', detail: 'GameHouse Kızılay — sanal gerçeklik', tip: 'Grup indirimi sorun' },
+                { time: '16:00', emoji: '📸', action: 'Anıtkabir', detail: 'Ziyaret + müze (17:00\'ye kadar)', tip: 'Güvenlik sıkı, erken gidin' },
+                { time: '18:00', emoji: '🍕', action: 'Tunalı', detail: 'Cadde gezintisi + pizza/burger', tip: 'Outdoor kafeler güzel' },
+                { time: '21:00', emoji: '🍺', action: 'Kızılay Barlar', detail: 'Sakarya Caddesi — canlı, enerjik', tip: 'Cumartesi en iyi gece' },
+            ],
+        }],
+    },
+    izmir: {
+        couples: [{
+            title: '🌅 Kordon Romantik', subtitle: 'Ege\'nin incisi', duration: '~5 saat', budget: '₺500–1.000', emoji: '🌊',
+            steps: [
+                { time: '16:00', emoji: '🌹', action: 'Çiçek', detail: 'Alsancak çiçekçileri — lavanta + güller', tip: 'Her köşede var' },
+                { time: '17:00', emoji: '🚶', action: 'Kordon Yürüyüşü', detail: 'Konak→Alsancak sahil boyu 3 km', tip: 'Günbatımına denk getirin' },
+                { time: '18:30', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Sakız (Alsancak) — Ege mutfağı', tip: 'Enginar + levrek' },
+                { time: '20:30', emoji: '🎵', action: 'Alsancak Barları', detail: '1453 Sokak — akustik müzik', tip: 'Yazın sokak, kışın iç mekan' },
+                { time: '22:00', emoji: '🌙', action: 'Asansör', detail: 'Tarihi Asansör\'den gece manzarası + çay', tip: 'Çok romantik!' },
+            ],
+        }],
+        friends: [{
+            title: '🏄 Ege Macerası', subtitle: 'Alaçatı + Çeşme tam gün', duration: 'Tam gün', budget: '₺400–800/kişi', emoji: '☀️',
+            steps: [
+                { time: '09:00', emoji: '🚗', action: 'Yola Çık', detail: 'Alaçatı\'ya 1 saat', tip: 'Müzik açın, E87 kullanın' },
+                { time: '10:30', emoji: '🏄', action: 'Windsurf', detail: 'Alaçatı Port\'ta windsurf dersi', tip: '2 saat başlangıç ~₺500' },
+                { time: '13:00', emoji: '🍽️', action: 'Brunch', detail: 'Agrilia — serpme kahvaltı', tip: 'Otlar + peynirler + gözleme' },
+                { time: '15:00', emoji: '🛍️', action: 'Alaçatı Sokakları', detail: 'Taş sokaklar + butik + dondurma', tip: 'Çarşamba pazarı en iyisi' },
+                { time: '17:00', emoji: '🏊', action: 'Ilıca Plajı', detail: 'Sıcak su kaynağı var!', tip: 'Deniz ayakkabısı getirin' },
+                { time: '19:00', emoji: '🍺', action: 'Sunset', detail: 'Çeşme Marina — Aperol Spritz', tip: 'Klasik' },
+            ],
+        }],
+    },
+    antalya: {
+        couples: [{
+            title: '🌊 Kaleiçi Romantik', subtitle: 'Akdeniz akşamı', duration: '~4 saat', budget: '₺600–1.200', emoji: '🏖️',
+            steps: [
+                { time: '17:00', emoji: '🌹', action: 'Çiçek', detail: 'Kaleiçi girişi çiçekçi', tip: '' },
+                { time: '17:30', emoji: '🚶', action: 'Kaleiçi', detail: 'Dar sokaklar + tarihi evler + Hadrian Kapısı', tip: 'Fotojenik' },
+                { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Club Arma — marina manzarası', tip: 'Karides güveç!' },
+                { time: '21:00', emoji: '🌙', action: 'Marina', detail: 'Yat limanında yürüyüş + dondurma', tip: 'Gece aydınlatma muhteşem' },
+            ],
+        }],
+        friends: [{
+            title: '🏖️ Beach Day', subtitle: 'Deniz + eğlence', duration: 'Tam gün', budget: '₺500–900/kişi', emoji: '☀️',
+            steps: [
+                { time: '09:00', emoji: '🏖️', action: 'Plaj', detail: 'Konyaaltı — şezlong + deniz', tip: 'Güneş kremi!' },
+                { time: '12:00', emoji: '🍔', action: 'Beach Club', detail: 'Lara Beach Club — havuz + müzik', tip: 'Giriş ücreti yemekten düşüyor' },
+                { time: '15:00', emoji: '🚤', action: 'Tekne Turu', detail: 'Düden Şelalesi turu — 2 saat', tip: 'Marina\'dan uygun turlar' },
+                { time: '18:00', emoji: '🍽️', action: 'Balık', detail: 'Kaleiçi balık restoranı', tip: 'Çipura + rakı' },
+                { time: '21:00', emoji: '🍺', action: 'Bar Crawl', detail: 'Club Ally, Kale Bar', tip: 'Her barda farklı müzik' },
+            ],
+        }],
+    },
+    bursa: {
+        couples: [{
+            title: '❄️ Uludağ Romantik', subtitle: 'Dağ\'da çift keyfi', duration: '~5 saat', budget: '₺600–1.200', emoji: '🏔️',
+            steps: [
+                { time: '10:00', emoji: '🚡', action: 'Teleferik', detail: 'Teferrüç→Uludağ — muhteşem manzara', tip: 'Hafta içi daha sakin' },
+                { time: '11:30', emoji: '☕', action: 'Sıcak Çikolata', detail: 'Dağ evi kafesinde — sıcak çikolata + kestane', tip: 'Kışın bot giyin' },
+                { time: '13:00', emoji: '🍖', action: 'İskender', detail: 'Kebapçı İskender (Ulu Cami yanı)', tip: 'Orijinal!' },
+                { time: '15:00', emoji: '♨️', action: 'Kaplıca', detail: 'Çekirge kaplıcaları — çift havuz', tip: 'Havlu getirin' },
+                { time: '17:00', emoji: '🌅', action: 'Günbatımı', detail: 'Tophane\'den ova manzarası', tip: 'Çay ile izleyin' },
+            ],
+        }],
+        friends: [{
+            title: '🎿 Uludağ Macera', subtitle: 'Dağ erkekler günü', duration: 'Tam gün', budget: '₺500–900/kişi', emoji: '⛷️',
+            steps: [
+                { time: '08:00', emoji: '🚗', action: 'Yol', detail: 'İstanbul→Bursa 2.5 saat', tip: 'Osmangazi köprüsü' },
+                { time: '10:30', emoji: '⛷️', action: 'Kayak', detail: 'Uludağ pistleri — kiralama var', tip: 'Kışın kayak, yazın trekking' },
+                { time: '13:00', emoji: '🍖', action: 'Dağ Öğle', detail: 'Dağ evlerinde kebap + çorba', tip: 'Sıcak çorba şart!' },
+                { time: '15:00', emoji: '🏔️', action: 'ATV', detail: 'Uludağ ATV off-road', tip: 'Kask takın' },
+                { time: '18:00', emoji: '🍖', action: 'İskender', detail: 'Kebapçı İskender (1867)', tip: 'Sıcak tereyağlı = efsane' },
+            ],
+        }],
+    },
+    kapadokya: {
+        couples: [{
+            title: '🎈 Aşk Rotası', subtitle: 'Peri bacalarında romantik gün', duration: 'Tam gün', budget: '₺1.500–3.000', emoji: '🌅',
+            steps: [
+                { time: '05:00', emoji: '🎈', action: 'Balon', detail: 'Gün doğumunda sıcak hava balonu — 1 saat', tip: 'Royal Balloon, Butterfly Balloons' },
+                { time: '08:00', emoji: '☕', action: 'Kahvaltı', detail: 'Koza Cave Hotel terası — serpme', tip: 'Manzaralı masa isteyin' },
+                { time: '10:00', emoji: '🐴', action: 'At Turu', detail: 'Vadilerde at binme — 2 saat', tip: 'Rahat pantolon' },
+                { time: '13:00', emoji: '🍽️', action: 'Öğle', detail: 'Dibek Restaurant — testi kebabı + şarap', tip: 'Testi kırma ritüeli eğlenceli' },
+                { time: '15:00', emoji: '🏛️', action: 'Yeraltı Şehri', detail: 'Derinkuyu veya Kaymaklı', tip: 'Kapalı alan, yorucu olabilir' },
+                { time: '18:00', emoji: '🌅', action: 'Sunset', detail: 'Kızılçukur Vadisi — şarap + günbatımı', tip: 'En güzel gün batımı noktası' },
+            ],
+        }],
+        friends: [{
+            title: '🏎️ Macera Günü', subtitle: 'Adrenalin + keşif', duration: 'Tam gün', budget: '₺800–1.500/kişi', emoji: '⚡',
+            steps: [
+                { time: '06:00', emoji: '🎈', action: 'Balon İzle', detail: 'Sunrise point\'ten ücretsiz izleyin', tip: 'Sıcak kahve getirin' },
+                { time: '08:00', emoji: '🍳', action: 'Kahvaltı', detail: 'Topdeck Cave — manzaralı', tip: 'Seçmeler bol' },
+                { time: '10:00', emoji: '🏎️', action: 'ATV Safari', detail: 'Peri bacaları ATV — 2 saat off-road', tip: 'Eski kıyafet giyin' },
+                { time: '13:00', emoji: '🍖', action: 'Öğle', detail: 'Testi kebabı', tip: 'Grupça yenir' },
+                { time: '15:00', emoji: '🥾', action: 'Ihlara Vadisi', detail: '14 km kanyon (kısa rota 4 km)', tip: 'Su + snack alın' },
+                { time: '18:00', emoji: '🍷', action: 'Şarap Tadımı', detail: 'Turasan veya Kocabağ', tip: '4-5 çeşit tadım' },
+            ],
+        }],
+    },
 }
 
 const GUEST_PRESETS = [
@@ -128,6 +288,8 @@ export default function MeetupsPage() {
     const supabase = createClient()
     const router = useRouter()
     const [spotMode, setSpotMode] = useState('couples') // 'couples' or 'friends'
+    const [selectedCity, setSelectedCity] = useState('istanbul')
+    const [expandedPlan, setExpandedPlan] = useState(null)
 
     useEffect(() => {
         if (space || user) loadMeetups()
@@ -296,12 +458,53 @@ export default function MeetupsPage() {
                         </motion.button>
                     </motion.div>
 
-                    {/* ═══ NICHE SPOT SUGGESTIONS ═══ */}
+                    {/* ═══ HERO BANNER ═══ */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                        style={{
+                            borderRadius: 24, overflow: 'hidden', marginBottom: 20,
+                            position: 'relative', height: 180,
+                            backgroundImage: 'url(/meetup_hero.png)',
+                            backgroundSize: 'cover', backgroundPosition: 'center',
+                        }}>
+                        <div style={{
+                            position: 'absolute', inset: 0,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+                            display: 'flex', alignItems: 'flex-end', padding: 24,
+                        }}>
+                            <div>
+                                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', margin: '0 0 4px' }}>Şehir seç, plan seç, tadını çıkar</p>
+                                <h2 style={{ color: 'white', margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>A'dan Z'ye Buluşma Planları</h2>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* ═══ CITY SELECTOR ═══ */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                        style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
+                        {CITIES.map(city => (
+                            <motion.button key={city.key} whileTap={{ scale: 0.95 }}
+                                onClick={() => { setSelectedCity(city.key); setExpandedPlan(null) }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+                                    borderRadius: 12, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+                                    fontSize: '0.82rem', fontWeight: 700,
+                                    background: selectedCity === city.key ? 'linear-gradient(135deg, #F59E0B, #EF4444)' : 'var(--bg-secondary)',
+                                    color: selectedCity === city.key ? 'white' : 'var(--text-secondary)',
+                                    boxShadow: selectedCity === city.key ? '0 4px 15px rgba(245,158,11,0.3)' : 'none',
+                                    transition: 'all 200ms',
+                                }}>
+                                <span style={{ fontSize: '1.1rem' }}>{city.emoji}</span> {city.name}
+                            </motion.button>
+                        ))}
+                    </motion.div>
+
+                    {/* ═══ MODE TOGGLE + A→Z PLANS ═══ */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                         style={sectionStyle}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                             <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
-                                <Sparkles size={16} style={{ color: '#F59E0B', marginRight: 6 }} /> İlham Al
+                                <Sparkles size={16} style={{ color: '#F59E0B', marginRight: 6 }} />
+                                {CITIES.find(c => c.key === selectedCity)?.emoji} {CITIES.find(c => c.key === selectedCity)?.name} Planları
                             </h2>
                             <div style={{ display: 'flex', gap: 6 }}>
                                 {[
@@ -309,7 +512,7 @@ export default function MeetupsPage() {
                                     { key: 'friends', label: '🤝 Arkadaşlar', color: '#6366F1' },
                                 ].map(mode => (
                                     <motion.button key={mode.key} whileTap={{ scale: 0.95 }}
-                                        onClick={() => setSpotMode(mode.key)}
+                                        onClick={() => { setSpotMode(mode.key); setExpandedPlan(null) }}
                                         style={{
                                             padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
                                             fontSize: '0.78rem', fontWeight: 700,
@@ -320,41 +523,94 @@ export default function MeetupsPage() {
                                 ))}
                             </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-                            {NICHE_SPOTS[spotMode].map((spot, i) => (
-                                <motion.div key={i}
+
+                        {/* Plan cards */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                            {(CITY_PLANS[selectedCity]?.[spotMode] || []).map((plan, pi) => (
+                                <motion.div key={pi}
                                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.04 }}
-                                    whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.12)' }}
-                                    onClick={() => {
-                                        setForm(prev => ({ ...prev, title: spot.name, description: spot.desc, city: spot.city, location_name: spot.name }))
-                                        setShowCreate(true)
-                                        setStep(2)
-                                    }}
+                                    transition={{ delay: pi * 0.08 }}
                                     style={{
-                                        background: 'var(--bg-primary)', borderRadius: 16,
-                                        border: '1px solid var(--border)', padding: 16,
-                                        cursor: 'pointer', transition: 'all 200ms',
+                                        background: 'var(--bg-primary)', borderRadius: 18,
+                                        border: expandedPlan === pi ? '2px solid #F59E0B' : '1px solid var(--border)',
+                                        overflow: 'hidden', transition: 'all 200ms',
                                     }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                                        <span style={{ fontSize: '1.6rem' }}>{spot.emoji}</span>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <h3 style={{ margin: '0 0 2px', fontSize: '0.92rem', fontWeight: 800 }}>{spot.name}</h3>
-                                            <p style={{ margin: '0 0 6px', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>📍 {spot.city}</p>
-                                            <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{spot.desc}</p>
-                                            <div style={{ display: 'flex', gap: 4 }}>
-                                                <span style={{
-                                                    fontSize: '0.62rem', padding: '2px 8px', borderRadius: 6,
-                                                    background: spotMode === 'couples' ? 'rgba(239,68,68,0.1)' : 'rgba(99,102,241,0.1)',
-                                                    color: spotMode === 'couples' ? '#EF4444' : '#6366F1',
-                                                    fontWeight: 600,
-                                                }}>{spot.category}</span>
-                                                <span style={{ fontSize: '0.62rem', padding: '2px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 600 }}>
-                                                    {spot.vibe}
-                                                </span>
+                                    {/* Plan header */}
+                                    <div
+                                        onClick={() => setExpandedPlan(expandedPlan === pi ? null : pi)}
+                                        style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '16px 20px', cursor: 'pointer',
+                                        }}>
+                                        <div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 800 }}>{plan.title}</h3>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{plan.subtitle}</p>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#F59E0B' }}>{plan.budget}</div>
+                                                <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>{plan.duration}</div>
                                             </div>
+                                            <motion.div animate={{ rotate: expandedPlan === pi ? 180 : 0 }}>
+                                                <ChevronDown size={18} style={{ color: 'var(--text-tertiary)' }} />
+                                            </motion.div>
                                         </div>
                                     </div>
+
+                                    {/* Expanded steps */}
+                                    <AnimatePresence>
+                                        {expandedPlan === pi && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}
+                                                style={{ overflow: 'hidden' }}>
+                                                <div style={{ padding: '0 20px 20px' }}>
+                                                    {/* Timeline */}
+                                                    <div style={{ position: 'relative' }}>
+                                                        {/* Vertical line */}
+                                                        <div style={{
+                                                            position: 'absolute', left: 15, top: 12, bottom: 12,
+                                                            width: 2, background: 'linear-gradient(to bottom, #F59E0B, #EF4444)',
+                                                            borderRadius: 2, opacity: 0.3,
+                                                        }} />
+                                                        {plan.steps.map((step, si) => (
+                                                            <motion.div key={si}
+                                                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: si * 0.06 }}
+                                                                style={{
+                                                                    display: 'flex', gap: 14, padding: '10px 0',
+                                                                    position: 'relative',
+                                                                }}>
+                                                                {/* Time dot */}
+                                                                <div style={{
+                                                                    width: 32, minWidth: 32, display: 'flex', flexDirection: 'column',
+                                                                    alignItems: 'center', gap: 2, zIndex: 1,
+                                                                }}>
+                                                                    <span style={{ fontSize: '1.2rem' }}>{step.emoji}</span>
+                                                                    <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#F59E0B' }}>{step.time}</span>
+                                                                </div>
+                                                                {/* Content */}
+                                                                <div style={{
+                                                                    flex: 1, background: 'var(--bg-secondary)', borderRadius: 14,
+                                                                    padding: '12px 16px', border: '1px solid var(--border)',
+                                                                }}>
+                                                                    <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: 3 }}>{step.action}</div>
+                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{step.detail}</div>
+                                                                    {step.tip && (
+                                                                        <div style={{
+                                                                            fontSize: '0.68rem', marginTop: 6, padding: '5px 10px',
+                                                                            background: 'rgba(245,158,11,0.08)', borderRadius: 8,
+                                                                            color: '#D97706', fontWeight: 600,
+                                                                        }}>💡 {step.tip}</div>
+                                                                    )}
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             ))}
                         </div>
