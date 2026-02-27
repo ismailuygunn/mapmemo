@@ -1,27 +1,49 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
-import { Search, Star, Users, Bed, MapPin, Loader2, ExternalLink, Heart, Map, List, SlidersHorizontal } from 'lucide-react'
+import { Search, Star, MapPin, Loader2, ExternalLink, Heart, Map, List, SlidersHorizontal, Bed, Bath, Users, X, ChevronDown, Plane } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const POPULAR_CITIES = [
-    { name: 'İstanbul', emoji: '🇹🇷' }, { name: 'Antalya', emoji: '🏖️' },
-    { name: 'Bodrum', emoji: '⛵' }, { name: 'Fethiye', emoji: '🏔️' },
-    { name: 'Kapadokya', emoji: '🎈' }, { name: 'Paris', emoji: '🇫🇷' },
-    { name: 'Roma', emoji: '🇮🇹' }, { name: 'Barselona', emoji: '🇪🇸' },
-    { name: 'Amsterdam', emoji: '🇳🇱' }, { name: 'Dubai', emoji: '🇦🇪' },
-    { name: 'Londra', emoji: '🇬🇧' }, { name: 'Prag', emoji: '🇨🇿' },
-    { name: 'Budapeşte', emoji: '🇭🇺' }, { name: 'Tiflis', emoji: '🇬🇪' },
-    { name: 'Bali', emoji: '🌴' },
+    { name: 'İstanbul', emoji: '🇹🇷', img: '🏙️' },
+    { name: 'Antalya', emoji: '🏖️', img: '🌊' },
+    { name: 'Bodrum', emoji: '⛵', img: '🏝️' },
+    { name: 'Fethiye', emoji: '🏔️', img: '⛰️' },
+    { name: 'Kapadokya', emoji: '🎈', img: '🏜️' },
+    { name: 'Paris', emoji: '🇫🇷', img: '🗼' },
+    { name: 'Roma', emoji: '🇮🇹', img: '🏛️' },
+    { name: 'Barselona', emoji: '🇪🇸', img: '☀️' },
+    { name: 'Amsterdam', emoji: '🇳🇱', img: '🌷' },
+    { name: 'Dubai', emoji: '🇦🇪', img: '🏗️' },
+    { name: 'Londra', emoji: '🇬🇧', img: '🎡' },
+    { name: 'Prag', emoji: '🇨🇿', img: '🏰' },
+    { name: 'Budapeşte', emoji: '🇭🇺', img: '♨️' },
+    { name: 'Tiflis', emoji: '🇬🇪', img: '⛪' },
+    { name: 'Bali', emoji: '🌴', img: '🌺' },
 ]
 
 const SORT_OPTIONS = [
-    { key: 'price_asc', label: 'En Ucuz' },
-    { key: 'price_desc', label: 'En Pahalı' },
-    { key: 'rating', label: 'En Yüksek Puan' },
-    { key: 'reviews', label: 'En Çok Yorum' },
+    { key: 'price_asc', label: '💰 En Ucuz', icon: '↑' },
+    { key: 'price_desc', label: '💎 En Pahalı', icon: '↓' },
+    { key: 'rating', label: '⭐ En İyi Puan', icon: '★' },
+    { key: 'reviews', label: '💬 En Çok Yorum', icon: '📝' },
+]
+
+const PROPERTY_TYPES = [
+    { key: 'all', label: 'Hepsi', emoji: '🏠' },
+    { key: 'entire', label: 'Tüm Ev', emoji: '🏡' },
+    { key: 'room', label: 'Özel Oda', emoji: '🚪' },
+    { key: 'shared', label: 'Paylaşımlı', emoji: '🛏️' },
+]
+
+const PRICE_RANGES = [
+    { key: 'all', label: 'Fiyat Filtresi', min: 0, max: 0 },
+    { key: 'budget', label: '₺0 – ₺2.000', min: 0, max: 2000 },
+    { key: 'mid', label: '₺2.000 – ₺5.000', min: 2000, max: 5000 },
+    { key: 'premium', label: '₺5.000 – ₺10.000', min: 5000, max: 10000 },
+    { key: 'luxury', label: '₺10.000+', min: 10000, max: 0 },
 ]
 
 function getTodayStr(offset = 7) {
@@ -46,7 +68,11 @@ export default function AirbnbPage() {
     const [sortBy, setSortBy] = useState('price_asc')
     const [hoveredId, setHoveredId] = useState(null)
     const [mapCenter, setMapCenter] = useState(null)
-    const [searchRadius, setSearchRadius] = useState(10)  // km
+    const [searchRadius, setSearchRadius] = useState(10)
+    const [propertyFilter, setPropertyFilter] = useState('all')
+    const [priceFilter, setPriceFilter] = useState('all')
+    const [nightCount, setNightCount] = useState(0)
+    const [showFilters, setShowFilters] = useState(false)
 
     const mapContainer = useRef(null)
     const mapRef = useRef(null)
@@ -62,17 +88,21 @@ export default function AirbnbPage() {
             })
             if (checkin) params.set('checkin', checkin)
             if (checkout) params.set('checkout', checkout)
-            // Geo-based search
             if (geo) {
                 params.set('lat', String(geo.lat))
                 params.set('lng', String(geo.lng))
                 params.set('radius', String(searchRadius))
             }
+            // Price filter
+            const priceRange = PRICE_RANGES.find(p => p.key === priceFilter)
+            if (priceRange && priceRange.min > 0) params.set('minPrice', String(priceRange.min))
+            if (priceRange && priceRange.max > 0) params.set('maxPrice', String(priceRange.max))
+
             const res = await fetch(`/api/airbnb?${params}`)
             const data = await res.json()
             if (data.error) setError(data.error)
             setListings(data.listings || [])
-            // Center map on first result if available
+            setNightCount(data.nightCount || 0)
             const first = (data.listings || [])[0]
             if (first?.lat && first?.lng) setMapCenter({ lat: first.lat, lng: first.lng })
         } catch (e) { setError(e.message); setListings([]) }
@@ -82,28 +112,36 @@ export default function AirbnbPage() {
     const toggleFav = (id) => setFavorites(prev =>
         prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     )
-
     const nextPhoto = (id, max) => setPhotoIdx(prev => ({
         ...prev, [id]: ((prev[id] || 0) + 1) % max,
     }))
+    const prevPhoto = (id, max) => setPhotoIdx(prev => ({
+        ...prev, [id]: ((prev[id] || 0) - 1 + max) % max,
+    }))
 
-    // Sort listings
-    const sortedListings = [...listings].sort((a, b) => {
+    // Filter + sort
+    const filteredListings = listings.filter(l => {
+        if (propertyFilter === 'entire' && !l.type?.toLowerCase().includes('entire')) return false
+        if (propertyFilter === 'room' && !l.type?.toLowerCase().includes('room')) return false
+        if (propertyFilter === 'shared' && !l.type?.toLowerCase().includes('shared')) return false
+        return true
+    })
+
+    const sortedListings = [...filteredListings].sort((a, b) => {
         switch (sortBy) {
-            case 'price_asc': return a.price - b.price
-            case 'price_desc': return b.price - a.price
+            case 'price_asc': return a.nightlyRate - b.nightlyRate
+            case 'price_desc': return b.nightlyRate - a.nightlyRate
             case 'rating': return b.rating - a.rating
             case 'reviews': return b.reviewCount - a.reviewCount
             default: return 0
         }
     })
 
-    // Initialize map
+    // Map setup
     useEffect(() => {
         if (!showMap || !mapContainer.current || mapRef.current) return
         const mapboxgl = require('mapbox-gl')
         mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-
         const map = new mapboxgl.Map({
             container: mapContainer.current,
             style: 'mapbox://styles/mapbox/dark-v11',
@@ -111,70 +149,56 @@ export default function AirbnbPage() {
             zoom: 12,
         })
         map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-
-        // Add click handler for geo search
         map.on('click', (e) => {
             const { lat, lng } = e.lngLat
             setMapCenter({ lat, lng })
             searchListings(null, { lat, lng })
         })
-
         mapRef.current = map
         return () => { map.remove(); mapRef.current = null }
-    }, [showMap]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [showMap]) // eslint-disable-line
 
-    // Update markers when listings or map change
+    // Update markers
     useEffect(() => {
         if (!mapRef.current || !showMap) return
         const mapboxgl = require('mapbox-gl')
-
-        // Clear existing markers
         markersRef.current.forEach(m => m.remove())
         markersRef.current = []
-
         const geoListings = sortedListings.filter(l => l.lat && l.lng)
         if (geoListings.length === 0) return
-
-        // Fit bounds to all markers
         if (geoListings.length > 1) {
             const bounds = new mapboxgl.LngLatBounds()
             geoListings.forEach(l => bounds.extend([l.lng, l.lat]))
             mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 14 })
-        } else if (geoListings.length === 1) {
+        } else {
             mapRef.current.flyTo({ center: [geoListings[0].lng, geoListings[0].lat], zoom: 13 })
         }
-
-        // Add price markers
         geoListings.forEach(listing => {
             const el = document.createElement('div')
-            el.className = 'airbnb-marker'
-            el.innerHTML = `₺${new Intl.NumberFormat('tr-TR').format(listing.price)}`
+            el.innerHTML = `₺${new Intl.NumberFormat('tr-TR').format(listing.nightlyRate)}`
             el.style.cssText = `
                 background: ${hoveredId === listing.id ? '#E11D48' : 'white'};
                 color: ${hoveredId === listing.id ? 'white' : '#222'};
                 padding: 4px 8px; border-radius: 20px; font-size: 11px;
                 font-weight: 700; cursor: pointer; white-space: nowrap;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                transition: all 150ms;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 150ms;
             `
             el.addEventListener('mouseenter', () => setHoveredId(listing.id))
             el.addEventListener('mouseleave', () => setHoveredId(null))
-
             const popup = new mapboxgl.Popup({ offset: 25, closeButton: false })
                 .setHTML(`<div style="font-family:sans-serif;max-width:200px">
                     <strong style="font-size:12px">${listing.name?.slice(0, 40)}</strong>
                     <div style="font-size:11px;color:#666;margin:2px 0">${listing.type} · ⭐ ${listing.rating.toFixed(1)}</div>
-                    <div style="font-size:13px;font-weight:700;color:#E11D48">₺${new Intl.NumberFormat('tr-TR').format(listing.price)}/gece</div>
+                    <div style="font-size:13px;font-weight:700;color:#E11D48">₺${new Intl.NumberFormat('tr-TR').format(listing.nightlyRate)}/gece</div>
+                    ${listing.totalPrice > 0 ? `<div style="font-size:10px;color:#888">Toplam: ₺${new Intl.NumberFormat('tr-TR').format(listing.totalPrice)}</div>` : ''}
                 </div>`)
-
             const marker = new mapboxgl.Marker({ element: el })
                 .setLngLat([listing.lng, listing.lat])
                 .setPopup(popup)
                 .addTo(mapRef.current)
-
             markersRef.current.push(marker)
         })
-    }, [sortedListings, showMap, hoveredId]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [sortedListings, showMap, hoveredId]) // eslint-disable-line
 
     const sectionStyle = {
         background: 'var(--bg-secondary)', borderRadius: 20,
@@ -186,7 +210,7 @@ export default function AirbnbPage() {
         color: 'var(--text-primary)', fontSize: '0.88rem', fontWeight: 600,
     }
 
-    const nightCount = checkin && checkout
+    const calcNights = checkin && checkout
         ? Math.max(1, Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000))
         : 0
 
@@ -196,26 +220,41 @@ export default function AirbnbPage() {
             <main className="page-main" style={{ overflowY: 'auto' }}>
                 <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px 60px' }}>
 
-                    {/* HERO */}
+                    {/* ═══ HERO BANNER ═══ */}
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
                         style={{
                             borderRadius: 24, overflow: 'hidden', marginBottom: 24,
-                            position: 'relative', minHeight: 180,
-                            background: 'linear-gradient(135deg, #831843, #be185d, #f43f5e)',
+                            position: 'relative', minHeight: 200,
                         }}>
+                        <img src="/images/airbnb-hero.png" alt="Konaklama" loading="eager"
+                            style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
                         <div style={{
                             position: 'absolute', inset: 0,
-                            background: 'linear-gradient(135deg, rgba(0,0,0,0.3), transparent)',
+                            background: 'linear-gradient(135deg, rgba(131,24,67,0.75), rgba(190,24,93,0.6), rgba(244,63,94,0.5))',
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 40px',
                         }}>
-                            <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0 }}>🏠 Konaklama</h1>
-                            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.92rem', margin: '6px 0 0' }}>
-                                Airbnb üzerinden gerçek ilanları keşfedin · Haritada arayın
+                            <h1 style={{ color: 'white', fontSize: '2.2rem', fontWeight: 900, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+                                🏠 Konaklama
+                            </h1>
+                            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem', margin: '6px 0 0', textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+                                Airbnb üzerinden gerçek ilanları keşfedin · Haritada arayın · Fiyat karşılaştırın
                             </p>
+                            {searchDone && listings.length > 0 && (
+                                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                    <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', padding: '4px 12px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 600, color: 'white' }}>
+                                        {listings.length} ilan
+                                    </span>
+                                    {nightCount > 0 && (
+                                        <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', padding: '4px 12px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 600, color: 'white' }}>
+                                            {nightCount} gece
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
-                    {/* SEARCH */}
+                    {/* ═══ SEARCH PANEL ═══ */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                         style={sectionStyle}>
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -226,23 +265,41 @@ export default function AirbnbPage() {
                                     onKeyDown={e => e.key === 'Enter' && searchListings()}
                                     style={inputStyle} />
                             </div>
-                            <div style={{ flex: '1 1 140px' }}>
+                            <div style={{ flex: '1 1 130px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>📅 Giriş</label>
                                 <input type="date" value={checkin} onChange={e => setCheckin(e.target.value)}
                                     min={new Date().toISOString().split('T')[0]} style={inputStyle} />
                             </div>
-                            <div style={{ flex: '1 1 140px' }}>
+                            <div style={{ flex: '1 1 130px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>📅 Çıkış</label>
                                 <input type="date" value={checkout} onChange={e => setCheckout(e.target.value)}
                                     min={checkin} style={inputStyle} />
                             </div>
-                            <div style={{ flex: '0 0 80px' }}>
+                            <div style={{ flex: '0 0 70px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>👤 Kişi</label>
                                 <select value={guests} onChange={e => setGuests(parseInt(e.target.value))} style={inputStyle}>
                                     {[1, 2, 3, 4, 5, 6, 8, 10].map(n => <option key={n} value={n}>{n}</option>)}
                                 </select>
                             </div>
                         </div>
+
+                        {/* Price range quick filters */}
+                        <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-tertiary)', marginRight: 4 }}>💰 Fiyat:</span>
+                            {PRICE_RANGES.map(pr => (
+                                <button key={pr.key} onClick={() => setPriceFilter(pr.key)}
+                                    style={{
+                                        padding: '5px 10px', borderRadius: 8, fontSize: '0.68rem', fontWeight: 600,
+                                        border: priceFilter === pr.key ? '1.5px solid #E11D48' : '1px solid var(--border)',
+                                        background: priceFilter === pr.key ? 'rgba(225,29,72,0.1)' : 'var(--bg-primary)',
+                                        color: priceFilter === pr.key ? '#E11D48' : 'var(--text-secondary)',
+                                        cursor: 'pointer', transition: 'all 150ms',
+                                    }}>
+                                    {pr.label}
+                                </button>
+                            ))}
+                        </div>
+
                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                             onClick={() => searchListings()} disabled={loading || !location}
                             style={{
@@ -253,33 +310,35 @@ export default function AirbnbPage() {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                             }}>
                             {loading ? <Loader2 size={18} className="spin" /> : <Search size={18} />}
-                            {loading ? 'Aranıyor...' : 'Konaklama Ara'}
+                            {loading ? 'Aranıyor...' : `Konaklama Ara${calcNights > 0 ? ` (${calcNights} gece)` : ''}`}
                         </motion.button>
                     </motion.div>
 
-                    {/* POPULAR CITIES */}
+                    {/* ═══ POPULAR CITIES ═══ */}
                     {!searchDone && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                             style={sectionStyle}>
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: '0 0 10px' }}>🔥 Popüler Şehirler</h3>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: '0 0 12px' }}>🔥 Popüler Şehirler</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
                                 {POPULAR_CITIES.map(city => (
-                                    <button key={city.name} onClick={() => { setLocation(city.name); searchListings(city.name) }}
+                                    <motion.button key={city.name} whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
+                                        onClick={() => { setLocation(city.name); searchListings(city.name) }}
                                         style={{
-                                            padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)',
+                                            padding: '14px 8px', borderRadius: 14, border: '1px solid var(--border)',
                                             background: 'var(--bg-primary)', color: 'var(--text-secondary)',
-                                            fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 150ms',
-                                        }}
-                                        onMouseOver={e => { e.currentTarget.style.background = '#E11D48'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#E11D48' }}
-                                        onMouseOut={e => { e.currentTarget.style.background = 'var(--bg-primary)'; e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
-                                        {city.emoji} {city.name}
-                                    </button>
+                                            cursor: 'pointer', transition: 'all 150ms',
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                                        }}>
+                                        <span style={{ fontSize: '1.5rem' }}>{city.img}</span>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>{city.name}</span>
+                                        <span style={{ fontSize: '0.92rem', opacity: 0.6 }}>{city.emoji}</span>
+                                    </motion.button>
                                 ))}
                             </div>
                         </motion.div>
                     )}
 
-                    {/* RESULTS */}
+                    {/* ═══ RESULTS ═══ */}
                     <AnimatePresence>
                         {searchDone && (
                             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
@@ -291,19 +350,39 @@ export default function AirbnbPage() {
 
                                 {listings.length > 0 && (
                                     <>
-                                        {/* Results header */}
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
-                                            <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
-                                                🏠 {listings.length} konaklama — {location}
-                                                {nightCount > 0 && <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontWeight: 500 }}> · {nightCount} gece</span>}
+                                        {/* Results toolbar */}
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            marginBottom: 14, flexWrap: 'wrap', gap: 8,
+                                        }}>
+                                            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>
+                                                🏠 {filteredListings.length} konaklama — {location}
+                                                {filteredListings.length !== listings.length && (
+                                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', fontWeight: 400 }}> (toplam {listings.length})</span>
+                                                )}
                                             </h2>
-                                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                {/* Property type filter */}
+                                                <div style={{ display: 'flex', gap: 3 }}>
+                                                    {PROPERTY_TYPES.map(pt => (
+                                                        <button key={pt.key} onClick={() => setPropertyFilter(pt.key)}
+                                                            style={{
+                                                                padding: '5px 8px', borderRadius: 6, fontSize: '0.62rem', fontWeight: 600,
+                                                                border: propertyFilter === pt.key ? '1.5px solid #E11D48' : '1px solid var(--border)',
+                                                                background: propertyFilter === pt.key ? 'rgba(225,29,72,0.08)' : 'var(--bg-primary)',
+                                                                color: propertyFilter === pt.key ? '#E11D48' : 'var(--text-tertiary)',
+                                                                cursor: 'pointer', transition: 'all 150ms',
+                                                            }}>
+                                                            {pt.emoji} {pt.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                                 {/* Sort */}
                                                 <select value={sortBy} onChange={e => setSortBy(e.target.value)}
                                                     style={{
-                                                        padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)',
+                                                        padding: '5px 10px', borderRadius: 8, border: '1px solid var(--border)',
                                                         background: 'var(--bg-primary)', color: 'var(--text-secondary)',
-                                                        fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+                                                        fontSize: '0.68rem', fontWeight: 600, cursor: 'pointer',
                                                     }}>
                                                     {SORT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
                                                 </select>
@@ -311,21 +390,21 @@ export default function AirbnbPage() {
                                                 <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
                                                     <button onClick={() => setShowMap(false)}
                                                         style={{
-                                                            padding: '6px 10px', border: 'none', cursor: 'pointer',
+                                                            padding: '5px 10px', border: 'none', cursor: 'pointer',
                                                             background: !showMap ? '#E11D48' : 'var(--bg-primary)',
                                                             color: !showMap ? 'white' : 'var(--text-secondary)',
-                                                            display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 600,
+                                                            display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.68rem', fontWeight: 600,
                                                         }}>
-                                                        <List size={13} /> Liste
+                                                        <List size={12} /> Liste
                                                     </button>
                                                     <button onClick={() => setShowMap(true)}
                                                         style={{
-                                                            padding: '6px 10px', border: 'none', cursor: 'pointer',
+                                                            padding: '5px 10px', border: 'none', cursor: 'pointer',
                                                             background: showMap ? '#E11D48' : 'var(--bg-primary)',
                                                             color: showMap ? 'white' : 'var(--text-secondary)',
-                                                            display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 600,
+                                                            display: 'flex', alignItems: 'center', gap: 3, fontSize: '0.68rem', fontWeight: 600,
                                                         }}>
-                                                        <Map size={13} /> Harita
+                                                        <Map size={12} /> Harita
                                                     </button>
                                                 </div>
                                             </div>
@@ -334,7 +413,6 @@ export default function AirbnbPage() {
                                         {/* Map view */}
                                         {showMap && (
                                             <div style={{ marginBottom: 16 }}>
-                                                {/* Radius control */}
                                                 <div style={{
                                                     display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
                                                     padding: '10px 14px', borderRadius: 12,
@@ -365,16 +443,17 @@ export default function AirbnbPage() {
                                             </div>
                                         )}
 
-                                        {/* Listing cards */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
+                                        {/* ═══ LISTING CARDS ═══ */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 18 }}>
                                             {sortedListings.map((listing, i) => {
                                                 const curPhoto = photoIdx[listing.id] || 0
                                                 const isHovered = hoveredId === listing.id
+                                                const isFav = favorites.includes(listing.id)
                                                 return (
                                                     <motion.div key={listing.id}
                                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                                         transition={{ delay: Math.min(i * 0.03, 0.3) }}
-                                                        whileHover={{ y: -5, boxShadow: '0 14px 35px rgba(0,0,0,0.12)' }}
+                                                        whileHover={{ y: -4, boxShadow: '0 14px 35px rgba(0,0,0,0.12)' }}
                                                         onMouseEnter={() => setHoveredId(listing.id)}
                                                         onMouseLeave={() => setHoveredId(null)}
                                                         style={{
@@ -382,9 +461,9 @@ export default function AirbnbPage() {
                                                             border: isHovered ? '2px solid #E11D48' : '1px solid var(--border)',
                                                             overflow: 'hidden', transition: 'all 200ms',
                                                         }}>
-                                                        {/* Photo */}
-                                                        <div style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden', cursor: 'pointer' }}
-                                                            onClick={() => listing.photos.length > 1 && nextPhoto(listing.id, listing.photos.length)}>
+
+                                                        {/* Photo carousel */}
+                                                        <div style={{ position: 'relative', aspectRatio: '16/10', overflow: 'hidden' }}>
                                                             {listing.photos[curPhoto] ? (
                                                                 <img src={listing.photos[curPhoto]} alt={listing.name} loading="lazy"
                                                                     style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 300ms' }}
@@ -395,27 +474,40 @@ export default function AirbnbPage() {
                                                                     <MapPin size={32} style={{ opacity: 0.3 }} />
                                                                 </div>
                                                             )}
-                                                            {/* Photo counter */}
+                                                            {/* Photo navigation arrows */}
                                                             {listing.photos.length > 1 && (
-                                                                <span style={{
-                                                                    position: 'absolute', bottom: 8, right: 8,
-                                                                    background: 'rgba(0,0,0,0.6)', color: 'white',
-                                                                    padding: '2px 8px', borderRadius: 8, fontSize: '0.6rem',
-                                                                }}>{curPhoto + 1}/{listing.photos.length}</span>
+                                                                <>
+                                                                    <button onClick={() => prevPhoto(listing.id, listing.photos.length)}
+                                                                        style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.4)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', backdropFilter: 'blur(4px)' }}>
+                                                                        ‹
+                                                                    </button>
+                                                                    <button onClick={() => nextPhoto(listing.id, listing.photos.length)}
+                                                                        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.4)', color: 'white', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', backdropFilter: 'blur(4px)' }}>
+                                                                        ›
+                                                                    </button>
+                                                                    {/* Photo dots */}
+                                                                    <div style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4 }}>
+                                                                        {listing.photos.slice(0, 5).map((_, pi) => (
+                                                                            <div key={pi} style={{
+                                                                                width: 6, height: 6, borderRadius: '50%',
+                                                                                background: pi === curPhoto ? 'white' : 'rgba(255,255,255,0.5)',
+                                                                                transition: 'all 200ms',
+                                                                            }} />
+                                                                        ))}
+                                                                    </div>
+                                                                </>
                                                             )}
                                                             {/* Badges */}
                                                             <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                                                                 {listing.isSuperhost && (
-                                                                    <span style={{
-                                                                        background: 'white', color: '#222', padding: '3px 10px',
-                                                                        borderRadius: 8, fontSize: '0.62rem', fontWeight: 700,
-                                                                    }}>⭐ Süper Ev Sahibi</span>
+                                                                    <span style={{ background: 'white', color: '#222', padding: '3px 10px', borderRadius: 8, fontSize: '0.62rem', fontWeight: 700, boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+                                                                        ⭐ Süper Ev Sahibi
+                                                                    </span>
                                                                 )}
                                                                 {listing.rareFind && (
-                                                                    <span style={{
-                                                                        background: '#EC4899', color: 'white', padding: '3px 10px',
-                                                                        borderRadius: 8, fontSize: '0.62rem', fontWeight: 700,
-                                                                    }}>💎 Nadir Bulunur</span>
+                                                                    <span style={{ background: '#EC4899', color: 'white', padding: '3px 10px', borderRadius: 8, fontSize: '0.62rem', fontWeight: 700 }}>
+                                                                        💎 Nadir Bulunur
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                             {/* Fav */}
@@ -426,84 +518,98 @@ export default function AirbnbPage() {
                                                                     border: 'none', borderRadius: '50%', width: 32, height: 32,
                                                                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                                 }}>
-                                                                <Heart size={15} fill={favorites.includes(listing.id) ? '#F43F5E' : 'none'}
-                                                                    color={favorites.includes(listing.id) ? '#F43F5E' : 'white'} />
+                                                                <Heart size={15} fill={isFav ? '#F43F5E' : 'none'} color={isFav ? '#F43F5E' : 'white'} />
                                                             </button>
                                                         </div>
 
                                                         {/* Info */}
                                                         <div style={{ padding: '14px 18px 18px' }}>
+                                                            {/* Title + Rating */}
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                                                                 <div style={{ flex: 1 }}>
                                                                     <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0, lineHeight: 1.3 }}>
-                                                                        {listing.name?.slice(0, 60)}{listing.name?.length > 60 ? '...' : ''}
+                                                                        {listing.name?.slice(0, 55)}{listing.name?.length > 55 ? '...' : ''}
                                                                     </h3>
                                                                     <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
                                                                         {listing.type} · {listing.neighborhood || listing.city}
                                                                     </p>
                                                                 </div>
                                                                 {listing.rating > 0 && (
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-                                                                        <Star size={13} fill="#F59E0B" color="#F59E0B" />
-                                                                        <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>{listing.rating.toFixed(1)}</span>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0, background: 'rgba(245,158,11,0.1)', padding: '3px 8px', borderRadius: 8 }}>
+                                                                        <Star size={12} fill="#F59E0B" color="#F59E0B" />
+                                                                        <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>{listing.rating.toFixed(1)}</span>
                                                                         {listing.reviewCount > 0 && (
-                                                                            <span style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>({listing.reviewCount})</span>
+                                                                            <span style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>({listing.reviewCount})</span>
                                                                         )}
                                                                     </div>
                                                                 )}
                                                             </div>
 
-                                                            {/* Amenities */}
-                                                            <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap' }}>
+                                                            {/* Amenity badges */}
+                                                            <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
                                                                 {listing.bedrooms > 0 && (
-                                                                    <span style={{ fontSize: '0.65rem', padding: '2px 7px', borderRadius: 6, background: 'rgba(99,102,241,0.1)', color: '#6366F1', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(99,102,241,0.08)', color: '#6366F1', fontWeight: 600 }}>
                                                                         🚪 {listing.bedrooms} oda
                                                                     </span>
                                                                 )}
                                                                 {listing.beds > 0 && (
-                                                                    <span style={{ fontSize: '0.65rem', padding: '2px 7px', borderRadius: 6, background: 'rgba(129,140,248,0.1)', color: '#818CF8', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(129,140,248,0.08)', color: '#818CF8', fontWeight: 600 }}>
                                                                         🛏️ {listing.beds} yatak
                                                                     </span>
                                                                 )}
                                                                 {listing.bathrooms > 0 && (
-                                                                    <span style={{ fontSize: '0.65rem', padding: '2px 7px', borderRadius: 6, background: 'rgba(14,165,233,0.1)', color: '#0EA5E9', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(14,165,233,0.08)', color: '#0EA5E9', fontWeight: 600 }}>
                                                                         🚿 {listing.bathrooms} banyo
                                                                     </span>
                                                                 )}
                                                                 {listing.guests > 0 && (
-                                                                    <span style={{ fontSize: '0.65rem', padding: '2px 7px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(16,185,129,0.08)', color: '#10B981', fontWeight: 600 }}>
                                                                         👤 {listing.guests} kişi
                                                                     </span>
                                                                 )}
                                                                 {listing.cancelPolicy && (
-                                                                    <span style={{ fontSize: '0.65rem', padding: '2px 7px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 600 }}>
-                                                                        {listing.cancelPolicy === 'CANCEL_FLEXIBLE' ? '✅ Esnek İptal' : listing.cancelPolicy === 'CANCEL_MODERATE' ? '⚡ Orta İptal' : '📋 İptal Politikası'}
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: listing.cancelPolicy === 'CANCEL_FLEXIBLE' ? 'rgba(34,197,94,0.08)' : 'rgba(245,158,11,0.08)', color: listing.cancelPolicy === 'CANCEL_FLEXIBLE' ? '#22C55E' : '#F59E0B', fontWeight: 600 }}>
+                                                                        {listing.cancelPolicy === 'CANCEL_FLEXIBLE' ? '✅ Esnek İptal' : listing.cancelPolicy === 'CANCEL_MODERATE' ? '⚡ Orta İptal' : '📋 Katı İptal'}
                                                                     </span>
                                                                 )}
                                                             </div>
 
-                                                            {/* Price + Book */}
-                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                                                            {/* ═══ PRICE BREAKDOWN ═══ */}
+                                                            <div style={{
+                                                                display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+                                                                padding: '10px 14px', borderRadius: 14,
+                                                                background: 'linear-gradient(135deg, rgba(225,29,72,0.04), rgba(244,63,94,0.02))',
+                                                                border: '1px solid rgba(225,29,72,0.1)',
+                                                                marginBottom: 10,
+                                                            }}>
                                                                 <div>
-                                                                    <span style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-                                                                        ₺{new Intl.NumberFormat('tr-TR').format(listing.price)}
-                                                                    </span>
-                                                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}> /gece</span>
-                                                                    {nightCount > 1 && listing.totalPrice > 0 && (
-                                                                        <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>
-                                                                            Toplam: ₺{new Intl.NumberFormat('tr-TR').format(listing.totalPrice)}
+                                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                                                                        <span style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                                                                            ₺{new Intl.NumberFormat('tr-TR').format(listing.nightlyRate)}
+                                                                        </span>
+                                                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>/gece</span>
+                                                                    </div>
+                                                                    {nightCount > 0 && listing.totalPrice > 0 && (
+                                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: 2 }}>
+                                                                            💰 Toplam {nightCount} gece: <span style={{ color: '#E11D48', fontWeight: 800 }}>₺{new Intl.NumberFormat('tr-TR').format(listing.totalPrice)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {listing.priceBreakdown && (
+                                                                        <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', marginTop: 1 }}>
+                                                                            {listing.priceBreakdown}
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                                 <a href={listing.deeplink || listing.url} target="_blank" rel="noopener noreferrer"
                                                                     style={{
                                                                         display: 'flex', alignItems: 'center', gap: 6,
-                                                                        padding: '8px 16px', borderRadius: 10, textDecoration: 'none',
-                                                                        background: '#E11D48', color: 'white',
+                                                                        padding: '10px 18px', borderRadius: 12, textDecoration: 'none',
+                                                                        background: 'linear-gradient(135deg, #E11D48, #F43F5E)', color: 'white',
                                                                         fontSize: '0.78rem', fontWeight: 700, transition: 'all 150ms',
+                                                                        flexShrink: 0,
                                                                     }}
-                                                                    onMouseOver={e => e.currentTarget.style.background = '#BE123C'}
-                                                                    onMouseOut={e => e.currentTarget.style.background = '#E11D48'}>
+                                                                    onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                                                    onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
                                                                     Airbnb'de Gör <ExternalLink size={12} />
                                                                 </a>
                                                             </div>
@@ -518,7 +624,8 @@ export default function AirbnbPage() {
                                 {listings.length === 0 && !error && (
                                     <div style={{ ...sectionStyle, textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
                                         <MapPin size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-                                        <p>Bu lokasyonda ilan bulunamadı.</p>
+                                        <p style={{ fontSize: '0.92rem' }}>Bu lokasyonda ilan bulunamadı.</p>
+                                        <p style={{ fontSize: '0.75rem' }}>Farklı bir şehir veya tarih deneyin.</p>
                                     </div>
                                 )}
                             </motion.div>
