@@ -207,9 +207,24 @@ function generateDates(month, duration, pattern) {
 function fmt(d) { return d.toISOString().split('T')[0] }
 
 // ═══════════════════════════════════════
-// FETCH REAL PRICE FROM AMADEUS
+// PRICE CACHE (5 min in-memory)
+// ═══════════════════════════════════════
+const priceCache = new Map()
+const CACHE_TTL = 5 * 60 * 1000 // 5 min
+
+function getCacheKey(origin, dest, depart, ret) {
+    return `${origin}-${dest}-${depart}-${ret}`
+}
+
+// ═══════════════════════════════════════
+// FETCH REAL PRICE FROM AMADEUS (with timeout + cache)
 // ═══════════════════════════════════════
 async function getLowestPrice(token, origin, dest, departDate, returnDate) {
+    // Check cache first
+    const cacheKey = getCacheKey(origin, dest, departDate, returnDate)
+    const cached = priceCache.get(cacheKey)
+    if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
+
     const baseUrl = useTestApi ? 'https://test.api.amadeus.com' : 'https://api.amadeus.com'
 
     const params = new URLSearchParams({
@@ -218,32 +233,42 @@ async function getLowestPrice(token, origin, dest, departDate, returnDate) {
         departureDate: departDate,
         adults: '1',
         currencyCode: 'TRY',
-        max: '3', // Only need cheapest few
+        max: '1', // Only cheapest
         nonStop: 'false',
     })
     if (returnDate) params.set('returnDate', returnDate)
 
     try {
+        // 4 second timeout per destination
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 4000)
+
         const res = await fetch(`${baseUrl}/v2/shopping/flight-offers?${params}`, {
             headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
         })
+        clearTimeout(timeout)
 
         if (!res.ok) return null
 
         const data = await res.json()
         if (!data.data || data.data.length === 0) return null
 
-        // Get cheapest offer
         const cheapest = data.data[0]
         const price = Math.round(parseFloat(cheapest.price?.grandTotal || cheapest.price?.total || 0))
-
-        // Get airline info
         const mainCarrier = cheapest.itineraries?.[0]?.segments?.[0]?.carrierCode || 'TK'
         const stops = (cheapest.itineraries?.[0]?.segments?.length || 1) - 1
 
-        return { price, airline: mainCarrier, stops, seats: cheapest.numberOfBookableSeats }
+        const result = { price, airline: mainCarrier, stops, seats: cheapest.numberOfBookableSeats }
+        // Cache the result
+        priceCache.set(cacheKey, { data: result, ts: Date.now() })
+        return result
     } catch (err) {
-        console.error(`Price fetch failed for ${dest}:`, err.message)
+        if (err.name === 'AbortError') {
+            console.log(`Timeout for ${dest} — skipped`)
+        } else {
+            console.error(`Price fetch failed for ${dest}:`, err.message)
+        }
         return null
     }
 }
@@ -278,7 +303,7 @@ export async function GET(request) {
         const token = await getAmadeusToken()
 
         // Fetch real prices for all destinations (parallel, batched)
-        const batchSize = 5
+        const batchSize = 8
         const allDeals = []
 
         for (let i = 0; i < dests.length; i += batchSize) {

@@ -133,7 +133,12 @@ export default function EventsPage() {
     const [searched, setSearched] = useState(false)
     const [total, setTotal] = useState(0)
 
-    useEffect(() => { searchEvents() }, [])
+
+    // Auto-search when city or format changes
+    useEffect(() => {
+        const activeCity = customCity || city
+        if (activeCity) searchEvents(activeCity)
+    }, [city, format]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Apply date filter whenever events or dateFilter changes
     useEffect(() => {
