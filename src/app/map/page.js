@@ -360,8 +360,8 @@ export default function MapPage() {
         setSelectedPin(null)
     }
 
-    // Don't block the UI for space loading — map should render immediately
-    // Pins will load once space data becomes available
+    // Show a compact loading banner instead of blocking the entire page
+    const showSpaceLoadingBanner = spaceLoading && !space
 
     // If there's a db error but no space, just proceed — don't block the map
     // The space will still be null but the app should work in limited mode
@@ -384,6 +384,20 @@ export default function MapPage() {
                                 <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
                                 <p style={{ fontSize: '0.875rem' }}>Harita yükleniyor...</p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Compact space loading banner — doesn't block the map */}
+                    {showSpaceLoadingBanner && mapLoaded && (
+                        <div style={{
+                            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+                            zIndex: 10, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                            borderRadius: 12, padding: '8px 16px',
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            color: 'white', fontSize: '0.78rem', fontWeight: 600,
+                        }}>
+                            <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                            Pinler yükleniyor...
                         </div>
                     )}
 

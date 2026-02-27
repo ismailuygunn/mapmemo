@@ -37,12 +37,13 @@ export function SpaceProvider({ children }) {
 
     const loadSpace = useCallback(async () => {
         setLoading(true)
-        // CRITICAL: Hard timeout — never let loading stay stuck more than 2 seconds
+        // CRITICAL: Hard timeout — never let loading stay stuck more than 8 seconds
+        // (Vercel cold starts can take 3-5s, so we need a generous timeout)
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
         loadingTimeoutRef.current = setTimeout(() => {
             console.warn('SpaceContext: Hard timeout reached, forcing loading=false')
             setLoading(false)
-        }, 2000)
+        }, 8000)
         try {
             // Step 1: Get user's space membership — no timeout, let Supabase handle it
             const { data: membership, error } = await supabase
