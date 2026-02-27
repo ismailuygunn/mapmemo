@@ -1,0 +1,77 @@
+import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
+
+function getSupabase(req) {
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {}
+    )
+    return supabase
+}
+
+// GET: Social check-in pins for the map
+export async function GET(request) {
+    try {
+        const supabase = getSupabase(request)
+        const { searchParams } = new URL(request.url)
+        const userId = searchParams.get('userId')
+        const scope = searchParams.get('scope') || 'all' // all | following | city
+
+        let feedUserIds = null
+
+        if (scope === 'following' && userId) {
+            // Only show pins from followed users + self
+            const { data: follows } = await supabase
+                .from('follows')
+                .select('following_id')
+                .eq('follower_id', userId)
+            feedUserIds = [userId, ...(follows || []).map(f => f.following_id)]
+        }
+
+        // Fetch check-ins with profiles
+        let query = supabase
+            .from('check_ins')
+            .select('id, user_id, place_name, city, country, lat, lng, emoji, category, photo_url, note, rating, created_at, profiles(id, display_name, username, avatar_url)')
+            .eq('is_public', true)
+            .not('lat', 'is', null)
+            .not('lng', 'is', null)
+            .order('created_at', { ascending: false })
+            .limit(200)
+
+        if (feedUserIds) {
+            query = query.in('user_id', feedUserIds)
+        }
+
+        const { data, error } = await query
+        if (error) throw error
+
+        // Format for map markers
+        const markers = (data || []).map(c => ({
+            id: c.id,
+            lat: c.lat,
+            lng: c.lng,
+            placeName: c.place_name,
+            city: c.city,
+            country: c.country,
+            emoji: c.emoji || '📍',
+            category: c.category,
+            photoUrl: c.photo_url,
+            note: c.note,
+            rating: c.rating,
+            createdAt: c.created_at,
+            user: c.profiles ? {
+                id: c.profiles.id,
+                displayName: c.profiles.display_name,
+                username: c.profiles.username,
+                avatarUrl: c.profiles.avatar_url,
+            } : null,
+        }))
+
+        return NextResponse.json({ markers, total: markers.length })
+    } catch (err) {
+        console.error('Social pins error:', err)
+        return NextResponse.json({ markers: [], error: err.message }, { status: 500 })
+    }
+}

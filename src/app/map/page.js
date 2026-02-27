@@ -10,7 +10,8 @@ import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import Sidebar from '@/components/layout/Sidebar'
 import PinForm from '@/components/map/PinForm'
 import PinDetail from '@/components/map/PinDetail'
-import { Plus, Search, X, MapPin, Loader2 } from 'lucide-react'
+import { Plus, Search, X, MapPin, Loader2, Users, Globe } from 'lucide-react'
+import { getAuthHeaders } from '@/lib/authHeaders'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -29,6 +30,10 @@ export default function MapPage() {
     const [searchResults, setSearchResults] = useState([])
     const [activeFilters, setActiveFilters] = useState({ status: null, type: null })
     const [mapLoaded, setMapLoaded] = useState(false)
+    const [socialPins, setSocialPins] = useState([])
+    const [showSocial, setShowSocial] = useState(true)
+    const [selectedSocialPin, setSelectedSocialPin] = useState(null)
+    const socialMarkersRef = useRef([])
     const [loading, setLoading] = useState(true)
     const { user } = useAuth()
     const { space, loading: spaceLoading, dbError, loadSpace: reloadSpace } = useSpace()
@@ -146,6 +151,7 @@ export default function MapPage() {
     // Load pins
     useEffect(() => {
         if (space || user) loadPins()
+        if (user) loadSocialPins()
     }, [space, user])
 
     const loadPins = async () => {
@@ -162,6 +168,16 @@ export default function MapPage() {
             setFilteredPins(data)
         }
         setLoading(false)
+    }
+
+    // Load social check-in pins
+    const loadSocialPins = async () => {
+        try {
+            const authH = await getAuthHeaders()
+            const res = await fetch(`/api/social/pins?userId=${user.id}&scope=all`, { headers: authH })
+            const data = await res.json()
+            setSocialPins(data.markers || [])
+        } catch (err) { console.error('Social pins error:', err) }
     }
 
     // Apply filters
@@ -228,6 +244,56 @@ export default function MapPage() {
             })
         })
     }, [filteredPins, mapLoaded])
+
+    // Render social check-in markers
+    useEffect(() => {
+        if (!mapRef.current || !mapLoaded) return
+
+        // Clear existing social markers
+        socialMarkersRef.current.forEach(m => m.remove())
+        socialMarkersRef.current = []
+
+        if (!showSocial) return
+
+        socialPins.forEach(pin => {
+            const el = document.createElement('div')
+            el.className = 'social-pin-marker'
+            const initial = pin.user?.displayName?.[0] || '?'
+            const avatarBg = pin.user?.avatarUrl
+                ? `url(${pin.user.avatarUrl}) center/cover no-repeat`
+                : `linear-gradient(135deg, #EC4899, #8B5CF6)`
+            el.innerHTML = `
+                <div style="
+                    display: flex; align-items: center; gap: 2px;
+                    cursor: pointer; position: relative;
+                ">
+                    <div style="
+                        width: 28px; height: 28px; border-radius: 50%;
+                        background: ${avatarBg};
+                        border: 2px solid rgba(255,255,255,0.9);
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        display: flex; align-items: center; justify-content: center;
+                        font-size: 12px; font-weight: 800; color: white;
+                    ">${pin.user?.avatarUrl ? '' : initial}</div>
+                    <span style="
+                        font-size: 14px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+                    ">${pin.emoji}</span>
+                </div>
+            `
+            el.addEventListener('click', (e) => {
+                e.stopPropagation()
+                setSelectedSocialPin(pin)
+                setSelectedPin(null)
+            })
+
+            import('mapbox-gl').then(mapboxgl => {
+                const marker = new mapboxgl.default.Marker({ element: el, anchor: 'center' })
+                    .setLngLat([pin.lng, pin.lat])
+                    .addTo(mapRef.current)
+                socialMarkersRef.current.push(marker)
+            })
+        })
+    }, [socialPins, showSocial, mapLoaded])
 
     // Search via Mapbox Geocoding API
     const handleSearch = useCallback(async (query) => {
@@ -428,8 +494,24 @@ export default function MapPage() {
                         ))}
                     </div>
 
-                    {/* FAB — Add Pin */}
-                    <div className="map-fab">
+                    {/* Social Toggle + FAB */}
+                    <div className="map-fab" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        <motion.button
+                            onClick={() => setShowSocial(!showSocial)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title={showSocial ? 'Sosyal pinleri gizle' : 'Sosyal pinleri göster'}
+                            style={{
+                                width: 48, height: 48, borderRadius: '50%',
+                                background: showSocial ? 'linear-gradient(135deg, #EC4899, #8B5CF6)' : 'var(--bg-secondary)',
+                                border: showSocial ? 'none' : '1px solid var(--border)',
+                                color: showSocial ? 'white' : 'var(--text-secondary)',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            }}
+                        >
+                            <Users size={20} />
+                        </motion.button>
                         <motion.button
                             className="fab-button"
                             onClick={handleAddPin}
@@ -457,6 +539,80 @@ export default function MapPage() {
                                     onDelete={handlePinDeleted}
                                     onUpdate={handlePinUpdated}
                                 />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Social Check-in Popup */}
+                    <AnimatePresence>
+                        {selectedSocialPin && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 60 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                style={{
+                                    position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+                                    width: '90%', maxWidth: 380, zIndex: 25,
+                                    background: 'var(--glass-bg-strong)', backdropFilter: 'blur(20px)',
+                                    borderRadius: 20, border: '1px solid var(--glass-border)',
+                                    boxShadow: 'var(--shadow-lg)', overflow: 'hidden',
+                                }}
+                            >
+                                {selectedSocialPin.photoUrl && (
+                                    <div style={{ height: 140, overflow: 'hidden' }}>
+                                        <img src={selectedSocialPin.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </div>
+                                )}
+                                <div style={{ padding: '14px 18px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                                        <div style={{
+                                            width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                                            background: selectedSocialPin.user?.avatarUrl
+                                                ? `url(${selectedSocialPin.user.avatarUrl}) center/cover`
+                                                : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 800, fontSize: '0.85rem',
+                                            border: '2px solid var(--border)',
+                                        }}>
+                                            {!selectedSocialPin.user?.avatarUrl && (selectedSocialPin.user?.displayName?.[0] || '?')}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>
+                                                {selectedSocialPin.user?.displayName || 'Kullanıcı'}
+                                            </div>
+                                            {selectedSocialPin.user?.username && (
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>@{selectedSocialPin.user.username}</div>
+                                            )}
+                                        </div>
+                                        <button onClick={() => setSelectedSocialPin(null)}
+                                            style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: 4 }}>
+                                        {selectedSocialPin.emoji} {selectedSocialPin.placeName}
+                                    </div>
+                                    {selectedSocialPin.note && (
+                                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '4px 0 8px', lineHeight: 1.5 }}>
+                                            {selectedSocialPin.note}
+                                        </p>
+                                    )}
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                        {selectedSocialPin.city && <span>📍 {selectedSocialPin.city}</span>}
+                                        <span>🕐 {new Date(selectedSocialPin.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
+                                        {selectedSocialPin.rating > 0 && <span>⭐ {selectedSocialPin.rating}/5</span>}
+                                    </div>
+                                    {selectedSocialPin.user?.username && (
+                                        <button
+                                            onClick={() => router.push(`/u/${selectedSocialPin.user.username}`)}
+                                            style={{
+                                                marginTop: 10, width: '100%', padding: '8px', borderRadius: 10,
+                                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                color: 'white', border: 'none', fontSize: '0.78rem', fontWeight: 700,
+                                                cursor: 'pointer',
+                                            }}
+                                        >Profili Gör</button>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
