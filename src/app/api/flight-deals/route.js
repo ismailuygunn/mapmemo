@@ -219,44 +219,47 @@ async function searchAmadeus(origin, dest, departDate, returnDate) {
 }
 
 // ═══════════════════════════════════════
-// KIWI.COM (TEQUILA) API
+// DUFFEL API
 // ═══════════════════════════════════════
-async function searchKiwi(origin, dest, departDate, returnDate) {
-    const apiKey = process.env.KIWI_API_KEY
+async function searchDuffel(origin, dest, departDate, returnDate) {
+    const apiKey = process.env.DUFFEL_API_KEY
     if (!apiKey) return null
 
     try {
-        // Kiwi uses DD/MM/YYYY format
-        const fmtKiwi = (d) => d.split('-').reverse().join('/')
-        const params = new URLSearchParams({
-            fly_from: origin,
-            fly_to: dest,
-            date_from: fmtKiwi(departDate),
-            date_to: fmtKiwi(departDate),
-            return_from: fmtKiwi(returnDate),
-            return_to: fmtKiwi(returnDate),
-            adults: '1',
-            curr: 'TRY',
-            limit: '1',
-            sort: 'price',
-            flight_type: 'round',
-        })
-        const res = await fetch(`https://api.tequila.kiwi.com/v2/search?${params}`, {
-            headers: { apikey: apiKey },
+        const res = await fetch('https://api.duffel.com/air/offer_requests', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'Duffel-Version': 'v2',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                data: {
+                    slices: [
+                        { origin, destination: dest, departure_date: departDate },
+                        { origin: dest, destination: origin, departure_date: returnDate },
+                    ],
+                    passengers: [{ type: 'adult' }],
+                    cabin_class: 'economy',
+                    return_offers: true,
+                    max_connections: 1,
+                },
+            }),
         })
         if (!res.ok) return null
         const data = await res.json()
-        const offer = data.data?.[0]
+        const offer = data.data?.offers?.[0]
         if (!offer) return null
 
         return {
-            price: Math.round(offer.price),
-            currency: 'TRY',
-            airlines: [...new Set(offer.airlines || [])],
-            duration: `PT${Math.floor(offer.duration?.departure / 3600)}H${Math.floor((offer.duration?.departure % 3600) / 60)}M`,
-            stops: (offer.route?.filter(r => r.return === 0)?.length || 1) - 1,
-            source: 'kiwi',
-            bookUrl: offer.deep_link || `https://www.kiwi.com/deep?from=${origin}&to=${dest}&departure=${departDate}&return=${returnDate}`,
+            price: parseFloat(offer.total_amount),
+            currency: offer.total_currency,
+            airlines: [...new Set(offer.slices?.flatMap(s => s.segments?.map(seg => seg.operating_carrier?.name || seg.marketing_carrier?.name)) || [])],
+            duration: offer.slices?.[0]?.duration || '',
+            stops: (offer.slices?.[0]?.segments?.length || 1) - 1,
+            source: 'duffel',
+            bookUrl: `https://www.google.com/travel/flights?q=Flights+from+${origin}+to+${dest}+on+${departDate}+return+${returnDate}&curr=TRY`,
         }
     } catch { return null }
 }
@@ -271,7 +274,9 @@ export async function GET(request) {
         const maxDeals = parseInt(searchParams.get('max') || '8')
         const duration = searchParams.get('duration') || '4'
         const month = searchParams.get('month') || 'any'
-        const pattern = searchParams.get('pattern') || 'any' // fri_sun, sat_sun, sat_mon, any
+        const pattern = searchParams.get('pattern') || 'any'
+        // Optional: search specific destination
+        const destFilter = searchParams.get('dest') || ''
 
         // Generate date ranges based on filters
         const dateRanges = generateDates(month, duration, pattern)
@@ -279,25 +284,29 @@ export async function GET(request) {
             return NextResponse.json({ deals: [], error: 'No valid date ranges found', origin })
         }
 
-        // Pick random destinations to scan
-        const numDests = Math.min(10, SCAN_DESTINATIONS.length)
-        const shuffled = [...SCAN_DESTINATIONS].sort(() => Math.random() - 0.5).slice(0, numDests)
+        // Pick destinations to scan
+        let destinationsToScan
+        if (destFilter) {
+            destinationsToScan = [destFilter]
+        } else {
+            const numDests = Math.min(10, SCAN_DESTINATIONS.length)
+            destinationsToScan = [...SCAN_DESTINATIONS].sort(() => Math.random() - 0.5).slice(0, numDests)
+        }
 
         // Search ALL destinations + dates in parallel for speed
-        const searchTasks = shuffled.map(async (dest) => {
+        const searchTasks = destinationsToScan.map(async (dest) => {
             const dateRange = dateRanges[Math.floor(Math.random() * dateRanges.length)]
 
-            // Search both Amadeus and Kiwi in parallel
-            const [amadeusResult, kiwiResult] = await Promise.all([
+            // Search both Amadeus and Duffel in parallel
+            const [amadeusResult, duffelResult] = await Promise.all([
                 searchAmadeus(origin, dest, dateRange.depart, dateRange.ret),
-                searchKiwi(origin, dest, dateRange.depart, dateRange.ret),
+                searchDuffel(origin, dest, dateRange.depart, dateRange.ret),
             ])
 
             // Pick best price
-            let best = null
             const sources = []
             if (amadeusResult) sources.push(amadeusResult)
-            if (kiwiResult) sources.push(kiwiResult)
+            if (duffelResult) sources.push(duffelResult)
 
             if (sources.length === 0) return null
 
@@ -346,14 +355,14 @@ export async function GET(request) {
             filters: { duration, month, pattern },
             scannedAt: new Date().toISOString(),
             totalScanned: shuffled.length,
-            sources: ['amadeus', process.env.KIWI_API_KEY ? 'kiwi' : null].filter(Boolean),
+            sources: ['amadeus', process.env.DUFFEL_API_KEY ? 'duffel' : null].filter(Boolean),
         })
     } catch (err) {
         console.error('Flight deals error:', err)
         if (err.message?.includes('not configured')) {
             return NextResponse.json({
                 deals: [], error: 'Flight API not configured',
-                setup: 'Add AMADEUS_API_KEY, AMADEUS_API_SECRET, and optionally KIWI_API_KEY to .env.local',
+                setup: 'Add AMADEUS_API_KEY, AMADEUS_API_SECRET, and optionally DUFFEL_API_KEY to .env.local',
             }, { status: 200 })
         }
         return NextResponse.json({ deals: [], error: err.message }, { status: 500 })

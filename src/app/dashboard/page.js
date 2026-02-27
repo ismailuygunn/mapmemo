@@ -46,19 +46,9 @@ export default function DashboardPage() {
     const [userSpaces, setUserSpaces] = useState([])
     const [showAssignModal, setShowAssignModal] = useState(false)
 
-    const [flightDeals, setFlightDeals] = useState([])
-    const [dealsLoading, setDealsLoading] = useState(false)
-    const [dealsLoaded, setDealsLoaded] = useState(false)
     const [quickPlanDeal, setQuickPlanDeal] = useState(null)
     const [quickPlanTempo, setQuickPlanTempo] = useState('balanced')
     const [quickPlanBudget, setQuickPlanBudget] = useState('mid')
-    // Filter states
-    const [dealOrigin, setDealOrigin] = useState('')
-    const [dealDuration, setDealDuration] = useState('4')
-    const [dealMonth, setDealMonth] = useState('any')
-    const [dealPattern, setDealPattern] = useState('any')
-    const [citySummary, setCitySummary] = useState(null) // city popup
-    const [citySummaryLoading, setCitySummaryLoading] = useState(false)
 
     const { user, profile } = useAuth()
     const { space } = useSpace()
@@ -71,8 +61,6 @@ export default function DashboardPage() {
         if (space) loadDashboard()
         if (user?.id) {
             loadUserSpaces()
-            // Only load deals ONCE — use cache after
-            if (!dealsLoaded) loadFlightDeals(false)
         }
     }, [space, user?.id])
 
@@ -123,95 +111,7 @@ export default function DashboardPage() {
     }
 
     // ─── Flight Deals (cached + multi-source) ───
-    const ORIGIN_CITIES = [
-        { code: 'IST', name: 'İstanbul' }, { code: 'ESB', name: 'Ankara' },
-        { code: 'ADB', name: 'İzmir' }, { code: 'AYT', name: 'Antalya' },
-        { code: 'SAW', name: 'İstanbul SAW' }, { code: 'ADA', name: 'Adana' },
-        { code: 'TZX', name: 'Trabzon' }, { code: 'GZT', name: 'Gaziantep' },
-    ]
 
-    useEffect(() => {
-        if (!dealOrigin && profile?.home_city) {
-            const match = ORIGIN_CITIES.find(c => c.name.toLowerCase() === (profile.home_city || '').toLowerCase())
-            setDealOrigin(match?.code || 'IST')
-        } else if (!dealOrigin) {
-            setDealOrigin('IST')
-        }
-    }, [profile])
-
-    const getOriginCity = () => dealOrigin || 'IST'
-
-    const getMonthOptions = () => {
-        const opts = [{ value: 'any', label: t('Tüm Aylar', 'All Months') }]
-        const now = new Date()
-        for (let i = 0; i < 6; i++) {
-            const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
-            opts.push({
-                value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-                label: d.toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', { month: 'long', year: 'numeric' }),
-            })
-        }
-        return opts
-    }
-
-    const loadFlightDeals = async (forceRefresh = false) => {
-        const origin = getOriginCity()
-        const cacheKey = `naviso-deals-${origin}-${dealDuration}-${dealMonth}-${dealPattern}`
-
-        if (!forceRefresh) {
-            try {
-                const cached = sessionStorage.getItem(cacheKey)
-                if (cached) {
-                    const { deals, ts } = JSON.parse(cached)
-                    if (Date.now() - ts < 30 * 60 * 1000 && deals?.length > 0) {
-                        setFlightDeals(deals)
-                        setDealsLoaded(true)
-                        return
-                    }
-                }
-            } catch { }
-        }
-
-        setDealsLoading(true)
-        try {
-            const params = new URLSearchParams({
-                origin, max: '8',
-                duration: dealDuration, month: dealMonth, pattern: dealPattern,
-            })
-            const res = await fetch(`/api/flight-deals?${params}`)
-            const data = await res.json()
-            if (data.deals?.length > 0) {
-                setFlightDeals(data.deals)
-                try { sessionStorage.setItem(cacheKey, JSON.stringify({ deals: data.deals, ts: Date.now() })) } catch { }
-            } else {
-                setFlightDeals([])
-            }
-        } catch { setFlightDeals([]) }
-        setDealsLoading(false)
-        setDealsLoaded(true)
-    }
-
-    // Load city summary via AI
-    const loadCitySummary = async (deal) => {
-        setCitySummary({ deal, content: null })
-        setCitySummaryLoading(true)
-        try {
-            const res = await fetch('/api/ai/quick-tips', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    city: deal.city,
-                    lang: locale,
-                    weatherContext: '',
-                }),
-            })
-            const data = await res.json()
-            setCitySummary({ deal, content: data.tips || [] })
-        } catch {
-            setCitySummary({ deal, content: [] })
-        }
-        setCitySummaryLoading(false)
-    }
 
     // ─── Quick Tips (weather-aware) ───
     const loadQuickTips = async (city) => {
@@ -322,261 +222,9 @@ export default function DashboardPage() {
                         ))}
                     </motion.div>
 
-                    {/* ═══════════════════════════════════════════ */}
-                    {/* ══ FLIGHT DEALS — AUTO ON LOGIN ══ */}
-                    {/* ═══════════════════════════════════════════ */}
-                    <motion.section
-                        className="dash-section"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                    >
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-                            {/* Title Row */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <h2 className="dash-section-title" style={{ margin: 0 }}>
-                                    <Zap size={18} style={{ color: '#F59E0B' }} /> {t('Uçuş Fırsatları', 'Flight Deals')}
-                                </h2>
-                                <button className="btn btn-ghost" onClick={() => loadFlightDeals(true)} disabled={dealsLoading} style={{ fontSize: '0.72rem', padding: '4px 10px' }}>
-                                    {dealsLoading ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />}
-                                    {t('Ara', 'Search')}
-                                </button>
-                            </div>
 
-                            {/* Filters Row */}
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                                {/* Origin City */}
-                                <select
-                                    value={dealOrigin}
-                                    onChange={e => { setDealOrigin(e.target.value); setDealsLoaded(false) }}
-                                    style={{
-                                        padding: '5px 10px', borderRadius: 8,
-                                        border: '1px solid var(--border)', background: 'var(--bg-tertiary)',
-                                        color: 'var(--text-primary)', fontSize: '0.72rem', cursor: 'pointer',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {ORIGIN_CITIES.map(c => (
-                                        <option key={c.code} value={c.code}>🛫 {c.name}</option>
-                                    ))}
-                                </select>
 
-                                {/* Duration */}
-                                <div style={{ display: 'flex', gap: 2 }}>
-                                    {['2', '3', '4', '5', '7'].map(d => (
-                                        <button key={d} onClick={() => { setDealDuration(d); setDealsLoaded(false) }}
-                                            style={{
-                                                padding: '4px 8px', borderRadius: 6, border: 'none',
-                                                fontSize: '0.68rem', fontWeight: 600, cursor: 'pointer',
-                                                background: dealDuration === d ? 'var(--primary-1)' : 'var(--bg-tertiary)',
-                                                color: dealDuration === d ? 'white' : 'var(--text-tertiary)',
-                                            }}
-                                        >
-                                            {d}{t('g', 'd')}
-                                        </button>
-                                    ))}
-                                </div>
 
-                                {/* Month */}
-                                <select
-                                    value={dealMonth}
-                                    onChange={e => { setDealMonth(e.target.value); setDealsLoaded(false) }}
-                                    style={{
-                                        padding: '5px 10px', borderRadius: 8,
-                                        border: '1px solid var(--border)', background: 'var(--bg-tertiary)',
-                                        color: 'var(--text-primary)', fontSize: '0.72rem', cursor: 'pointer',
-                                    }}
-                                >
-                                    {getMonthOptions().map(o => (
-                                        <option key={o.value} value={o.value}>{o.label}</option>
-                                    ))}
-                                </select>
-
-                                {/* Weekend Pattern */}
-                                <div style={{ display: 'flex', gap: 2 }}>
-                                    {[
-                                        { v: 'any', l: t('Tümü', 'All') },
-                                        { v: 'fri_sun', l: t('Cu→Pz', 'Fri→Sun') },
-                                        { v: 'sat_sun', l: t('Ct→Pz', 'Sat→Sun') },
-                                        { v: 'sat_mon', l: t('Ct→Pt', 'Sat→Mon') },
-                                    ].map(p => (
-                                        <button key={p.v} onClick={() => { setDealPattern(p.v); setDealsLoaded(false) }}
-                                            style={{
-                                                padding: '4px 8px', borderRadius: 6, border: 'none',
-                                                fontSize: '0.68rem', fontWeight: 600, cursor: 'pointer',
-                                                background: dealPattern === p.v ? '#10B981' : 'var(--bg-tertiary)',
-                                                color: dealPattern === p.v ? 'white' : 'var(--text-tertiary)',
-                                            }}
-                                        >
-                                            {p.l}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {dealsLoading && flightDeals.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-tertiary)' }}>
-                                <Loader2 size={28} className="spin" style={{ marginBottom: 8 }} />
-                                <p style={{ fontSize: '0.82rem' }}>{t('Fırsatlar taranıyor...', 'Scanning deals...')}</p>
-                            </div>
-                        ) : flightDeals.length > 0 ? (
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                                gap: 14,
-                            }}>
-                                {flightDeals.map((deal, i) => {
-                                    const bookUrl = deal.bookUrl || `https://www.google.com/travel/flights?q=Flights+from+${getOriginCity()}+to+${deal.destination}+on+${deal.departDate}+return+${deal.returnDate}&curr=TRY`
-
-                                    return (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ opacity: 0, y: 14 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.06 }}
-                                            whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
-                                            style={{
-                                                background: 'var(--bg-secondary)',
-                                                borderRadius: 16,
-                                                overflow: 'hidden',
-                                                border: '1px solid var(--border)',
-                                                transition: 'all 200ms',
-                                            }}
-                                        >
-                                            {/* Deal header — click for city summary */}
-                                            <div style={{
-                                                background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B', '#6366F1'][i % 6]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488', '#818CF8'][i % 6]})`,
-                                                padding: '16px 18px',
-                                                position: 'relative',
-                                                color: 'white',
-                                                cursor: 'pointer',
-                                            }}
-                                                onClick={() => loadCitySummary(deal)}
-                                            >
-                                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                    <div>
-                                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
-                                                            {deal.city}
-                                                        </h3>
-                                                        <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>
-                                                            {deal.country} {deal.source && <span style={{ opacity: 0.6 }}>· {deal.source}</span>}
-                                                        </p>
-                                                    </div>
-                                                    <div style={{
-                                                        background: 'rgba(255,255,255,0.2)',
-                                                        borderRadius: 10,
-                                                        padding: '4px 10px',
-                                                        backdropFilter: 'blur(4px)',
-                                                    }}>
-                                                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>₺{formatPrice(deal.price)}</span>
-                                                    </div>
-                                                </div>
-                                                {/* Price comparison */}
-                                                {deal.priceComparison && deal.priceComparison.length > 1 && (
-                                                    <div style={{ marginTop: 6, display: 'flex', gap: 6, fontSize: '0.62rem', opacity: 0.7 }}>
-                                                        {deal.priceComparison.map((p, pi) => (
-                                                            <span key={pi} style={{
-                                                                background: pi === 0 ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.12)',
-                                                                padding: '2px 6px', borderRadius: 4,
-                                                            }}>
-                                                                {p.source}: ₺{formatPrice(p.price)}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Deal body */}
-                                            <div style={{ padding: '12px 18px 16px' }}>
-                                                {/* Visa badge */}
-                                                <div style={{
-                                                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                    background: deal.visa?.label?.color ? `${deal.visa.label.color}18` : 'rgba(99,102,241,0.1)',
-                                                    color: deal.visa?.label?.color || '#6366F1',
-                                                    borderRadius: 8, padding: '3px 10px',
-                                                    fontSize: '0.68rem', fontWeight: 600, marginBottom: 8,
-                                                }}>
-                                                    <Shield size={10} />
-                                                    {locale === 'tr' ? deal.visa?.label?.tr : deal.visa?.label?.en}
-                                                    {deal.visa?.maxDays && ` (${deal.visa.maxDays} gün)`}
-                                                </div>
-                                                {deal.visa?.note && (
-                                                    <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
-                                                        {deal.visa.note}
-                                                    </span>
-                                                )}
-
-                                                {/* Dates */}
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                    <Calendar size={12} />
-                                                    {new Date(deal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                    {' → '}
-                                                    {new Date(deal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                    <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
-                                                        {deal.tripLabel || (deal.tripType === 'weekend' ? '🗓️ Hafta sonu' : deal.tripType === 'longtrip' ? '🌴 Uzun tatil' : '📅 Hafta içi')}
-                                                    </span>
-                                                </div>
-
-                                                {/* Airlines + Duration */}
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                                                    <Plane size={11} />
-                                                    {deal.airlines?.join(', ')}
-                                                    {deal.stops > 0 && <span>· {deal.stops} aktarma</span>}
-                                                    {deal.duration && (
-                                                        <span style={{ marginLeft: 'auto' }}>
-                                                            <Clock size={10} /> {deal.duration.replace('PT', '').replace('H', 'sa ').replace('M', 'dk')}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* TWO ACTION BUTTONS */}
-                                                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                                                    <a
-                                                        href={bookUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        style={{
-                                                            flex: 1, padding: '8px',
-                                                            background: '#10B981', color: 'white',
-                                                            border: 'none', borderRadius: 10, fontSize: '0.74rem',
-                                                            fontWeight: 700, cursor: 'pointer', textDecoration: 'none',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                                        }}
-                                                    >
-                                                        🎫 {t('Satın Al', 'Buy Ticket')}
-                                                    </a>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            setQuickPlanDeal(deal)
-                                                        }}
-                                                        style={{
-                                                            flex: 1, padding: '8px',
-                                                            background: 'var(--primary-1)', color: 'white',
-                                                            border: 'none', borderRadius: 10, fontSize: '0.74rem',
-                                                            fontWeight: 700, cursor: 'pointer',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                                                        }}
-                                                    >
-                                                        <Plane size={13} /> {t('Planla', 'Plan')}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )
-                                })}
-                            </div>
-                        ) : (
-                            <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px 0' }}>
-                                {t('Fırsatlar yükleniyor veya bulunamadı.', 'Loading deals or none found.')}
-                            </p>
-                        )}
-                    </motion.section>
-
-                    {/* ═══════════════════════════════════════ */}
                     {/* ══ AI QUICK TIPS ══ */}
                     {/* ═══════════════════════════════════════ */}
                     <motion.section className="dash-section" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
@@ -834,123 +482,11 @@ export default function DashboardPage() {
                         ))}
                     </motion.div>
                 </div>
-            </main>
+            </main >
 
-            {/* ═══ CITY SUMMARY POPUP ═══ */}
-            <AnimatePresence>
-                {citySummary && (
-                    <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        style={{
-                            position: 'fixed', inset: 0, zIndex: 190,
-                            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            padding: 20,
-                        }}
-                        onClick={() => setCitySummary(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                                background: 'var(--bg-secondary)', borderRadius: 20,
-                                width: '100%', maxWidth: 440, overflow: 'hidden',
-                                border: '1px solid var(--border)',
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-                                maxHeight: '80vh', overflowY: 'auto',
-                            }}
-                        >
-                            {/* Header */}
-                            <div style={{
-                                background: 'linear-gradient(135deg, #0D9488, #10B981)',
-                                padding: '22px 24px', color: 'white', position: 'relative',
-                            }}>
-                                <button onClick={() => setCitySummary(null)} style={{
-                                    position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.15)',
-                                    border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'white',
-                                }}>
-                                    <X size={14} />
-                                </button>
-                                <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>
-                                    🌍 {citySummary.deal?.city}
-                                </h2>
-                                <p style={{ margin: '2px 0 0', opacity: 0.8, fontSize: '0.78rem' }}>
-                                    {citySummary.deal?.country}
-                                    {citySummary.deal?.visa?.label && (
-                                        <span style={{ marginLeft: 8, background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 6, fontSize: '0.68rem' }}>
-                                            {locale === 'tr' ? citySummary.deal.visa.label.tr : citySummary.deal.visa.label.en}
-                                        </span>
-                                    )}
-                                </p>
-                                <div style={{ display: 'flex', gap: 10, marginTop: 8, fontSize: '0.72rem', opacity: 0.7 }}>
-                                    <span>₺{formatPrice(citySummary.deal?.price)}</span>
-                                    <span>📅 {new Date(citySummary.deal?.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(citySummary.deal?.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
-                                </div>
-                            </div>
-
-                            {/* Body */}
-                            <div style={{ padding: '16px 24px 24px' }}>
-                                {citySummaryLoading ? (
-                                    <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                                        <Loader2 size={24} className="spin" style={{ color: 'var(--text-tertiary)' }} />
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: 8 }}>
-                                            {t('Şehir bilgileri yükleniyor...', 'Loading city info...')}
-                                        </p>
-                                    </div>
-                                ) : citySummary.content?.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                        {citySummary.content.slice(0, 5).map((tip, i) => (
-                                            <div key={i} style={{
-                                                padding: '10px 14px', borderRadius: 12,
-                                                background: 'var(--bg-primary)',
-                                                border: '1px solid var(--border)',
-                                                fontSize: '0.8rem', lineHeight: 1.5,
-                                            }}>
-                                                {tip}
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px 0' }}>
-                                        {t('Bilgi yüklenemedi.', 'Could not load info.')}
-                                    </p>
-                                )}
-
-                                {/* Actions */}
-                                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                                    <a
-                                        href={citySummary.deal?.bookUrl || `https://www.google.com/travel/flights?q=Flights+to+${citySummary.deal?.destination}`}
-                                        target="_blank" rel="noopener noreferrer"
-                                        style={{
-                                            flex: 1, padding: '10px', borderRadius: 10,
-                                            background: '#10B981', color: 'white',
-                                            textDecoration: 'none', fontSize: '0.8rem', fontWeight: 700,
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                        }}
-                                    >
-                                        🎫 {t('Bilet Al', 'Buy Ticket')}
-                                    </a>
-                                    <button
-                                        onClick={() => { setCitySummary(null); setQuickPlanDeal(citySummary.deal) }}
-                                        style={{
-                                            flex: 1, padding: '10px', borderRadius: 10,
-                                            background: 'var(--primary-1)', color: 'white',
-                                            border: 'none', fontSize: '0.8rem', fontWeight: 700,
-                                            cursor: 'pointer',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                        }}
-                                    >
-                                        <Plane size={14} /> {t('Planla', 'Plan')}
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* ═══ QUICK PLAN MODAL ═══ */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {quickPlanDeal && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1084,8 +620,9 @@ export default function DashboardPage() {
                             </div>
                         </motion.div>
                     </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+                )
+                }
+            </AnimatePresence >
+        </div >
     )
 }
