@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Plane, User, Ticket, Home, Zap, Newspaper, Search, UserPlus, Heart } from 'lucide-react'
+import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Plane, User, Ticket, Home, Zap, Newspaper, Search, UserPlus, Heart, MoreHorizontal, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,6 +13,7 @@ export default function Sidebar() {
     const { signOut, profile } = useAuth()
     const { t } = useLanguage()
     const [collapsed, setCollapsed] = useState(false)
+    const [moreOpen, setMoreOpen] = useState(false)
 
     // Persist collapse state
     useEffect(() => {
@@ -47,9 +48,27 @@ export default function Sidebar() {
         ...(profile?.role === 'admin' ? [{ icon: Shield, label: 'Admin', href: '/admin' }] : []),
     ]
 
+    // Mobile: 5 key items for bottom nav, rest in "More" drawer
+    const mobileMainItems = [
+        { icon: Map, label: 'Harita', href: '/map' },
+        { icon: Newspaper, label: 'Feed', href: '/feed' },
+        { icon: Compass, label: 'Keşfet', href: '/explore' },
+        { icon: Search, label: 'Kişiler', href: '/discover' },
+        { icon: MoreHorizontal, label: 'Daha', href: '__more__' },
+    ]
+
     const handleLogout = async () => {
         await signOut()
         router.push('/login')
+    }
+
+    const handleMobileNav = (href) => {
+        if (href === '__more__') {
+            setMoreOpen(true)
+        } else {
+            setMoreOpen(false)
+            router.push(href)
+        }
     }
 
     return (
@@ -149,16 +168,16 @@ export default function Sidebar() {
                 </button>
             </motion.aside>
 
-            {/* Mobile Bottom Nav — Floating Pill Style */}
+            {/* Mobile Bottom Nav — 5 Key Items */}
             <nav className="mobile-nav">
                 <div className="mobile-nav-pill">
-                    {navItems.map(({ icon: Icon, label, href }) => {
-                        const isActive = pathname.startsWith(href)
+                    {mobileMainItems.map(({ icon: Icon, label, href }) => {
+                        const isActive = href === '__more__' ? moreOpen : pathname.startsWith(href)
                         return (
                             <button
                                 key={href}
                                 className={`mobile-nav-item ${isActive ? 'mobile-nav-item-active' : ''}`}
-                                onClick={() => router.push(href)}
+                                onClick={() => handleMobileNav(href)}
                             >
                                 <span className="mobile-nav-icon">
                                     <Icon size={20} />
@@ -173,18 +192,70 @@ export default function Sidebar() {
                                         {label}
                                     </motion.span>
                                 )}
-                                {isActive && (
-                                    <motion.div
-                                        className="mobile-nav-active-dot"
-                                        layoutId="mobile-nav-dot"
-                                        transition={{ type: 'spring', damping: 25 }}
-                                    />
-                                )}
                             </button>
                         )
                     })}
                 </div>
             </nav>
+
+            {/* Mobile "More" Drawer */}
+            <AnimatePresence>
+                {moreOpen && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            className="mobile-more-backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setMoreOpen(false)}
+                        />
+                        {/* Drawer */}
+                        <motion.div
+                            className="mobile-more-drawer"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                        >
+                            <div className="mobile-more-header">
+                                <span style={{ fontWeight: 700, fontSize: '1rem' }}>Tüm Sayfalar</span>
+                                <button className="mobile-more-close" onClick={() => setMoreOpen(false)}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="mobile-more-grid">
+                                {navItems.map(({ icon: Icon, label, href }) => {
+                                    const isActive = pathname.startsWith(href)
+                                    return (
+                                        <button
+                                            key={href}
+                                            className={`mobile-more-item ${isActive ? 'mobile-more-item-active' : ''}`}
+                                            onClick={() => { setMoreOpen(false); router.push(href) }}
+                                        >
+                                            <div className="mobile-more-icon">
+                                                <Icon size={22} />
+                                            </div>
+                                            <span className="mobile-more-label">{label}</span>
+                                        </button>
+                                    )
+                                })}
+                                {/* Logout */}
+                                <button
+                                    className="mobile-more-item"
+                                    onClick={() => { setMoreOpen(false); handleLogout() }}
+                                    style={{ color: 'var(--error)' }}
+                                >
+                                    <div className="mobile-more-icon" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                                        <LogOut size={22} />
+                                    </div>
+                                    <span className="mobile-more-label">Çıkış</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </>
     )
 }
