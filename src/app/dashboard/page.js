@@ -46,10 +46,12 @@ export default function DashboardPage() {
     const [userSpaces, setUserSpaces] = useState([])
     const [showAssignModal, setShowAssignModal] = useState(false)
 
-    // Flight deals
     const [flightDeals, setFlightDeals] = useState([])
     const [dealsLoading, setDealsLoading] = useState(false)
-    const [dealsLoaded, setDealsLoaded] = useState(false) // prevent re-fetching
+    const [dealsLoaded, setDealsLoaded] = useState(false)
+    const [quickPlanDeal, setQuickPlanDeal] = useState(null) // modal
+    const [quickPlanTempo, setQuickPlanTempo] = useState('balanced')
+    const [quickPlanBudget, setQuickPlanBudget] = useState('mid')
 
     const { user, profile } = useAuth()
     const { space } = useSpace()
@@ -304,113 +306,139 @@ export default function DashboardPage() {
                                 gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
                                 gap: 14,
                             }}>
-                                {flightDeals.map((deal, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, y: 14 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.06 }}
-                                        whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
-                                        style={{
-                                            background: 'var(--bg-secondary)',
-                                            borderRadius: 16,
-                                            overflow: 'hidden',
-                                            border: '1px solid var(--border)',
-                                            cursor: 'pointer',
-                                            transition: 'all 200ms',
-                                        }}
-                                        onClick={() => router.push(`/planner?city=${encodeURIComponent(deal.city)}&depart=${deal.departDate}&return=${deal.returnDate}`)}
-                                    >
-                                        {/* Deal header gradient */}
-                                        <div style={{
-                                            background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B', '#6366F1'][i % 6]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488', '#818CF8'][i % 6]})`,
-                                            padding: '16px 18px',
-                                            position: 'relative',
-                                            color: 'white',
-                                        }}>
-                                            <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <div>
-                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
-                                                        {deal.city}
-                                                    </h3>
-                                                    <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>
-                                                        {deal.country}
-                                                    </p>
-                                                </div>
-                                                <div style={{
-                                                    background: 'rgba(255,255,255,0.2)',
-                                                    borderRadius: 10,
-                                                    padding: '4px 10px',
-                                                    backdropFilter: 'blur(4px)',
-                                                }}>
-                                                    <span style={{ fontSize: '1rem', fontWeight: 800 }}>₺{formatPrice(deal.price)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                {flightDeals.map((deal, i) => {
+                                    // Build Google Flights booking URL
+                                    const origin = getOriginCity()
+                                    const gfUrl = `https://www.google.com/travel/flights?q=Flights+from+${origin}+to+${deal.destination}+on+${deal.departDate}+return+${deal.returnDate}&curr=TRY`
 
-                                        {/* Deal body */}
-                                        <div style={{ padding: '12px 18px 16px' }}>
-                                            {/* Visa badge */}
+                                    return (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, y: 14 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.06 }}
+                                            whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
+                                            style={{
+                                                background: 'var(--bg-secondary)',
+                                                borderRadius: 16,
+                                                overflow: 'hidden',
+                                                border: '1px solid var(--border)',
+                                                transition: 'all 200ms',
+                                            }}
+                                        >
+                                            {/* Deal header gradient */}
                                             <div style={{
-                                                display: 'inline-flex', alignItems: 'center', gap: 4,
-                                                background: deal.visa?.label?.color ? `${deal.visa.label.color}18` : 'rgba(99,102,241,0.1)',
-                                                color: deal.visa?.label?.color || '#6366F1',
-                                                borderRadius: 8, padding: '3px 10px',
-                                                fontSize: '0.68rem', fontWeight: 600, marginBottom: 8,
-                                            }}>
-                                                <Shield size={10} />
-                                                {locale === 'tr' ? deal.visa?.label?.tr : deal.visa?.label?.en}
-                                                {deal.visa?.maxDays && ` (${deal.visa.maxDays} gün)`}
+                                                background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B', '#6366F1'][i % 6]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488', '#818CF8'][i % 6]})`,
+                                                padding: '16px 18px',
+                                                position: 'relative',
+                                                color: 'white',
+                                                cursor: 'pointer',
+                                            }}
+                                                onClick={() => window.open(gfUrl, '_blank')}
+                                            >
+                                                <div style={{ position: 'absolute', top: -10, right: -10, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
+                                                            {deal.city}
+                                                        </h3>
+                                                        <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>
+                                                            {deal.country}
+                                                        </p>
+                                                    </div>
+                                                    <div style={{
+                                                        background: 'rgba(255,255,255,0.2)',
+                                                        borderRadius: 10,
+                                                        padding: '4px 10px',
+                                                        backdropFilter: 'blur(4px)',
+                                                    }}>
+                                                        <span style={{ fontSize: '1rem', fontWeight: 800 }}>₺{formatPrice(deal.price)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            {deal.visa?.note && (
-                                                <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
-                                                    {deal.visa.note}
-                                                </span>
-                                            )}
 
-                                            {/* Dates */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                                <Calendar size={12} />
-                                                {new Date(deal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                {' → '}
-                                                {new Date(deal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
-                                                    {deal.tripType === 'weekend' ? '🗓️ Hafta sonu' : '📅 Hafta içi'}
-                                                </span>
-                                            </div>
-
-                                            {/* Airlines + Duration */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                                                <Plane size={11} />
-                                                {deal.airlines?.join(', ')}
-                                                {deal.stops > 0 && <span>· {deal.stops} aktarma</span>}
-                                                {deal.duration && (
-                                                    <span style={{ marginLeft: 'auto' }}>
-                                                        <Clock size={10} /> {deal.duration.replace('PT', '').replace('H', 'sa ').replace('M', 'dk')}
+                                            {/* Deal body */}
+                                            <div style={{ padding: '12px 18px 16px' }}>
+                                                {/* Visa badge */}
+                                                <div style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                    background: deal.visa?.label?.color ? `${deal.visa.label.color}18` : 'rgba(99,102,241,0.1)',
+                                                    color: deal.visa?.label?.color || '#6366F1',
+                                                    borderRadius: 8, padding: '3px 10px',
+                                                    fontSize: '0.68rem', fontWeight: 600, marginBottom: 8,
+                                                }}>
+                                                    <Shield size={10} />
+                                                    {locale === 'tr' ? deal.visa?.label?.tr : deal.visa?.label?.en}
+                                                    {deal.visa?.maxDays && ` (${deal.visa.maxDays} gün)`}
+                                                </div>
+                                                {deal.visa?.note && (
+                                                    <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
+                                                        {deal.visa.note}
                                                     </span>
                                                 )}
-                                            </div>
 
-                                            {/* CTA */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    router.push(`/planner?city=${encodeURIComponent(deal.city)}&depart=${deal.departDate}&return=${deal.returnDate}`)
-                                                }}
-                                                style={{
-                                                    marginTop: 10, width: '100%', padding: '8px',
-                                                    background: 'var(--primary-1)', color: 'white',
-                                                    border: 'none', borderRadius: 10, fontSize: '0.76rem',
-                                                    fontWeight: 600, cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                                }}
-                                            >
-                                                <Plane size={13} /> {t('Tatil Planla', 'Plan Holiday')}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                                {/* Dates */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                                    <Calendar size={12} />
+                                                    {new Date(deal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    {' → '}
+                                                    {new Date(deal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>
+                                                        {deal.tripType === 'weekend' ? '🗓️ Hafta sonu' : deal.tripType === 'longtrip' ? '🌴 Uzun tatil' : '📅 Hafta içi'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Airlines + Duration */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                                                    <Plane size={11} />
+                                                    {deal.airlines?.join(', ')}
+                                                    {deal.stops > 0 && <span>· {deal.stops} aktarma</span>}
+                                                    {deal.duration && (
+                                                        <span style={{ marginLeft: 'auto' }}>
+                                                            <Clock size={10} /> {deal.duration.replace('PT', '').replace('H', 'sa ').replace('M', 'dk')}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* TWO ACTION BUTTONS */}
+                                                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                                                    {/* Buy → Google Flights */}
+                                                    <a
+                                                        href={gfUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        style={{
+                                                            flex: 1, padding: '8px',
+                                                            background: '#10B981', color: 'white',
+                                                            border: 'none', borderRadius: 10, fontSize: '0.74rem',
+                                                            fontWeight: 700, cursor: 'pointer', textDecoration: 'none',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                                                        }}
+                                                    >
+                                                        🎫 {t('Satın Al', 'Buy Ticket')}
+                                                    </a>
+                                                    {/* Plan → Quick Plan Modal */}
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setQuickPlanDeal(deal)
+                                                        }}
+                                                        style={{
+                                                            flex: 1, padding: '8px',
+                                                            background: 'var(--primary-1)', color: 'white',
+                                                            border: 'none', borderRadius: 10, fontSize: '0.74rem',
+                                                            fontWeight: 700, cursor: 'pointer',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                                                        }}
+                                                    >
+                                                        <Plane size={13} /> {t('Planla', 'Plan')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })}
                             </div>
                         ) : (
                             <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px 0' }}>
@@ -678,6 +706,144 @@ export default function DashboardPage() {
                     </motion.div>
                 </div>
             </main>
+
+            {/* ═══ QUICK PLAN MODAL ═══ */}
+            <AnimatePresence>
+                {quickPlanDeal && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 200,
+                            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            padding: 20,
+                        }}
+                        onClick={() => setQuickPlanDeal(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                background: 'var(--bg-secondary)', borderRadius: 24,
+                                width: '100%', maxWidth: 480, overflow: 'hidden',
+                                border: '1px solid var(--border)',
+                                boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+                            }}
+                        >
+                            {/* Modal Header — gradient */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                padding: '24px 28px', color: 'white', position: 'relative',
+                            }}>
+                                <button onClick={() => setQuickPlanDeal(null)} style={{
+                                    position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.15)',
+                                    border: 'none', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'white',
+                                }}>
+                                    <X size={16} />
+                                </button>
+                                <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800 }}>
+                                    ✈️ {quickPlanDeal.city}
+                                </h2>
+                                <p style={{ margin: '4px 0 0', opacity: 0.8, fontSize: '0.82rem' }}>
+                                    {quickPlanDeal.country} · ₺{formatPrice(quickPlanDeal.price)}
+                                </p>
+                                <div style={{ display: 'flex', gap: 8, marginTop: 10, fontSize: '0.75rem', opacity: 0.7 }}>
+                                    <span>📅 {new Date(quickPlanDeal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(quickPlanDeal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
+                                    <span>🛫 {quickPlanDeal.airlines?.join(', ')}</span>
+                                </div>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div style={{ padding: '20px 28px 28px' }}>
+                                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
+                                    {t('Bu uçuş için hızlıca plan oluşturun. Tarih ve şehir otomatik dolduruldu!', 'Quickly create a plan for this flight. Date and city are auto-filled!')}
+                                </p>
+
+                                {/* Tempo */}
+                                <div style={{ marginBottom: 14 }}>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, marginBottom: 6, display: 'block', color: 'var(--text-primary)' }}>
+                                        🏃 {t('Tempo', 'Tempo')}
+                                    </label>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        {[{ v: 'relaxed', l: t('🧘 Rahat', '🧘 Relaxed') }, { v: 'balanced', l: t('⚖️ Dengeli', '⚖️ Balanced') }, { v: 'packed', l: t('⚡ Yoğun', '⚡ Packed') }].map(o => (
+                                            <button key={o.v} onClick={() => setQuickPlanTempo(o.v)}
+                                                style={{
+                                                    flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none',
+                                                    cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                                                    background: quickPlanTempo === o.v ? 'var(--primary-1)' : 'var(--bg-tertiary)',
+                                                    color: quickPlanTempo === o.v ? 'white' : 'var(--text-secondary)',
+                                                    transition: 'all 150ms',
+                                                }}>
+                                                {o.l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Budget */}
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, marginBottom: 6, display: 'block', color: 'var(--text-primary)' }}>
+                                        💰 {t('Bütçe', 'Budget')}
+                                    </label>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        {[{ v: 'budget', l: t('💵 Ekonomik', '💵 Budget') }, { v: 'mid', l: t('💰 Orta', '💰 Mid') }, { v: 'luxury', l: t('💎 Lüks', '💎 Luxury') }].map(o => (
+                                            <button key={o.v} onClick={() => setQuickPlanBudget(o.v)}
+                                                style={{
+                                                    flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none',
+                                                    cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                                                    background: quickPlanBudget === o.v ? '#10B981' : 'var(--bg-tertiary)',
+                                                    color: quickPlanBudget === o.v ? 'white' : 'var(--text-secondary)',
+                                                    transition: 'all 150ms',
+                                                }}>
+                                                {o.l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <a
+                                        href={`https://www.google.com/travel/flights?q=Flights+from+${getOriginCity()}+to+${quickPlanDeal.destination}+on+${quickPlanDeal.departDate}+return+${quickPlanDeal.returnDate}&curr=TRY`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        style={{
+                                            flex: 1, padding: '12px', borderRadius: 12,
+                                            background: '#10B981', color: 'white',
+                                            textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        }}
+                                    >
+                                        🎫 {t('Bilet Al', 'Buy Ticket')}
+                                    </a>
+                                    <button
+                                        onClick={() => {
+                                            const params = new URLSearchParams({
+                                                city: quickPlanDeal.city,
+                                                depart: quickPlanDeal.departDate,
+                                                return: quickPlanDeal.returnDate,
+                                                tempo: quickPlanTempo,
+                                                budget: quickPlanBudget,
+                                                departure: profile?.home_city || 'Istanbul',
+                                            })
+                                            setQuickPlanDeal(null)
+                                            router.push(`/planner?${params}`)
+                                        }}
+                                        style={{
+                                            flex: 1, padding: '12px', borderRadius: 12,
+                                            background: 'var(--primary-1)', color: 'white',
+                                            border: 'none', fontSize: '0.82rem', fontWeight: 700,
+                                            cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        }}
+                                    >
+                                        <Plane size={16} /> {t('Plan Oluştur', 'Create Plan')}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

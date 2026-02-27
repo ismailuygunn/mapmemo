@@ -98,6 +98,33 @@ export default function PlannerPage() {
 
     useEffect(() => { if (space) loadTrips() }, [space])
 
+    // ── Read URL params from Quick Plan modal ──
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const params = new URLSearchParams(window.location.search)
+        const city = params.get('city')
+        const depart = params.get('depart')
+        const ret = params.get('return')
+        const tempo = params.get('tempo')
+        const budget = params.get('budget')
+        const departure = params.get('departure')
+
+        if (city) {
+            setFormData(prev => ({
+                ...prev,
+                cities: [city],
+                cityInput: '',
+                startDate: depart || prev.startDate,
+                endDate: ret || prev.endDate,
+                tempo: tempo || prev.tempo,
+                budget: budget || prev.budget,
+                departureCity: departure || prev.departureCity,
+            }))
+            if (depart && ret) setFormStep(2)
+            else setFormStep(1)
+        }
+    }, [])
+
     // Load all user spaces for save selector
     useEffect(() => {
         const loadUserSpaces = async () => {
