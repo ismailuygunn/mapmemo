@@ -257,12 +257,11 @@ export default function FlightsPage() {
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
                                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
                                                     <Zap size={16} style={{ color: '#F59E0B', marginRight: 6 }} />
-                                                    {deals.length} destinasyon · 3 kaynak tarandı
+                                                    {deals.length} destinasyon
                                                 </h2>
                                                 <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 600 }}>Amadeus</span>
-                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(7,112,227,0.1)', color: '#0770E3', fontWeight: 600 }}>Skyscanner</span>
-                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>Duffel</span>
+                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>✈️ Duffel</span>
+                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.08)', color: '#6366F1', fontWeight: 500 }}>Amadeus (yedek)</span>
                                                     <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
                                                         📅 {new Date(deals[0].departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deals[0].returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                                                     </span>
@@ -316,6 +315,30 @@ export default function FlightsPage() {
 
                                                         {/* Body */}
                                                         <div style={{ padding: '14px 22px 20px' }}>
+                                                            {/* Flight time display */}
+                                                            {deal.departTime && (
+                                                                <div style={{
+                                                                    display: 'flex', alignItems: 'center', gap: 10,
+                                                                    padding: '10px 14px', borderRadius: 12,
+                                                                    background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                                                                    marginBottom: 10,
+                                                                }}>
+                                                                    <div style={{ textAlign: 'center', flex: 1 }}>
+                                                                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)' }}>{deal.departTime}</div>
+                                                                        <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Kalkış</div>
+                                                                    </div>
+                                                                    <div style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                                                                        <Plane size={12} style={{ color: '#818CF8', transform: 'rotate(45deg)' }} />
+                                                                        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                                                                    </div>
+                                                                    <div style={{ textAlign: 'center', flex: 1 }}>
+                                                                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)' }}>{deal.arriveTime || '—'}</div>
+                                                                        <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Varış</div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
                                                             {/* Meta badges */}
                                                             <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
                                                                 <span style={{
@@ -336,7 +359,33 @@ export default function FlightsPage() {
                                                                         {deal.stops === 0 ? '🟢 Aktarmasız' : `🔄 ${deal.stops} aktarma`}
                                                                     </span>
                                                                 )}
+                                                                {deal.fallback && (
+                                                                    <span style={{ fontSize: '0.62rem', fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: 'rgba(99,102,241,0.08)', color: '#6366F1' }}>
+                                                                        Amadeus
+                                                                    </span>
+                                                                )}
                                                             </div>
+
+                                                            {/* Alternative time options */}
+                                                            {deal.alternatives && deal.alternatives.length > 0 && (
+                                                                <div style={{ marginBottom: 10 }}>
+                                                                    <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 5 }}>⏰ Diğer Saatler</div>
+                                                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                                                        {deal.alternatives.map((alt, ai) => (
+                                                                            <div key={ai} style={{
+                                                                                padding: '5px 10px', borderRadius: 8,
+                                                                                background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                                                                                fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: 6,
+                                                                            }}>
+                                                                                <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{alt.departTime}</span>
+                                                                                <span style={{ color: 'var(--text-tertiary)', fontSize: '0.6rem' }}>→ {alt.arriveTime || '?'}</span>
+                                                                                <span style={{ fontWeight: 700, color: '#EC4899' }}>₺{alt.priceFormatted}</span>
+                                                                                {alt.stops > 0 && <span style={{ fontSize: '0.55rem', color: '#F59E0B' }}>{alt.stops}x</span>}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
 
                                                             {/* Date info */}
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 12 }}>
@@ -372,7 +421,7 @@ export default function FlightsPage() {
                                                             </div>
 
                                                             <p style={{ margin: '8px 0 0', fontSize: '0.58rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                                                ₺{deal.priceFormatted} · {deal.sourcesFound || 1} kaynaktan en ucuz fiyat · Platformlara tıklayıp biletinizi alabilirsiniz
+                                                                ₺{deal.priceFormatted} · {deal.source} · Platformlara tıklayıp biletinizi alabilirsiniz
                                                             </p>
                                                         </div>
                                                     </motion.div>

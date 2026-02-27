@@ -162,7 +162,7 @@ const priceCache = new Map()
 const CACHE_TTL = 5 * 60 * 1000
 
 // ═══════════════════════════════════════
-// SOURCE 1: AMADEUS
+// SOURCE 1: AMADEUS (fallback)
 // ═══════════════════════════════════════
 async function fetchAmadeusPrice(origin, dest, departDate, returnDate) {
     try {
@@ -171,7 +171,7 @@ async function fetchAmadeusPrice(origin, dest, departDate, returnDate) {
         const base = amadeusIsTest ? 'https://test.api.amadeus.com' : 'https://api.amadeus.com'
         const params = new URLSearchParams({
             originLocationCode: origin, destinationLocationCode: dest,
-            departureDate: departDate, adults: '1', currencyCode: 'TRY', max: '1', nonStop: 'false',
+            departureDate: departDate, adults: '1', currencyCode: 'TRY', max: '5', nonStop: 'false',
         })
         if (returnDate) params.set('returnDate', returnDate)
         const ctrl = new AbortController()
@@ -183,13 +183,34 @@ async function fetchAmadeusPrice(origin, dest, departDate, returnDate) {
         if (!res.ok) return null
         const data = await res.json()
         if (!data.data?.[0]) return null
+
         const offer = data.data[0]
+        const seg0 = offer.itineraries?.[0]?.segments?.[0]
+        const segLast = offer.itineraries?.[0]?.segments?.slice(-1)[0]
+
+        // Build alternatives (other time options)
+        const alternatives = data.data.slice(1, 4).map(alt => {
+            const s0 = alt.itineraries?.[0]?.segments?.[0]
+            const sL = alt.itineraries?.[0]?.segments?.slice(-1)[0]
+            return {
+                price: Math.round(parseFloat(alt.price?.grandTotal || alt.price?.total || 0)),
+                priceFormatted: new Intl.NumberFormat('tr-TR').format(Math.round(parseFloat(alt.price?.grandTotal || 0))),
+                airline: s0?.carrierCode || '??',
+                departTime: s0?.departure?.at ? s0.departure.at.slice(11, 16) : '',
+                arriveTime: sL?.arrival?.at ? sL.arrival.at.slice(11, 16) : '',
+                stops: (alt.itineraries?.[0]?.segments?.length || 1) - 1,
+            }
+        }).filter(a => a.price > 0)
+
         return {
             price: Math.round(parseFloat(offer.price?.grandTotal || offer.price?.total || 0)),
-            airline: offer.itineraries?.[0]?.segments?.[0]?.carrierCode || '??',
+            airline: seg0?.carrierCode || '??',
             stops: (offer.itineraries?.[0]?.segments?.length || 1) - 1,
             seats: offer.numberOfBookableSeats,
+            departTime: seg0?.departure?.at ? seg0.departure.at.slice(11, 16) : '',
+            arriveTime: segLast?.arrival?.at ? segLast.arrival.at.slice(11, 16) : '',
             source: 'Amadeus',
+            alternatives,
         }
     } catch { return null }
 }
@@ -230,7 +251,7 @@ async function fetchSkyscannerPrice(origin, dest, departDate, returnDate) {
 }
 
 // ═══════════════════════════════════════
-// SOURCE 3: DUFFEL
+// SOURCE: DUFFEL (primary)
 // ═══════════════════════════════════════
 async function fetchDuffelPrice(origin, dest, departDate, returnDate) {
     const key = process.env.DUFFEL_API_KEY
@@ -239,7 +260,7 @@ async function fetchDuffelPrice(origin, dest, departDate, returnDate) {
         const slices = [{ origin, destination: dest, departure_date: departDate }]
         if (returnDate) slices.push({ origin: dest, destination: origin, departure_date: returnDate })
         const ctrl = new AbortController()
-        const t = setTimeout(() => ctrl.abort(), 6000)
+        const t = setTimeout(() => ctrl.abort(), 8000)
         const res = await fetch('https://api.duffel.com/air/offer_requests', {
             method: 'POST',
             headers: {
@@ -257,71 +278,124 @@ async function fetchDuffelPrice(origin, dest, departDate, returnDate) {
         const data = await res.json()
         const offers = data?.data?.offers || []
         if (offers.length === 0) return null
-        // Find cheapest
-        const cheapest = offers.reduce((min, o) => {
-            const p = parseFloat(o.total_amount || '999999')
-            return p < min.price ? { price: p, offer: o } : min
-        }, { price: 999999, offer: null })
-        if (!cheapest.offer || cheapest.price >= 999999) return null
-        // Duffel returns in destination currency - convert if needed
-        const currency = cheapest.offer.total_currency || 'TRY'
-        let price = Math.round(cheapest.price)
-        // Simple TRY conversion for common currencies
-        if (currency === 'USD') price = Math.round(price * 35)
-        else if (currency === 'EUR') price = Math.round(price * 38)
-        else if (currency === 'GBP') price = Math.round(price * 44)
-        const seg = cheapest.offer.slices?.[0]?.segments?.[0]
+
+        // Currency conversion helper
+        function convertToTRY(amount, currency) {
+            let price = Math.round(amount)
+            if (currency === 'USD') price = Math.round(amount * 35)
+            else if (currency === 'EUR') price = Math.round(amount * 38)
+            else if (currency === 'GBP') price = Math.round(amount * 44)
+            return price
+        }
+
+        // Extract time/airline from an offer
+        function extractOfferDetails(offer) {
+            const seg0 = offer.slices?.[0]?.segments?.[0]
+            const segLast = offer.slices?.[0]?.segments?.slice(-1)[0]
+            const currency = offer.total_currency || 'TRY'
+            const rawPrice = parseFloat(offer.total_amount || '999999')
+            return {
+                price: convertToTRY(rawPrice, currency),
+                airline: seg0?.marketing_carrier?.name || seg0?.operating_carrier?.name || '??',
+                airlineCode: seg0?.marketing_carrier?.iata_code || seg0?.operating_carrier?.iata_code || '',
+                stops: (offer.slices?.[0]?.segments?.length || 1) - 1,
+                departTime: seg0?.departing_at ? seg0.departing_at.slice(11, 16) : '',
+                arriveTime: segLast?.arriving_at ? segLast.arriving_at.slice(11, 16) : '',
+            }
+        }
+
+        // Sort offers by price
+        const sorted = offers
+            .map(o => ({ offer: o, price: parseFloat(o.total_amount || '999999') }))
+            .filter(o => o.price < 999999)
+            .sort((a, b) => a.price - b.price)
+
+        if (sorted.length === 0) return null
+        const cheapest = extractOfferDetails(sorted[0].offer)
+
+        // Build alternatives (different time options, up to 3)
+        const seenTimes = new Set([cheapest.departTime])
+        const alternatives = []
+        for (const s of sorted.slice(1)) {
+            const alt = extractOfferDetails(s.offer)
+            if (alt.departTime && !seenTimes.has(alt.departTime)) {
+                seenTimes.add(alt.departTime)
+                alternatives.push({
+                    price: alt.price,
+                    priceFormatted: new Intl.NumberFormat('tr-TR').format(alt.price),
+                    airline: alt.airline,
+                    airlineCode: alt.airlineCode,
+                    departTime: alt.departTime,
+                    arriveTime: alt.arriveTime,
+                    stops: alt.stops,
+                })
+                if (alternatives.length >= 3) break
+            }
+        }
+
         return {
-            price,
-            airline: seg?.marketing_carrier?.name || seg?.operating_carrier?.name || '??',
-            stops: (cheapest.offer.slices?.[0]?.segments?.length || 1) - 1,
+            ...cheapest,
             source: 'Duffel',
+            alternatives,
         }
     } catch { return null }
 }
 
 // ═══════════════════════════════════════
-// MULTI-SOURCE SCANNER
-// Gets cheapest price across all sources
+// FLIGHT SCANNER
+// Priority: Duffel first → Amadeus fallback
 // ═══════════════════════════════════════
 async function scanAllSources(origin, dest, departDate, returnDate) {
     const cacheKey = `${origin}-${dest}-${departDate}-${returnDate}`
     const cached = priceCache.get(cacheKey)
     if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.data
 
-    // Fire all sources in parallel
-    const [amadeus, skyscanner, duffel] = await Promise.allSettled([
-        fetchAmadeusPrice(origin, dest, departDate, returnDate),
-        fetchSkyscannerPrice(origin, dest, departDate, returnDate),
-        fetchDuffelPrice(origin, dest, departDate, returnDate),
-    ])
+    // 1) Try Duffel first (primary source)
+    let duffelResult = null
+    try {
+        duffelResult = await fetchDuffelPrice(origin, dest, departDate, returnDate)
+    } catch { /* ignore */ }
 
-    const results = [amadeus, skyscanner, duffel]
-        .filter(r => r.status === 'fulfilled' && r.value && r.value.price > 0)
-        .map(r => r.value)
-
-    if (results.length === 0) return null
-
-    // Find cheapest across all sources
-    results.sort((a, b) => a.price - b.price)
-    const cheapest = results[0]
-
-    // Build source comparison
-    const allPrices = results.map(r => ({
-        price: r.price,
-        source: r.source,
-        formatted: new Intl.NumberFormat('tr-TR').format(r.price),
-    }))
-
-    const result = {
-        ...cheapest,
-        allPrices, // all found prices for comparison
-        sourcesScanned: ['Amadeus', 'Skyscanner', 'Duffel'].length,
-        sourcesFound: results.length,
+    if (duffelResult && duffelResult.price > 0) {
+        const result = {
+            ...duffelResult,
+            allPrices: [{
+                price: duffelResult.price,
+                source: 'Duffel',
+                formatted: new Intl.NumberFormat('tr-TR').format(duffelResult.price),
+            }],
+            sourcesScanned: 1,
+            sourcesFound: 1,
+        }
+        priceCache.set(cacheKey, { data: result, ts: Date.now() })
+        return result
     }
 
-    priceCache.set(cacheKey, { data: result, ts: Date.now() })
-    return result
+    // 2) Duffel failed/empty → fallback to Amadeus
+    let amadeusResult = null
+    try {
+        amadeusResult = await fetchAmadeusPrice(origin, dest, departDate, returnDate)
+    } catch { /* ignore */ }
+
+    if (amadeusResult && amadeusResult.price > 0) {
+        const result = {
+            ...amadeusResult,
+            allPrices: [{
+                price: amadeusResult.price,
+                source: 'Amadeus',
+                formatted: new Intl.NumberFormat('tr-TR').format(amadeusResult.price),
+            }],
+            sourcesScanned: 2,
+            sourcesFound: 1,
+            fallback: true, // indicates Amadeus was used as fallback
+        }
+        priceCache.set(cacheKey, { data: result, ts: Date.now() })
+        return result
+    }
+
+    // None found
+    priceCache.set(cacheKey, { data: null, ts: Date.now() })
+    return null
 }
 
 // ═══════════════════════════════════════
@@ -376,8 +450,12 @@ export async function GET(request) {
                         stops: priceData.stops,
                         seatsLeft: priceData.seats,
                         source: priceData.source,
+                        departTime: priceData.departTime || '',
+                        arriveTime: priceData.arriveTime || '',
+                        alternatives: priceData.alternatives || [],
                         allPrices: priceData.allPrices,
                         sourcesFound: priceData.sourcesFound,
+                        fallback: priceData.fallback || false,
                         departDate: dateRange.depart,
                         returnDate: dateRange.ret,
                         tripLabel: dateRange.label,
@@ -396,7 +474,7 @@ export async function GET(request) {
             returnDate: dateRange.ret,
             total: allDeals.length,
             scannedAt: new Date().toISOString(),
-            sources: ['Amadeus', 'Skyscanner', 'Duffel'],
+            sources: ['Duffel', 'Amadeus (yedek)'],
         })
     } catch (err) {
         console.error('Flight deals error:', err)
