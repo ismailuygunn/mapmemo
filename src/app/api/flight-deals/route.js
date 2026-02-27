@@ -171,12 +171,24 @@ function generateDates(month, duration, pattern) {
     const dur = parseInt(duration) || 4
     const dates = []
 
-    if (pattern === 'fri_sun') {
+    // Pattern config: [departDayOfWeek, nightsCount, label]
+    const PATTERNS = {
+        thu_sun: [4, 3, 'Perş→Pazar'],
+        fri_sun: [5, 2, 'Cuma→Pazar'],
+        fri_mon: [5, 3, 'Cuma→Pazartesi'],
+        sat_sun: [6, 1, 'Ct→Pazar'],
+        sat_mon: [6, 2, 'Ct→Pazartesi'],
+        sat_tue: [6, 3, 'Ct→Salı'],
+    }
+
+    const patternConfig = PATTERNS[pattern]
+    if (patternConfig) {
+        const [targetDay, nights, label] = patternConfig
         let d = new Date(startSearch)
         while (d <= endSearch && dates.length < 4) {
-            if (d.getDay() === 5) {
-                const ret = new Date(d.getTime() + 2 * dayMs)
-                dates.push({ depart: fmt(d), ret: fmt(ret), label: 'Cuma→Pazar' })
+            if (d.getDay() === targetDay) {
+                const ret = new Date(d.getTime() + nights * dayMs)
+                dates.push({ depart: fmt(d), ret: fmt(ret), label })
             }
             d = new Date(d.getTime() + dayMs)
         }

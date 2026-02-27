@@ -168,8 +168,8 @@ export default function FlightsPage() {
                             </div>
                         </div>
 
-                        {/* Row 2 */}
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+                        {/* Row 2: Month + Weekend / Duration */}
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                             <div style={{ flex: '1 1 180px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>📅 Ne Zaman</label>
                                 <select value={month} onChange={e => setMonth(e.target.value)}
@@ -177,39 +177,50 @@ export default function FlightsPage() {
                                     {getMonthOptions().map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </select>
                             </div>
-                            <div style={{ flex: '2 1 300px' }}>
-                                <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>🕐 Kaç Gün</label>
-                                <div style={{ display: 'flex', gap: 4 }}>
-                                    {['2', '3', '4', '5', '7', '10', '14'].map(d => (
-                                        <button key={d} onClick={() => setDuration(d)}
-                                            style={{
-                                                flex: 1, padding: '10px 4px', borderRadius: 10, border: 'none',
-                                                fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
-                                                background: duration === d ? 'var(--primary-1)' : 'var(--bg-tertiary)',
-                                                color: duration === d ? 'white' : 'var(--text-secondary)',
-                                                transition: 'all 150ms',
-                                            }}>{d}</button>
-                                    ))}
-                                </div>
+                        </div>
+
+                        {/* Row 3: Weekend Presets */}
+                        <div style={{ marginBottom: 12 }}>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🗓️ Hafta Sonu / Kısa Kaçamak</label>
+                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                {[
+                                    { v: 'any', l: '🔄 Tümü', days: '' },
+                                    { v: 'thu_sun', l: '🌙 Perş → Pazar', days: '3 gece' },
+                                    { v: 'fri_sun', l: '✈️ Cuma → Pazar', days: '2 gece' },
+                                    { v: 'fri_mon', l: '🏖️ Cuma → Pazartesi', days: '3 gece' },
+                                    { v: 'sat_sun', l: '⚡ Ct → Pazar', days: '1 gece' },
+                                    { v: 'sat_mon', l: '🌊 Ct → Pazartesi', days: '2 gece' },
+                                    { v: 'sat_tue', l: '🗺️ Ct → Salı', days: '3 gece' },
+                                ].map(p => (
+                                    <button key={p.v} onClick={() => { setPattern(p.v); if (p.v !== 'any') setDuration(p.days?.replace(/[^0-9]/g, '') || '3') }}
+                                        style={{
+                                            padding: '8px 14px', borderRadius: 11, border: pattern === p.v ? 'none' : '1px solid var(--border)',
+                                            fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer',
+                                            background: pattern === p.v ? 'linear-gradient(135deg, #10B981, #059669)' : 'var(--bg-primary)',
+                                            color: pattern === p.v ? 'white' : 'var(--text-secondary)',
+                                            transition: 'all 150ms', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                                        }}>
+                                        <span>{p.l}</span>
+                                        {p.days && <span style={{ fontSize: '0.58rem', opacity: 0.7 }}>{p.days}</span>}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Row 3: Pattern */}
+                        {/* Row 4: Custom Duration */}
                         <div style={{ marginBottom: 16 }}>
-                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>🗓️ Hafta Sonu Planı</label>
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                {[
-                                    { v: 'any', l: 'Tümü' }, { v: 'fri_sun', l: 'Cuma→Pazar' },
-                                    { v: 'sat_sun', l: 'Ct→Pz' }, { v: 'sat_mon', l: 'Ct→Pt' },
-                                ].map(p => (
-                                    <button key={p.v} onClick={() => setPattern(p.v)}
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🕐 Özel Süre (gün)</label>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                                {['2', '3', '4', '5', '7', '10', '14'].map(d => (
+                                    <button key={d} onClick={() => { setDuration(d); setPattern('any') }}
                                         style={{
-                                            padding: '8px 14px', borderRadius: 10, border: 'none',
-                                            fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                                            background: pattern === p.v ? '#10B981' : 'var(--bg-tertiary)',
-                                            color: pattern === p.v ? 'white' : 'var(--text-secondary)',
+                                            flex: 1, padding: '10px 4px', borderRadius: 10,
+                                            border: duration === d && pattern === 'any' ? 'none' : '1px solid var(--border)',
+                                            fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+                                            background: duration === d && pattern === 'any' ? 'var(--primary-1)' : 'var(--bg-primary)',
+                                            color: duration === d && pattern === 'any' ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms',
-                                        }}>{p.l}</button>
+                                        }}>{d}</button>
                                 ))}
                             </div>
                         </div>

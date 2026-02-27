@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const CITIES = [
+const CITIES_TR = [
     { name: 'İstanbul', slug: 'istanbul', emoji: '🌉' },
     { name: 'Ankara', slug: 'ankara', emoji: '🏛️' },
     { name: 'İzmir', slug: 'izmir', emoji: '🌊' },
@@ -26,6 +26,23 @@ const CITIES = [
     { name: 'Samsun', slug: 'samsun', emoji: '🚢' },
     { name: 'Kayseri', slug: 'kayseri', emoji: '🗻' },
     { name: 'Diyarbakır', slug: 'diyarbakir', emoji: '🏰' },
+]
+
+const CITIES_INT = [
+    { name: 'Paris', slug: 'Paris', emoji: '🇫🇷' },
+    { name: 'Londra', slug: 'London', emoji: '🇬🇧' },
+    { name: 'Roma', slug: 'Rome', emoji: '🇮🇹' },
+    { name: 'Barselona', slug: 'Barcelona', emoji: '🇪🇸' },
+    { name: 'Amsterdam', slug: 'Amsterdam', emoji: '🇳🇱' },
+    { name: 'Berlin', slug: 'Berlin', emoji: '🇩🇪' },
+    { name: 'Viyana', slug: 'Vienna', emoji: '🇦🇹' },
+    { name: 'Prag', slug: 'Prague', emoji: '🇨🇿' },
+    { name: 'Budapeşte', slug: 'Budapest', emoji: '🇭🇺' },
+    { name: 'Dubai', slug: 'Dubai', emoji: '🇦🇪' },
+    { name: 'New York', slug: 'New York', emoji: '🇺🇸' },
+    { name: 'Tokyo', slug: 'Tokyo', emoji: '🇯🇵' },
+    { name: 'Bangkok', slug: 'Bangkok', emoji: '🇹🇭' },
+    { name: 'Seul', slug: 'Seoul', emoji: '🇰🇷' },
 ]
 
 const FORMATS = [
@@ -107,6 +124,7 @@ export default function EventsPage() {
     const { t } = useLanguage()
 
     const [city, setCity] = useState('istanbul')
+    const [customCity, setCustomCity] = useState('')
     const [format, setFormat] = useState('')
     const [dateFilter, setDateFilter] = useState('all')
     const [events, setEvents] = useState([])
@@ -123,11 +141,12 @@ export default function EventsPage() {
         setFilteredEvents(filtered)
     }, [events, dateFilter])
 
-    const searchEvents = async () => {
+    const searchEvents = async (overrideCity) => {
         setLoading(true)
         setSearched(false)
+        const searchCity = overrideCity || customCity || city
         try {
-            const params = new URLSearchParams({ city })
+            const params = new URLSearchParams({ city: searchCity })
             if (format) params.set('format', format)
             const res = await fetch(`/api/events?${params}`)
             const data = await res.json()
@@ -167,7 +186,7 @@ export default function EventsPage() {
                                 🎭 Etkinlikler
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', margin: '6px 0 0', maxWidth: 500 }}>
-                                Konser, tiyatro, stand-up, sergi ve daha fazlası — şehrindeki etkinlikleri keşfet
+                                Türkiye ve dünya genelinde konser, tiyatro, festival ve daha fazlası
                             </p>
                         </div>
                     </motion.div>
@@ -180,21 +199,51 @@ export default function EventsPage() {
                             Etkinlik Ara
                         </h2>
 
-                        {/* City Selection */}
-                        <div style={{ marginBottom: 14 }}>
-                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>📍 Şehir</label>
-                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                {CITIES.map(c => (
-                                    <button key={c.slug} onClick={() => setCity(c.slug)}
+                        {/* City Selection — Turkey */}
+                        <div style={{ marginBottom: 10 }}>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🇹🇷 Türkiye</label>
+                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                {CITIES_TR.map(c => (
+                                    <button key={c.slug} onClick={() => { setCity(c.slug); setCustomCity('') }}
                                         style={{
-                                            padding: '8px 14px', borderRadius: 10, border: 'none',
-                                            fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                                            background: city === c.slug ? 'linear-gradient(135deg, #EC4899, #8B5CF6)' : 'var(--bg-tertiary)',
-                                            color: city === c.slug ? 'white' : 'var(--text-secondary)',
+                                            padding: '7px 12px', borderRadius: 10, border: city === c.slug && !customCity ? 'none' : '1px solid var(--border)',
+                                            fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer',
+                                            background: city === c.slug && !customCity ? 'linear-gradient(135deg, #EC4899, #8B5CF6)' : 'var(--bg-primary)',
+                                            color: city === c.slug && !customCity ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms',
                                         }}>{c.emoji} {c.name}</button>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* City Selection — International */}
+                        <div style={{ marginBottom: 10 }}>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🌍 Uluslararası</label>
+                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                {CITIES_INT.map(c => (
+                                    <button key={c.slug} onClick={() => { setCity(c.slug); setCustomCity('') }}
+                                        style={{
+                                            padding: '7px 12px', borderRadius: 10, border: city === c.slug && !customCity ? 'none' : '1px solid var(--border)',
+                                            fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer',
+                                            background: city === c.slug && !customCity ? 'linear-gradient(135deg, #3B82F6, #6366F1)' : 'var(--bg-primary)',
+                                            color: city === c.slug && !customCity ? 'white' : 'var(--text-secondary)',
+                                            transition: 'all 150ms',
+                                        }}>{c.emoji} {c.name}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Custom City Input */}
+                        <div style={{ marginBottom: 14 }}>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>🔍 Başka Şehir</label>
+                            <input type="text" placeholder="Herhangi bir şehir yazın... (ör: Milano, Singapur)"
+                                value={customCity} onChange={e => setCustomCity(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && searchEvents(customCity)}
+                                style={{
+                                    width: '100%', padding: '10px 14px', borderRadius: 12,
+                                    border: '1px solid var(--border)', background: 'var(--bg-primary)',
+                                    color: 'var(--text-primary)', fontSize: '0.85rem',
+                                }} />
                         </div>
 
                         {/* Format/Category Filter */}
@@ -255,7 +304,7 @@ export default function EventsPage() {
                                         <Ticket size={16} style={{ color: '#EC4899', marginRight: 6 }} />
                                         {filteredEvents.length} etkinlik
                                         {dateFilter !== 'all' && <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500 }}> ({DATE_FILTERS.find(d => d.key === dateFilter)?.label})</span>}
-                                        {' — '}{CITIES.find(c => c.slug === city)?.name || city}
+                                        {' — '}{[...CITIES_TR, ...CITIES_INT].find(c => c.slug === city)?.name || customCity || city}
                                     </h2>
                                     {filteredEvents.length !== events.length && (
                                         <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
@@ -417,7 +466,7 @@ export default function EventsPage() {
                                 {/* Attribution */}
                                 {filteredEvents.length > 0 && (
                                     <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-tertiary)', marginTop: 16 }}>
-                                        Etkinlik verileri etkinlik.io tarafından sağlanmaktadır.
+                                        Etkinlik verileri etkinlik.io ve Ticketmaster tarafından sağlanmaktadır.
                                     </p>
                                 )}
                             </motion.div>
