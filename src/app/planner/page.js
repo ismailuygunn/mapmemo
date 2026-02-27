@@ -64,6 +64,7 @@ export default function PlannerPage() {
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [advancedTab, setAdvancedTab] = useState('transport')
     const [citySuggestions, setCitySuggestions] = useState([])
+    const [depSuggestions, setDepSuggestions] = useState([])
     const [departureSuggestions, setDepartureSuggestions] = useState([])
     // Phase 3+4+6 visible data
     const [weatherInfo, setWeatherInfo] = useState(null)
@@ -237,7 +238,7 @@ export default function PlannerPage() {
 
         setLoading(true)
         setLoadingProgress(0)
-        setLoadingStep(locale === 'tr' ? 'Pinler kontrol ediliyor...' : 'Checking pins...')
+        setLoadingStep(locale === 'tr' ? '📍 Pinler kontrol ediliyor...' : '📍 Checking pins...')
         try {
             let existingPins = []
             if (space) {
@@ -252,7 +253,7 @@ export default function PlannerPage() {
             setLoadingProgress(15)
 
             // Fetch weather forecast
-            setLoadingStep(locale === 'tr' ? 'Hava durumu alınıyor...' : 'Fetching weather...')
+            setLoadingStep(locale === 'tr' ? '🌤️ Hava durumu kontrol ediliyor...' : '🌤️ Checking weather...')
             let weatherData = null
             try {
                 const weatherRes = await fetch(`/api/weather?city=${encodeURIComponent(cities[0])}&lang=${locale}`)
@@ -262,7 +263,7 @@ export default function PlannerPage() {
             setLoadingProgress(30)
 
             // Fetch events
-            setLoadingStep(locale === 'tr' ? 'Etkinlikler aranıyor...' : 'Finding events...')
+            setLoadingStep(locale === 'tr' ? '🎭 Etkinlikler ve festivallar taranıyor...' : '🎭 Scanning events & festivals...')
             let eventsData = []
             try {
                 const qs = new URLSearchParams({ city: cities[0] })
@@ -275,7 +276,7 @@ export default function PlannerPage() {
             setLoadingProgress(45)
 
             // Generate plan
-            setLoadingStep(locale === 'tr' ? 'AI plan oluşturuyor...' : 'AI generating plan...')
+            setLoadingStep(locale === 'tr' ? '✨ AI büyüsü devrede — plan hazırlanıyor...' : '✨ AI magic in action — crafting your plan...')
             const progressInterval = setInterval(() => {
                 setLoadingProgress(prev => Math.min(prev + 2, 90))
             }, 500)
@@ -314,7 +315,7 @@ export default function PlannerPage() {
             })
             clearInterval(progressInterval)
             setLoadingProgress(95)
-            setLoadingStep(locale === 'tr' ? 'Plan hazırlanıyor...' : 'Preparing plan...')
+            setLoadingStep(locale === 'tr' ? '🎉 Plan neredeyse hazır — son dokunuşlar...' : '🎉 Almost ready — final touches...')
 
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Failed')
@@ -416,6 +417,8 @@ export default function PlannerPage() {
                     itinerary_data: itinerary,
                     tempo: formData.tempo,
                     budget: formData.budget,
+                    cover_photo_url: itinerary?.coverPhoto || null,
+                    hero_image_url: itinerary?.coverPhoto || null,
                 })
                 .select().single()
             if (e) throw e
@@ -506,31 +509,71 @@ export default function PlannerPage() {
                         </div>
                     </div>
 
-                    {/* ═══ LOADING OVERLAY ═══ */}
+                    {/* ═══ FUN LOADING OVERLAY ═══ */}
                     <AnimatePresence>
                         {loading && (
                             <motion.div
                                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                 style={{
                                     position: 'fixed', inset: 0, zIndex: 100,
-                                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                                    background: 'linear-gradient(135deg, rgba(15,10,40,0.95), rgba(30,15,60,0.95))',
+                                    backdropFilter: 'blur(12px)',
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                    gap: 20, padding: 32,
+                                    gap: 24, padding: 32,
                                 }}>
-                                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}>
-                                    <Plane size={48} color="white" />
-                                </motion.div>
-                                <div style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, textAlign: 'center' }}>
-                                    {loadingStep}
-                                </div>
-                                <div style={{ width: '100%', maxWidth: 320, height: 6, background: 'rgba(255,255,255,0.15)', borderRadius: 99 }}>
+                                {/* Animated Globe */}
+                                <motion.div
+                                    animate={{ y: [0, -12, 0] }}
+                                    transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+                                    style={{ position: 'relative' }}
+                                >
+                                    <motion.span
+                                        animate={{ rotate: 360 }}
+                                        transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+                                        style={{ fontSize: '4rem', display: 'block' }}
+                                    >🌍</motion.span>
                                     <motion.div
-                                        style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, var(--primary-1), var(--primary-2))' }}
+                                        animate={{ x: [-30, 30, -30], y: [-5, 5, -5] }}
+                                        transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                                        style={{ position: 'absolute', top: -10, right: -20 }}
+                                    >
+                                        <Plane size={24} color="#FBBF24" style={{ transform: 'rotate(-30deg)' }} />
+                                    </motion.div>
+                                </motion.div>
+
+                                {/* Fun loading messages */}
+                                <motion.div
+                                    key={loadingStep}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{ color: 'white', fontSize: '1.2rem', fontWeight: 700, textAlign: 'center', maxWidth: 400 }}
+                                >
+                                    {loadingStep}
+                                </motion.div>
+
+                                {/* Decorative emojis floating */}
+                                <div style={{ display: 'flex', gap: 16, opacity: 0.6 }}>
+                                    {['🏛️', '🍕', '🎭', '🌅', '🎒', '✈️', '🗺️'].map((e, i) => (
+                                        <motion.span
+                                            key={i}
+                                            animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
+                                            transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
+                                            style={{ fontSize: '1.2rem' }}
+                                        >{e}</motion.span>
+                                    ))}
+                                </div>
+
+                                {/* Progress bar */}
+                                <div style={{ width: '100%', maxWidth: 360, height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
+                                    <motion.div
+                                        style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #818CF8, #F472B6, #FBBF24)' }}
                                         animate={{ width: `${loadingProgress}%` }}
-                                        transition={{ duration: 0.3 }}
+                                        transition={{ duration: 0.5 }}
                                     />
                                 </div>
-                                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem' }}>{loadingProgress}%</span>
+                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem', letterSpacing: 1 }}>
+                                    {loadingProgress}% — {locale === 'tr' ? 'Biraz sabır, harika bir plan geliyor...' : 'Patience, an amazing plan is coming...'}
+                                </span>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -600,10 +643,19 @@ export default function PlannerPage() {
                                                         placeholder={t('planner.cityPlaceholder')}
                                                         value={formData.cityInput}
                                                         onChange={(e) => { update('cityInput', e.target.value); fetchCitySuggestions(e.target.value, setCitySuggestions) }}
-                                                        onKeyDown={handleCityKeyDown}
+                                                        onKeyDown={(e) => {
+                                                            // Only allow selection from list — block Enter for free text
+                                                            if (e.key === 'Enter') { e.preventDefault(); return }
+                                                            handleCityKeyDown(e)
+                                                        }}
                                                         autoComplete="off"
                                                     />
-                                                    {/* Google Places Suggestions */}
+                                                    {formData.cityInput.length > 0 && citySuggestions.length === 0 && (
+                                                        <p style={{ fontSize: '0.68rem', color: '#F59E0B', marginTop: 4 }}>
+                                                            {locale === 'tr' ? '⚠️ Listeden bir şehir seçmelisiniz' : '⚠️ Please select a city from the list'}
+                                                        </p>
+                                                    )}
+                                                    {/* Google Places Suggestions — MUST select from here */}
                                                     {citySuggestions.length > 0 && (
                                                         <div style={{
                                                             position: 'absolute', top: '100%', left: 0, right: 0,
@@ -611,7 +663,7 @@ export default function PlannerPage() {
                                                             border: '1px solid var(--border-primary)',
                                                             borderRadius: 'var(--radius-md)',
                                                             boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                                                            zIndex: 50, maxHeight: 200, overflow: 'auto',
+                                                            zIndex: 50, maxHeight: 240, overflow: 'auto',
                                                         }}>
                                                             {citySuggestions.map((s, i) => (
                                                                 <button key={i} type="button" onClick={() => selectCitySuggestion(s.name || s.description || s)}
@@ -632,7 +684,10 @@ export default function PlannerPage() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <button type="button" className="btn btn-secondary" onClick={addCity} style={{ flexShrink: 0 }}>
+                                                <button type="button" className="btn btn-secondary" onClick={() => {
+                                                    // Only add if there's a valid selection
+                                                    if (formData.cityInput.trim()) addCity()
+                                                }} style={{ flexShrink: 0 }}>
                                                     <Plus size={16} /> {t('planner.addCity')}
                                                 </button>
                                             </div>
@@ -673,15 +728,51 @@ export default function PlannerPage() {
                                 {formStep === 1 && (
                                     <motion.div key="step1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
 
-                                        {/* Dates */}
+                                        {/* Dates with integrated flex */}
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                             <div className="input-group">
                                                 <label>📅 {t('planner.startDate')} <span style={{ color: 'var(--error)', fontSize: '0.75rem' }}>*</span></label>
                                                 <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} required />
+                                                {/* Flex options for start date */}
+                                                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                                                    {[0, 1, 2, 3].map(flex => (
+                                                        <button key={flex} type="button"
+                                                            onClick={() => update('flexStart', flex)}
+                                                            style={{
+                                                                padding: '3px 10px', borderRadius: 8,
+                                                                fontSize: '0.66rem', fontWeight: 600,
+                                                                border: (formData.flexStart || 0) === flex ? '1.5px solid var(--primary-1)' : '1px solid var(--border)',
+                                                                background: (formData.flexStart || 0) === flex ? 'rgba(79,70,229,0.12)' : 'var(--bg-tertiary)',
+                                                                color: (formData.flexStart || 0) === flex ? 'var(--primary-1)' : 'var(--text-tertiary)',
+                                                                cursor: 'pointer', transition: 'all 150ms',
+                                                            }}
+                                                        >
+                                                            {flex === 0 ? (locale === 'tr' ? 'Kesin' : 'Exact') : `±${flex} ${locale === 'tr' ? 'gün' : 'days'}`}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                             <div className="input-group">
                                                 <label>📅 {t('planner.endDate')} <span style={{ color: 'var(--error)', fontSize: '0.75rem' }}>*</span></label>
                                                 <input type="date" className="input" value={formData.endDate} onChange={(e) => update('endDate', e.target.value)} required />
+                                                {/* Flex options for end date */}
+                                                <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                                                    {[0, 1, 2, 3].map(flex => (
+                                                        <button key={flex} type="button"
+                                                            onClick={() => update('flexEnd', flex)}
+                                                            style={{
+                                                                padding: '3px 10px', borderRadius: 8,
+                                                                fontSize: '0.66rem', fontWeight: 600,
+                                                                border: (formData.flexEnd || 0) === flex ? '1.5px solid var(--primary-1)' : '1px solid var(--border)',
+                                                                background: (formData.flexEnd || 0) === flex ? 'rgba(79,70,229,0.12)' : 'var(--bg-tertiary)',
+                                                                color: (formData.flexEnd || 0) === flex ? 'var(--primary-1)' : 'var(--text-tertiary)',
+                                                                cursor: 'pointer', transition: 'all 150ms',
+                                                            }}
+                                                        >
+                                                            {flex === 0 ? (locale === 'tr' ? 'Kesin' : 'Exact') : `±${flex} ${locale === 'tr' ? 'gün' : 'days'}`}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -735,27 +826,46 @@ export default function PlannerPage() {
                                             </div>
                                         )}
 
-                                        {/* ── Departure City + Flex ── */}
-                                        <div className="input-group">
+                                        {/* ── Departure City (list-only) ── */}
+                                        <div className="input-group" style={{ position: 'relative' }}>
                                             <label>🛫 {t('planner.departureCity')}</label>
                                             <input type="text" className="input" placeholder={t('planner.departureCityHint')}
-                                                value={formData.departureCity} onChange={(e) => update('departureCity', e.target.value)} />
+                                                value={formData.departureCity}
+                                                onChange={(e) => { update('departureCity', e.target.value); fetchCitySuggestions(e.target.value, setDepSuggestions) }}
+                                                autoComplete="off" />
+                                            {depSuggestions && depSuggestions.length > 0 && (
+                                                <div style={{
+                                                    position: 'absolute', top: '100%', left: 0, right: 0,
+                                                    marginTop: 4, background: 'var(--bg-secondary)',
+                                                    border: '1px solid var(--border-primary)',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                                                    zIndex: 50, maxHeight: 200, overflow: 'auto',
+                                                }}>
+                                                    {depSuggestions.map((s, i) => (
+                                                        <button key={i} type="button" onClick={() => {
+                                                            update('departureCity', s.name || s.description || s)
+                                                            setDepSuggestions([])
+                                                        }}
+                                                            style={{
+                                                                display: 'flex', alignItems: 'center', gap: 8,
+                                                                width: '100%', padding: '10px 12px', border: 'none',
+                                                                background: 'transparent', cursor: 'pointer',
+                                                                color: 'var(--text-primary)', fontSize: '0.875rem',
+                                                                textAlign: 'left', transition: 'background 150ms',
+                                                            }}
+                                                            onMouseOver={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+                                                            onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                                                        >
+                                                            <Plane size={14} style={{ color: 'var(--primary-1)', flexShrink: 0 }} />
+                                                            <span>{s.name || s.description || s}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                            {/* Flex Dates */}
-                                            <div className="date-night-toggle" onClick={() => update('flexDates', !formData.flexDates)} style={{ marginBottom: 0 }}>
-                                                <div className="date-night-info">
-                                                    <span>📆</span>
-                                                    <div>
-                                                        <span className="date-night-label">{t('planner.flexDates')}</span>
-                                                        <span className="date-night-hint">{t('planner.flexDatesHint')}</span>
-                                                    </div>
-                                                </div>
-                                                <div className={`toggle-pill ${formData.flexDates ? 'toggle-pill-active' : ''}`}>
-                                                    <div className="toggle-pill-dot" />
-                                                </div>
-                                            </div>
 
                                             {/* Time Preference */}
                                             <div className="input-group" style={{ marginBottom: 0 }}>

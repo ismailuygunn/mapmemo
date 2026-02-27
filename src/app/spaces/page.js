@@ -45,6 +45,7 @@ export default function SpacesPage() {
     const [editingName, setEditingName] = useState(false)
     const [editName, setEditName] = useState('')
     const [copied, setCopied] = useState(false)
+    const [error, setError] = useState(null)
 
     const { user } = useAuth()
     const { space: activeSpace, createSpace, joinSpace: ctxJoinSpace, loadSpace: ctxLoadSpace, setSpace: setActiveSpace, setUserRole: setActiveUserRole } = useSpace()
@@ -58,18 +59,40 @@ export default function SpacesPage() {
     // ── Load all spaces ──
     const loadSpaces = async () => {
         setLoading(true)
+        setError(null)
         try {
-            const { data: memberships } = await supabase
+            const { data: memberships, error: memErr } = await supabase
                 .from('space_members')
                 .select('space_id, role')
                 .eq('user_id', user.id)
 
+            if (memErr) {
+                console.error('space_members query error:', memErr)
+                // Don't block - show empty state with option to create
+                if (memErr.message?.includes('infinite recursion') || memErr.code === '42P17') {
+                    setError('RLS')
+                } else {
+                    setError(memErr.message)
+                }
+                setSpaces([])
+                setLoading(false)
+                return
+            }
+
             if (memberships && memberships.length > 0) {
                 const spaceIds = memberships.map(m => m.space_id)
-                const { data: spacesData } = await supabase
+                const { data: spacesData, error: spErr } = await supabase
                     .from('spaces')
                     .select('*')
                     .in('id', spaceIds)
+
+                if (spErr) {
+                    console.error('spaces query error:', spErr)
+                    setError(spErr.message)
+                    setSpaces([])
+                    setLoading(false)
+                    return
+                }
 
                 if (spacesData) {
                     const list = spacesData.map(s => ({
@@ -78,24 +101,16 @@ export default function SpacesPage() {
                     }))
                     setSpaces(list)
 
-                    // Also get trip counts for each space
-                    for (const s of list) {
-                        const { count } = await supabase
-                            .from('trips')
-                            .select('id', { count: 'exact', head: true })
-                            .eq('space_id', s.id)
-                        s.tripCount = count || 0
-                    }
-                    setSpaces([...list])
-
-                    // Also get member counts
-                    for (const s of list) {
-                        const { count } = await supabase
-                            .from('space_members')
-                            .select('id', { count: 'exact', head: true })
-                            .eq('space_id', s.id)
-                        s.memberCount = count || 0
-                    }
+                    // Get counts in parallel
+                    const countPromises = list.map(async (s) => {
+                        const [tripCount, memberCount] = await Promise.all([
+                            supabase.from('trips').select('id', { count: 'exact', head: true }).eq('space_id', s.id).then(r => r.count || 0),
+                            supabase.from('space_members').select('id', { count: 'exact', head: true }).eq('space_id', s.id).then(r => r.count || 0),
+                        ])
+                        s.tripCount = tripCount
+                        s.memberCount = memberCount
+                    })
+                    await Promise.allSettled(countPromises)
                     setSpaces([...list])
                 }
             } else {
@@ -103,6 +118,7 @@ export default function SpacesPage() {
             }
         } catch (err) {
             console.error('Load spaces error:', err)
+            setError(err.message)
         }
         setLoading(false)
     }
@@ -272,6 +288,33 @@ export default function SpacesPage() {
             <Sidebar />
             <div className="main-content">
                 <div className="groups-hub">
+                    {/* Error Banner */}
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                            style={{
+                                padding: '12px 16px', marginBottom: 16,
+                                background: error === 'RLS' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
+                                border: `1px solid ${error === 'RLS' ? 'rgba(251,191,36,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10,
+                                fontSize: '0.82rem', color: error === 'RLS' ? '#F59E0B' : '#EF4444',
+                            }}
+                        >
+                            <span>⚠️</span>
+                            <span style={{ flex: 1 }}>
+                                {error === 'RLS'
+                                    ? t('Veritabanı izin hatası oluştu. Grup oluşturabilir veya katılabilirsiniz.', 'Database permission error. You can still create or join groups.')
+                                    : `${t('Hata', 'Error')}: ${error}`}
+                            </span>
+                            <button onClick={loadSpaces} style={{
+                                background: 'none', border: '1px solid currentColor',
+                                borderRadius: 8, padding: '4px 12px', color: 'inherit',
+                                cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                            }}>
+                                <RefreshCw size={12} /> {t('Tekrar Dene', 'Retry')}
+                            </button>
+                        </motion.div>
+                    )}
                     <AnimatePresence mode="wait">
                         {selectedSpace ? (
                             // ═══ GROUP DETAIL VIEW ═══

@@ -72,12 +72,29 @@ Make this look like a Condé Nast Traveler magazine cover. 100% geographically f
                 }
             })
             parts.push({
-                text: `IMPORTANT: The provided reference photo(s) contain REAL PEOPLE/CHARACTERS.
-Extract the people/characters from the reference photo(s) and place them naturally into the ${city} scene.
-Keep their appearance, clothing, and features as close to the original as possible.
-Place them in a natural pose appropriate for the ${city} setting and ${style} style.
-The background MUST be an accurate, real view of ${city}.
-Do NOT change the location to the reference photo's location — the background MUST be ${city}.`
+                text: `CRITICAL — FACE/IDENTITY PRESERVATION (HIGHEST PRIORITY):
+The provided reference photo(s) contain REAL PEOPLE whose faces MUST be preserved with EXACT accuracy.
+
+FACE CONSISTENCY RULES (MANDATORY):
+1. FACE is the #1 priority — the face must be IDENTICAL to the reference photo
+2. Preserve EXACT: face shape, jawline, skin tone, skin texture, eye shape, eye color, eyebrow shape, nose shape, nose size, lip shape, lip thickness, ear shape, facial proportions
+3. Preserve EXACT: hair color, hair style, hair length, hair texture, hairline
+4. Preserve EXACT: any facial features like moles, freckles, dimples, wrinkles, scars, beard/mustache style
+5. Do NOT alter, beautify, smooth, age, or modify the face in ANY way
+6. Do NOT change skin color, skin tone, or complexion
+7. The person's identity must be UNMISTAKABLY recognizable as the SAME person from the reference
+
+BODY & POSE:
+- Clothing may change to match the ${city} setting naturally
+- Place them in a natural pose appropriate for the ${city} setting and ${style} style
+- Body proportions should be consistent with the reference
+
+BACKGROUND — MUST be ${city}:
+- The background MUST be an accurate, real view of ${city}
+- Do NOT use the reference photo's location — the background MUST be ${city}
+- Feature REAL landmarks of ${city}
+
+PRIORITY ORDER: Face accuracy > Geographic accuracy > Style > Clothing`
             })
         }
 
