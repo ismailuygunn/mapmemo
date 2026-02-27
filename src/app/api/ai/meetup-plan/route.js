@@ -1,25 +1,57 @@
-// AI Meetup Plan Generator — Personalized A-Z plans with Google Places
+// SOS Plan — AI Meetup Plan Generator (Scenario-based)
 import { NextResponse } from 'next/server'
+
+// ── Scenario Definitions ──
+const SCENARIOS = {
+    anniversary: {
+        persona: 'Sen dünyanın en romantik ve yaratıcı plan ustasısın. Her detayda aşk, sürpriz ve duygusallık olmalı.',
+        tone: 'Romantik, samimi, duygusal ama pratik',
+        focus: 'Romantik mekanlar, mum ışıklı akşam yemekleri, manzara noktaları, çiçekçiler, hediye fikirleri, fotoğraf noktaları',
+        searchTerms: ['romantik restoran', 'fine dining', 'rooftop manzara', 'çiçekçi', 'şarap bar', 'butik otel'],
+        mandatoryExtras: ['surpriseIdeas', 'messageDrafts', 'giftSuggestions'],
+    },
+    birthday: {
+        persona: 'Sen sürpriz parti ve doğum günü planlama konusunda çılgın bir dehasın. Hediye koordinasyonu, zamanlama ve sürpriz unsuru senin süper gücün.',
+        tone: 'Eğlenceli, enerjik, sürpriz dolu',
+        focus: 'Pasta siparişi, balon süsleme, hediye koordinasyonu, sürpriz parti mekanları, eğlenceli aktiviteler',
+        searchTerms: ['pasta pastane', 'parti mekan', 'eğlence merkezi', 'karaoke', 'restoran grup', 'bowling'],
+        mandatoryExtras: ['surpriseIdeas', 'giftSuggestions', 'messageDrafts'],
+    },
+    friends: {
+        persona: 'Sen şehrin en gizli, en çılgın, herkesin bilmediği ama aşırı eğlenceli mekanlarını bilen insider bir efsanesin. Sıra dışı öneriler, gizli cevherler, beklenmedik deneyimler senin işin.',
+        tone: 'Enerjik, çılgın, insider bilgisi dolu, cesur',
+        focus: 'Gizli barlar, escape room, rekabetçi aktiviteler, sokak yemeği turları, canlı müzik, rooftop, bilmece kulüpleri, retro oyun salonları',
+        searchTerms: ['gizli bar speakeasy', 'escape room', 'bowling bilardo', 'canlı müzik mekan', 'sokak yemeği', 'rooftop bar', 'oyun kafesi board game'],
+        mandatoryExtras: ['surpriseIdeas', 'groupChallenges'],
+    },
+    apology: {
+        persona: 'Sen ilişki uzmanı ve gönül alma konusunda dahi bir stratejistsin. Samimi, düşünceli ve doğru zamanda doğru hamleyi yapan planlar üretirsin.',
+        tone: 'Samimi, düşünceli, zarif ama içten',
+        focus: 'Özel hediyeler, anlamlı mekanlar, çiçek, mektup/mesaj, favori yemek, ortak anı yerleri',
+        searchTerms: ['çiçekçi', 'şık restoran', 'tatlıcı pastane', 'hediyelik eşya', 'sakin kafe', 'park manzara'],
+        mandatoryExtras: ['messageDrafts', 'giftSuggestions', 'apologyStrategy'],
+    },
+    mood: {
+        persona: 'Sen bir ruh hali terapisti ve iyi his planlayıcısısın. İnsanların moralini yükselten, pozitif enerji veren, küçük mutluluklar yaratan planlar üretirsin.',
+        tone: 'Sıcak, pozitif, motive edici, neşeli',
+        focus: 'Doğa yürüyüşü, spa/hamam, comfort food, komik film, alışveriş terapisi, hayvan cafe, yoga/meditasyon',
+        searchTerms: ['spa hamam', 'kafe rahat', 'park yürüyüş', 'sinema', 'yoga meditasyon', 'tatlıcı', 'hayvan kafe kedikafe'],
+        mandatoryExtras: ['selfCareChecklist', 'moodPlaylist'],
+    },
+}
 
 export async function POST(request) {
     try {
         const body = await request.json()
-        const {
-            city,           // string — selected city
-            groupType,      // 'couple' | 'guys' | 'girls' | 'mixed' | 'solo'
-            maleCount,      // number
-            femaleCount,    // number
-            ageRange,       // '18-25' | '25-35' | '35-45' | '45+'
-            energyLevel,    // 'chill' | 'balanced' | 'active' | 'crazy'
-            timeStart,      // string — '19:00'
-            timeEnd,        // string — '02:00'
-            budget,         // 'economic' | 'mid' | 'luxury' | 'unlimited'
-            preferences,    // string[] — ['food','drinks','nature','culture','adventure','romantic','nightlife','sports','shopping','photo','music','experience']
-            extraNotes,     // string — free text
-        } = body
+        const { scenario, city, peopleCount, budget, extraNotes } = body
 
-        if (!city) {
-            return NextResponse.json({ error: 'Şehir seçilmedi' }, { status: 400 })
+        if (!scenario || !city) {
+            return NextResponse.json({ error: 'Senaryo ve şehir zorunlu' }, { status: 400 })
+        }
+
+        const scenarioConfig = SCENARIOS[scenario]
+        if (!scenarioConfig) {
+            return NextResponse.json({ error: 'Geçersiz senaryo' }, { status: 400 })
         }
 
         const geminiKey = process.env.GEMINI_API_KEY
@@ -27,99 +59,43 @@ export async function POST(request) {
             return NextResponse.json({ error: 'AI servisi yapılandırılmamış' }, { status: 500 })
         }
 
-        // ── Fetch REAL Google Places data ──
+        // ── Fetch Google Places ──
         let placesContext = ''
         const googleApiKey = process.env.GOOGLE_PLACES_API_KEY
         if (googleApiKey) {
             try {
                 const PLACES_BASE = 'https://maps.googleapis.com/maps/api/place'
-
-                // Geocode the city
                 const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city + ', Turkey')}&key=${googleApiKey}`)
                 const geoData = await geoRes.json()
                 const coords = geoData.results?.[0]?.geometry?.location
 
                 if (coords) {
-                    const fetchPlaces = async (type, keyword = '') => {
+                    const fetchPlaces = async (keyword) => {
                         const params = new URLSearchParams({
-                            location: `${coords.lat},${coords.lng}`,
-                            radius: '8000', type, key: googleApiKey, language: 'tr',
+                            query: `${keyword} ${city}`,
+                            key: googleApiKey,
+                            language: 'tr',
                         })
-                        if (keyword) params.append('keyword', keyword)
-                        const res = await fetch(`${PLACES_BASE}/nearbysearch/json?${params}`)
+                        const res = await fetch(`${PLACES_BASE}/textsearch/json?${params}`)
                         const data = await res.json()
                         return (data.results || [])
                             .filter(p => p.rating && p.user_ratings_total)
                             .sort((a, b) => (b.rating * Math.log10(b.user_ratings_total + 1)) - (a.rating * Math.log10(a.user_ratings_total + 1)))
                     }
 
-                    const fetchTextPlaces = async (query) => {
-                        const params = new URLSearchParams({ query: `${query} ${city}`, key: googleApiKey, language: 'tr' })
-                        const res = await fetch(`${PLACES_BASE}/textsearch/json?${params}`)
-                        const data = await res.json()
-                        return (data.results || []).filter(p => p.rating).sort((a, b) => (b.rating || 0) - (a.rating || 0))
-                    }
+                    const allResults = await Promise.all(
+                        scenarioConfig.searchTerms.map(term => fetchPlaces(term))
+                    )
 
-                    // Build search queries based on preferences and group type
-                    const searchQueries = []
-
-                    // Always fetch restaurants and cafes
-                    searchQueries.push(fetchPlaces('restaurant'))
-                    searchQueries.push(fetchPlaces('cafe'))
-
-                    // Conditional based on preferences
-                    if (preferences?.includes('drinks') || preferences?.includes('nightlife')) {
-                        searchQueries.push(fetchPlaces('bar', 'cocktail bar rooftop'))
-                        searchQueries.push(fetchTextPlaces('gece hayatı club bar'))
-                    }
-                    if (preferences?.includes('culture')) {
-                        searchQueries.push(fetchPlaces('museum'))
-                        searchQueries.push(fetchPlaces('art_gallery'))
-                    }
-                    if (preferences?.includes('nature')) {
-                        searchQueries.push(fetchTextPlaces('park bahçe doğa yürüyüş'))
-                    }
-                    if (preferences?.includes('adventure') || preferences?.includes('sports')) {
-                        searchQueries.push(fetchTextPlaces('aktivite macera escape room bowling'))
-                    }
-                    if (preferences?.includes('shopping')) {
-                        searchQueries.push(fetchPlaces('shopping_mall'))
-                    }
-                    if (preferences?.includes('music')) {
-                        searchQueries.push(fetchTextPlaces('canlı müzik konser mekan'))
-                    }
-                    if (preferences?.includes('experience')) {
-                        searchQueries.push(fetchTextPlaces('atölye workshop deneyim'))
-                    }
-                    if (preferences?.includes('romantic') || groupType === 'couple') {
-                        searchQueries.push(fetchTextPlaces('romantik mekan manzara günbatımı'))
-                    }
-                    if (preferences?.includes('food')) {
-                        searchQueries.push(fetchTextPlaces('sokak yemeği yerel mutfak lezzet'))
-                    }
-
-                    const allResults = await Promise.all(searchQueries)
-
-                    const formatPlaces = (places, count = 10) => places.slice(0, count).map(p => {
+                    const formatPlaces = (places, count = 8) => places.slice(0, count).map(p => {
                         const price = p.price_level != null ? ' | Fiyat: ' + '₺'.repeat(p.price_level || 1) : ''
-                        return `  • ${p.name} — ⭐${p.rating} (${p.user_ratings_total} yorum)${price} | ${p.vicinity || p.formatted_address || ''}`
+                        return `  • ${p.name} — ⭐${p.rating} (${p.user_ratings_total} yorum)${price} | ${p.formatted_address || ''}`
                     }).join('\n')
 
-                    const labels = ['🍽️ RESTORANLAR', '☕ KAFELER']
-                    if (preferences?.includes('drinks') || preferences?.includes('nightlife')) labels.push('🍸 BARLAR', '🌙 GECE HAYATI')
-                    if (preferences?.includes('culture')) labels.push('🏛️ MÜZELER', '🎨 GALERİ')
-                    if (preferences?.includes('nature')) labels.push('🌳 DOĞA')
-                    if (preferences?.includes('adventure') || preferences?.includes('sports')) labels.push('🎯 AKTİVİTELER')
-                    if (preferences?.includes('shopping')) labels.push('🛍️ ALIŞVERİŞ')
-                    if (preferences?.includes('music')) labels.push('🎵 MÜZİK MEKANLARI')
-                    if (preferences?.includes('experience')) labels.push('🎨 DENEYİMLER')
-                    if (preferences?.includes('romantic') || groupType === 'couple') labels.push('💕 ROMANTİK')
-                    if (preferences?.includes('food')) labels.push('🍖 YEREL LEZZETLER')
-
-                    placesContext = '\n\n═══ GOOGLE PLACES GERÇEK VERİLER (BUNLARI KULLAN!) ═══\nAşağıdaki mekanlar Google Maps\'ten gerçek veriler. Plan yaparken BUNLARI öncelikli kullan.\n\n'
-                    allResults.forEach((places, i) => {
-                        if (places.length > 0 && labels[i]) {
-                            placesContext += `${labels[i]}:\n${formatPlaces(places, 8)}\n\n`
+                    placesContext = '\n\n═══ GOOGLE PLACES VERİLERİ (GERÇEK MEKANLAR — BUNLARI KULLAN!) ═══\n\n'
+                    scenarioConfig.searchTerms.forEach((term, i) => {
+                        if (allResults[i]?.length > 0) {
+                            placesContext += `🔍 "${term}":\n${formatPlaces(allResults[i])}\n\n`
                         }
                     })
 
@@ -127,147 +103,159 @@ export async function POST(request) {
                     const allPlaces = allResults.flat()
                     const hiddenGems = allPlaces.filter(p => p.rating >= 4.4 && p.user_ratings_total < 500 && p.user_ratings_total >= 20)
                     if (hiddenGems.length > 0) {
-                        placesContext += `\n💎 GİZLİ CEVHERLER (yüksek puan, az yorum — kesinlikle 2-3 tane öner!):\n${formatPlaces(hiddenGems, 6)}\n`
+                        placesContext += `\n💎 GİZLİ CEVHERLER (az bilinen ama çok iyi puan — kesinlikle 2-3 tane öner!):\n${formatPlaces(hiddenGems, 6)}\n`
                     }
 
-                    placesContext += '\nÖNEMLİ: Yukarıdaki GERÇEK mekan isimlerini kullan. Rating ve yorum sayısını da belirt. Her öneride neden o mekanı seçtiğini açıkla.'
+                    placesContext += '\nKRİTİK: Yukarıdaki GERÇEK mekan isimlerini kullan. Rating ve yorum sayısını belirt.'
                 }
             } catch (placesErr) {
                 console.warn('Google Places fetch failed:', placesErr.message)
             }
         }
 
-        // ── Build the group description ──
-        const totalPeople = (maleCount || 0) + (femaleCount || 0)
-        const groupDesc = {
-            'couple': `Başbaşa romantik buluşma (1 çift)`,
-            'guys': `${totalPeople || 'birkaç'} kişilik erkek grubu (agalar)`,
-            'girls': `${totalPeople || 'birkaç'} kişilik kız grubu (kız kıza)`,
-            'mixed': `Karma grup — ${maleCount || '?'} erkek, ${femaleCount || '?'} kız (toplam ${totalPeople})`,
-            'solo': `Tek kişi — solo macera`,
-        }[groupType] || `${totalPeople || 'birkaç'} kişilik grup`
-
-        const energyDesc = {
-            'chill': 'Sakin, rahat, sohbet ağırlıklı. Oturma mekanları, manzara noktaları, sessiz kafeler.',
-            'balanced': 'Dengeli tempoda. Hem oturmalı hem yürüyüşlü aktiviteler karıştır.',
-            'active': 'Hareketli! Yürüyüş, keşif, aktiviteler, enerji dolu mekanlar.',
-            'crazy': 'DELİLİK! Adrenalin, macera, dans, parti, beklenmedik anlar. Sıra dışı deneyimler!'
-        }[energyLevel] || 'Dengeli tempo'
-
+        // ── Budget mapping ──
         const budgetDesc = {
-            'economic': 'EKONOMİK — Ucuz ama kaliteli mekanlar. Sokak yemeği, park, ücretsiz aktiviteler. Kişi başı ₺100-300.',
-            'mid': 'ORTA — Güzel restoranlar, rahat mekanlar. Kişi başı ₺300-600.',
-            'luxury': 'LÜKS — En iyi restoranlar, rooftop barlar, premium deneyimler. Kişi başı ₺600-1500.',
-            'unlimited': 'SINIR YOK — En iyi mekanlar, VIP deneyimler, özel hizmetler.'
-        }[budget] || 'Orta bütçe'
+            'economic': 'EKONOMİK — Kişi başı ₺100-300. Ucuz ama kaliteli, sokak yemeği, park, ücretsiz.',
+            'mid': 'ORTA — Kişi başı ₺300-600. Güzel restoranlar, rahat mekanlar.',
+            'luxury': 'LÜKS — Kişi başı ₺600+. En iyi mekanlar, premium deneyimler.',
+        }[budget] || 'ORTA — Kişi başı ₺300-600'
 
-        const prefLabels = {
-            'food': 'Yemek & Lezzetler', 'drinks': 'İçki & Kokteyl', 'nature': 'Doğa & Açık Hava',
-            'culture': 'Kültür & Tarih', 'adventure': 'Macera & Adrenalin', 'romantic': 'Romantik & Özel',
-            'nightlife': 'Gece Hayatı', 'sports': 'Spor & Aktivite', 'shopping': 'Alışveriş',
-            'photo': 'Fotoğraf Noktaları', 'music': 'Müzik & Konser', 'experience': 'Deneyim & Atölye'
+        // ── Scenario-specific extras ──
+        const extrasFormat = []
+        if (scenarioConfig.mandatoryExtras.includes('surpriseIdeas')) {
+            extrasFormat.push(`"surpriseIdeas": ["3-5 sürpriz fikri — planın içine gizlenmiş, zamanlı, wow efekti yaratacak anlar"]`)
         }
-        const prefText = preferences?.length > 0 ? preferences.map(p => prefLabels[p] || p).join(', ') : 'Genel'
+        if (scenarioConfig.mandatoryExtras.includes('messageDrafts')) {
+            extrasFormat.push(`"messageDrafts": [
+    { "timing": "Planı başlatmadan önce gönderilebilir", "message": "WhatsApp/SMS mesaj taslağı — samimi, doğal, kopyala-yapıştır" },
+    { "timing": "Gece sonunda", "message": "Kapanış mesajı" }
+  ]`)
+        }
+        if (scenarioConfig.mandatoryExtras.includes('giftSuggestions')) {
+            extrasFormat.push(`"giftSuggestions": [
+    { "item": "Hediye adı", "where": "Nereden alınır", "priceRange": "₺XX-XX", "why": "Neden bu hediye" }
+  ]`)
+        }
+        if (scenarioConfig.mandatoryExtras.includes('apologyStrategy')) {
+            extrasFormat.push(`"apologyStrategy": {
+    "openingMove": "İlk adım — nasıl yaklaşmalı",
+    "keyPhrase": "Söylenmesi gereken anahtar cümle",
+    "avoidList": ["Sakın yapma 1", "Sakın yapma 2"],
+    "recoverySignals": ["İşe yarıyor sinyalleri"]
+  }`)
+        }
+        if (scenarioConfig.mandatoryExtras.includes('groupChallenges')) {
+            extrasFormat.push(`"groupChallenges": [
+    { "challenge": "Grup challenge açıklaması", "reward": "Kazanana ne olur" }
+  ]`)
+        }
+        if (scenarioConfig.mandatoryExtras.includes('selfCareChecklist')) {
+            extrasFormat.push(`"selfCareChecklist": ["Yapılacak self-care adımı 1", "adım 2"]`)
+        }
+        if (scenarioConfig.mandatoryExtras.includes('moodPlaylist')) {
+            extrasFormat.push(`"moodPlaylist": { "vibe": "Playlist tarzı açıklaması", "songs": ["Şarkı 1 - Sanatçı", "Şarkı 2 - Sanatçı"] }`)
+        }
 
-        // ── Build Mega-Prompt ──
-        const prompt = `Sen dünyanın en yaratıcı ve bilgili buluşma planlayıcısısın. ${city} şehrinde, aşağıdaki detaylara göre A'dan Z'ye, adım adım bir buluşma planı oluştur.
+        // ── Build Mega Prompt ──
+        const now = new Date()
+        const currentHour = now.getHours()
+        const currentTime = `${String(currentHour).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
-═══ BULUŞMA DETAYLARI ═══
+        const prompt = `${scenarioConfig.persona}
+
+═══ SOS PLAN TALEBİ ═══
+🚨 SENARYO: ${scenario.toUpperCase()}
 📍 Şehir: ${city}
-👥 Grup: ${groupDesc}
-${maleCount != null ? `   Erkek: ${maleCount}, Kız: ${femaleCount}` : ''}
-🎂 Yaş Aralığı: ${ageRange || '25-35'}
-⚡ Enerji Seviyesi: ${energyDesc}
-🕐 Saat Aralığı: ${timeStart || '19:00'} — ${timeEnd || '00:00'}
+👥 Kişi Sayısı: ${peopleCount || 2}
 💰 Bütçe: ${budgetDesc}
-🎯 Tercihler: ${prefText}
-${extraNotes ? `📝 Ekstra Not: ${extraNotes}` : ''}
+🕐 Şu anki saat: ${currentTime} (planı ŞİMDİDEN itibaren yap!)
+${extraNotes ? `📝 Ekstra Bilgi: ${extraNotes}` : ''}
+
+═══ SENARYO ODAĞI ═══
+Ton: ${scenarioConfig.tone}
+Odak: ${scenarioConfig.focus}
 
 ═══ KRİTİK KURALLAR ═══
 
-1. **GERÇEK MEKANLAR**: SADECE ${city}'da gerçekten var olan mekanları öner. Google Places verilerini kullan. İsim uyduRMA!
+1. **ACELE ET AMA MANTIKLI OL**: Bu bir SOS plan — kullanıcı SON DAKİKA karar verdi. Plan ${currentTime}'dan itibaren başlamalı. Gerçekçi zamanlama yap.
 
-2. **GOOGLE'DA BULUNAMAYAN ÖNERİLER**: Planın başka hiçbir yerde bulunamayacak kadar özel ve kişiye özel olmalı. Genel "bar'a git" deme — spesifik mekan, sipariş önerisi, oturma yeri bile söyle.
+2. **DELİRMECELİ AMA MANTIKLI**: Her adım "vay be bunu düşünmezdim" dedirtmeli ama aynı zamanda uygulanabilir olmalı. Hayal kurma, gerçekçi ol.
 
-3. **SAAT BAZLI DETAY**: ${timeStart || '19:00'}'dan ${timeEnd || '00:00'}'a kadar her 30-60 dakikayı planla. Boş zaman bırakma. Her adımda ulaşım detayı ver.
+3. **GERÇEK MEKANLAR**: SADECE ${city}'da gerçekten var olan mekanları öner. İsim UYDURMA. Google Places verilerini kullan.
 
-4. **KİŞİYE ÖZEL**: 
-   - Grup tipi "${groupType}" — buna göre mekan seç (${groupType === 'couple' ? 'romantik, başbaşa, özel mekanlar' : groupType === 'guys' ? 'eğlenceli, rekabetçi, rahat ortamlar' : groupType === 'girls' ? 'şık, Instagramlık, güvenli mekanlar' : 'herkesin eğlenebileceği karma ortamlar'})
-   - Yaş ${ageRange} — müzik, mekan tarzı, enerji buna uygun olsun
-   - Enerji "${energyLevel}" — ${energyLevel === 'crazy' ? 'SÜRPRİZLER, beklenmedik anlar, cesur öneriler ekle!' : energyLevel === 'chill' ? 'sakin, rahat, konforlu mekanlar' : 'dengeli tempo'}
+4. **İNCE DETAYLAR**:
+   - Her adımda ne sipariş edileceğini bile söyle
+   - Garsonlara ne denileceği, masa seçimi, oturma düzeni
+   - Fotoğraf çektirme noktaları ve açıları
+   - Müzik önerileri (Spotify linki değil ama tarz)
 
-5. **PRO TIPS**: Her adımda bir "pro tip" ver — sipariş önerisi, oturma yeri, fotoğraf açısı, garson tavsiyesi gibi. Gerçek bir insider bilgisi olsun.
+5. **SENARYO BAZLI ÖZEL İÇERİK**:
+${scenario === 'anniversary' ? '   - Romantik sürprizler: çiçek nereden alınır, ne zaman verilir\n   - Hediye zamanlaması\n   - Göz göze anlar yaratacak mekan düzeni\n   - "İlk buluşma" havasını yeniden yaratma fikirleri' : ''}
+${scenario === 'birthday' ? '   - Sürpriz koordinasyonu: kim ne yapar, zamanlama\n   - Pasta nereden alınır, mum üfleme anı\n   - Hediye presentasyonu anı\n   - Grup aktiviteleri' : ''}
+${scenario === 'friends' ? '   - HERKESIN BİLMEDİĞİ ama AŞIRI EĞLENCELİ hidden gem mekanlar\n   - Grup challenge/yarışma fikirleri\n   - "Bu gece efsane olacak" hissini yaratacak geçişler\n   - Spontan sürpriz anlar' : ''}
+${scenario === 'apology' ? '   - Zamanlama stratejisi: ne zaman ne söylenir\n   - Beden dili ve ton ipuçları\n   - Küçük ama anlamlı jestler\n   - "Affedilme anı" nasıl yaratılır' : ''}
+${scenario === 'mood' ? '   - Endorfin yükselten aktiviteler\n   - Comfort food sıralaması\n   - Küçük mutluluklar: köpek sevme, güneş batımı izleme\n   - "Kendine gel" ritüelleri' : ''}
 
-6. **ALTERNATİFLER**: Her ana mekan için 1 alternatif mekan öner (dolu olursa / beğenmezlerse).
+6. **B PLANI**: Her şey ters giderse alternatif senaryo hazırla.
 
-7. **GEÇİŞLER**: Mekanlar arası ulaşımı detaylı ver (yürüme süresi, taksi ücreti, toplu taşıma).
+7. **ULAŞIM**: Mekanlar arası yürüme süresi, taksi ücreti, toplu taşıma detayları.
 ${placesContext}
 
 ═══ YANIT FORMATI (SADECE JSON) ═══
 {
-  "planTitle": "Yaratıcı, eğlenceli plan başlığı (emoji ile)",
+  "planTitle": "Yaratıcı, çılgın plan başlığı (emoji ile, senaryo tonunda)",
   "planEmoji": "🔥",
-  "vibeDescription": "2-3 cümle — planın genel ruhu ve neden özel olduğu",
-  "totalBudget": "₺XXX–XXX/kişi",
-  "groupSummary": "Grup için kısa açıklama",
+  "vibeDescription": "2-3 cümle — planın ruhu ve neden özel olduğu. Samimi, heyecanlı yaz.",
+  "urgencyNote": "Aciliyet notu — hemen yapılması gereken ilk şey (çiçek al, rezervasyon yap vs.)",
+  "totalBudget": { "min": 500, "max": 1200, "perPerson": "₺250-600" },
   "steps": [
     {
-      "time": "19:00",
-      "duration": "1-1.5 saat",
-      "emoji": "🍖",
-      "action": "Kısa aksiyon başlığı (3-4 kelime)",
+      "time": "${currentTime}",
+      "duration": "30-45 dk",
+      "emoji": "🎯",
+      "title": "Kısa, çekici başlık (3-5 kelime)",
       "placeName": "Gerçek mekan adı",
       "placeRating": 4.6,
-      "placeReviews": 12000,
-      "address": "Tam adres",
-      "googleMapsUrl": "https://maps.google.com/?q=mekan+adı+şehir",
-      "detail": "Detaylı açıklama — neden burası, ne yapılacak, ne sipariş edilecek. 3-4 cümle, gerçek bir arkadaş gibi yaz.",
-      "proTip": "Pro tip — insider bilgi, sipariş tavsiyesi, oturma yeri vs.",
-      "estimatedCost": "₺XXX/kişi",
-      "transportNote": "Bir önceki yerden nasıl gelinir (yürüme/taksi/metro)",
-      "alternative": {
-        "name": "Alternatif mekan",
-        "reason": "Neden alternatif (dolu olursa, farklı bir tarz isterlerse)"
-      }
+      "placeReviews": 1200,
+      "address": "Kısa adres",
+      "detail": "Ne yapılacak, nasıl yapılacak. Sipariş önerisi, oturma yeri, atmosfer. 3-4 cümle, samimi yaz.",
+      "proTip": "Insider bilgi — sipariş tavsiyesi, gizli menü, garson ipucu vs.",
+      "estimatedCost": "₺XX/kişi",
+      "transport": "Bir önceki yerden nasıl gelinir",
+      "alternative": { "name": "Alternatif mekan", "reason": "Neden (dolu olursa vs.)" }
     }
   ],
-  "proTips": [
-    "Genel pro tip 1 — planla ilgili önemli bilgi",
-    "Genel pro tip 2",
-    "Genel pro tip 3"
-  ],
-  "whatToWear": "Kıyafet önerisi — gruba ve mekanlara uygun",
-  "playlistVibe": "Spotify playlist önerisi — bu geceyle uyumlu müzik türü/tarzı",
-  "emergencyPlan": "Yağmur/soğuk/beklenmedik durum planı — alternatif iç mekan"
+  "planB": {
+    "title": "B Planı başlığı",
+    "description": "Yağmur yağarsa / mekan dolu olursa ne yapılır",
+    "steps": ["Alternatif adım 1", "Alternatif adım 2"]
+  },
+  "whatToWear": "Kıyafet önerisi — gruba ve senaryoya uygun",
+  "playlistVibe": "Müzik tarzı önerisi — bu akşamla uyumlu",
+  ${extrasFormat.join(',\n  ')}
 }
 
-KIRITIK:
+KRİTİK:
 - Tüm metin TÜRKÇE olsun
-- steps dizisinde en az 5, en fazla 10 adım olsun
-- Her adımda placeName GERÇEK bir mekan olsun
-- proTip her adımda farklı ve gerçekten faydalı olsun
-- Saat aralığı ${timeStart} — ${timeEnd} dışına ÇIKMA
+- steps dizisinde en az 4, en fazla 8 adım olsun
+- Saat ${currentTime}'dan başlayıp mantıklı ilerlesin
 - SADECE geçerli JSON döndür, markdown veya yorum EKLEME`
 
         // ── Call Gemini ──
         const models = ['gemini-2.0-flash', 'gemini-1.5-flash']
-
         for (const model of models) {
             try {
                 const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
-
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         systemInstruction: {
-                            parts: [{
-                                text: 'Sen uzman bir buluşma ve eğlence planlayıcısısın. Her zaman geçerli JSON ile yanıt ver. SADECE gerçek, var olan mekanları öner. Yaratıcı, kişiye özel ve başka yerde bulunamayacak planlar üret. Türkçe yaz.'
-                            }]
+                            parts: [{ text: scenarioConfig.persona + ' Her zaman geçerli JSON ile yanıt ver. SADECE gerçek, var olan mekanları öner. Türkçe yaz.' }]
                         },
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
-                            temperature: 0.7,
+                            temperature: 0.85,
                             maxOutputTokens: 16384,
                             responseMimeType: 'application/json',
                         },
@@ -281,10 +269,13 @@ KIRITIK:
 
                 const data = await response.json()
                 const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-
                 if (!content) continue
 
                 const result = JSON.parse(content)
+                // Attach scenario metadata
+                result._scenario = scenario
+                result._city = city
+                result._generatedAt = new Date().toISOString()
                 return NextResponse.json(result)
             } catch (err) {
                 console.error(`Gemini ${model} error:`, err.message)
@@ -293,9 +284,8 @@ KIRITIK:
         }
 
         return NextResponse.json({ error: 'AI servisi şu anda meşgul. Tekrar deneyin.' }, { status: 500 })
-
     } catch (err) {
-        console.error('Meetup plan API error:', err)
+        console.error('SOS Plan API error:', err)
         return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
 }

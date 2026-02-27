@@ -34,7 +34,7 @@ export default function Sidebar() {
         { icon: Calendar, label: t('nav.planner') || 'Planla', href: '/planner' },
         { icon: Plane, label: t('Uçuşlar', 'Flights'), href: '/flights' },
         { icon: Home, label: 'Konaklama', href: '/airbnb' },
-        { icon: Zap, label: 'Ani Buluşma', href: '/meetups' },
+        { icon: Zap, label: 'SOS Plan', href: '/meetups' },
         { icon: Ticket, label: 'Etkinlikler', href: '/events' },
         { icon: Users, label: 'Gruplar', href: '/spaces' },
         { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
