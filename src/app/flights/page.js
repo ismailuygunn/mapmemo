@@ -463,6 +463,7 @@ export default function FlightsPage() {
                                                                             onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}>
                                                                             {i === 0 && <div style={{ fontSize: '0.52rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, opacity: 0.9 }}>🏆 En Ucuz</div>}
                                                                             <div style={{ fontSize: '1.4rem', fontWeight: 900, lineHeight: 1 }}>₺{deal.priceFormatted}</div>
+                                                                            <div style={{ fontSize: '0.5rem', opacity: 0.8, marginTop: 1 }}>vergiler dahil</div>
                                                                             <div style={{ fontSize: '0.52rem', opacity: 0.7, marginTop: 2 }}>{deal.source} · tıkla → al 🎫</div>
                                                                         </a>
                                                                     </div>

@@ -7,21 +7,59 @@ import { Search, Star, MapPin, Loader2, ExternalLink, Heart, Map, List, SlidersH
 import { motion, AnimatePresence } from 'framer-motion'
 
 const POPULAR_CITIES = [
+    // Türkiye
     { name: 'İstanbul', emoji: '🇹🇷', img: '🏙️' },
     { name: 'Antalya', emoji: '🏖️', img: '🌊' },
     { name: 'Bodrum', emoji: '⛵', img: '🏝️' },
     { name: 'Fethiye', emoji: '🏔️', img: '⛰️' },
     { name: 'Kapadokya', emoji: '🎈', img: '🏜️' },
+    { name: 'İzmir', emoji: '🌊', img: '🏖️' },
+    { name: 'Ankara', emoji: '🏛️', img: '🇹🇷' },
+    { name: 'Trabzon', emoji: '⛰️', img: '🌿' },
+    { name: 'Alaçatı', emoji: '🏄', img: '🌬️' },
+    { name: 'Çeşme', emoji: '☀️', img: '🏖️' },
+    { name: 'Kuşadası', emoji: '🏛️', img: '🌅' },
+    { name: 'Marmaris', emoji: '⛵', img: '🌊' },
+    { name: 'Kaş', emoji: '🤿', img: '🌊' },
+    { name: 'Sapanca', emoji: '🌲', img: '🏕️' },
+    { name: 'Bursa', emoji: '🏔️', img: '❄️' },
+    { name: 'Safranbolu', emoji: '🏘️', img: '🏚️' },
+    { name: 'Muğla', emoji: '🌲', img: '🌿' },
+    { name: 'Gaziantep', emoji: '🍽️', img: '🥘' },
+    { name: 'Adana', emoji: '🌶️', img: '🔥' },
+    // Avrupa
     { name: 'Paris', emoji: '🇫🇷', img: '🗼' },
     { name: 'Roma', emoji: '🇮🇹', img: '🏛️' },
     { name: 'Barselona', emoji: '🇪🇸', img: '☀️' },
     { name: 'Amsterdam', emoji: '🇳🇱', img: '🌷' },
-    { name: 'Dubai', emoji: '🇦🇪', img: '🏗️' },
     { name: 'Londra', emoji: '🇬🇧', img: '🎡' },
     { name: 'Prag', emoji: '🇨🇿', img: '🏰' },
     { name: 'Budapeşte', emoji: '🇭🇺', img: '♨️' },
+    { name: 'Viyana', emoji: '🇦🇹', img: '🎻' },
+    { name: 'Berlin', emoji: '🇩🇪', img: '🗽' },
+    { name: 'Atina', emoji: '🇬🇷', img: '🏛️' },
+    { name: 'Lizbon', emoji: '🇵🇹', img: '🚃' },
+    { name: 'Milano', emoji: '🇮🇹', img: '👗' },
+    { name: 'Madrid', emoji: '🇪🇸', img: '🏟️' },
+    { name: 'Santorini', emoji: '🇬🇷', img: '🌅' },
+    { name: 'Dubrovnik', emoji: '🇭🇷', img: '🏰' },
+    // Ortadoğu / Kafkasya
+    { name: 'Dubai', emoji: '🇦🇪', img: '🏗️' },
     { name: 'Tiflis', emoji: '🇬🇪', img: '⛪' },
+    { name: 'Bakü', emoji: '🇦🇿', img: '🔥' },
+    // Asya / Uzak Doğu
     { name: 'Bali', emoji: '🌴', img: '🌺' },
+    { name: 'Tokyo', emoji: '🇯🇵', img: '🗾' },
+    { name: 'Bangkok', emoji: '🇹🇭', img: '🛕' },
+    { name: 'Singapur', emoji: '🇸🇬', img: '🌃' },
+    // Amerika
+    { name: 'New York', emoji: '🇺🇸', img: '🗽' },
+    { name: 'Miami', emoji: '🏝️', img: '🌴' },
+    { name: 'Los Angeles', emoji: '🎬', img: '🌅' },
+    { name: 'Cancun', emoji: '🇲🇽', img: '🏖️' },
+    // Afrika
+    { name: 'Marakeş', emoji: '🇲🇦', img: '🕌' },
+    { name: 'Cape Town', emoji: '🇿🇦', img: '🏔️' },
 ]
 
 const SORT_OPTIONS = [
