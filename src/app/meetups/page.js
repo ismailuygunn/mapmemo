@@ -29,6 +29,34 @@ const OCCASIONS = [
     { key: 'other', label: 'Diğer', emoji: '📌', icon: Star, color: '#64748B', suggestions: ['Planı kaydet', 'Detayları sonra ekle'] },
 ]
 
+// ═══ CURATED NICHE SPOTS ═══
+const NICHE_SPOTS = {
+    couples: [
+        { name: 'Kız Kulesi Sunset', city: 'İstanbul', desc: 'Kız Kulesi\'nde günbatımı yemeği — eşsiz Boğaz manzarası', emoji: '🌅', category: 'Romantik', vibe: '💕' },
+        { name: 'Pierre Loti Tepesi', city: 'İstanbul', desc: 'Haliç manzaralı Türk kahvesi, teleferikle ulaşım', emoji: '☕', category: 'Manzara', vibe: '🪷' },
+        { name: 'Balat Sokakları', city: 'İstanbul', desc: 'Rengarenk evler arasında yürüyüş, vintage kafeler', emoji: '🎨', category: 'Keşif', vibe: '🌈' },
+        { name: 'Bebek Sahili Yürüyüş', city: 'İstanbul', desc: 'Boğaz kıyısında yürüyüş, waffle ve dondurma molası', emoji: '🍦', category: 'Yürüyüş', vibe: '😍' },
+        { name: 'Sarıyer Korusu', city: 'İstanbul', desc: 'Gizli orman yolu ve şelale — şehirden kaçış', emoji: '🌲', category: 'Doğa', vibe: '🧘' },
+        { name: 'Büyükada Bisiklet', city: 'İstanbul', desc: 'Ada\'da bisiklet turu, deniz kenarında öğle yemeği', emoji: '🚲', category: 'Macera', vibe: '✈️' },
+        { name: 'Kuruçeşme Barlar', city: 'İstanbul', desc: 'Gece Boğaz\'da ışıklı köprü manzarası + sahil barları', emoji: '🌃', category: 'Gece', vibe: '✨' },
+        { name: 'Kapadokya Piknik', city: 'Kapadokya', desc: 'Peri bacaları arasında piknik ve şarap', emoji: '🍷', category: 'Romantik', vibe: '🌅' },
+        { name: 'Lavanta Tarlaları', city: 'Isparta', desc: 'Mor tarlalarda fotoğraf ve piknik (Haziran-Temmuz)', emoji: '💜', category: 'Fotoğraf', vibe: '🌺' },
+        { name: 'Kaş Cam Tekne', city: 'Kaş', desc: 'Batık şehir üzerinde cam teknede günbatımı', emoji: '🚤', category: 'Deniz', vibe: '🌊' },
+    ],
+    friends: [
+        { name: 'Kadıköy Bar Sokak', city: 'İstanbul', desc: 'Canlı müzik, sokak yemeği, craft bira — haftanın her günü canlı', emoji: '🍺', category: 'Gece', vibe: '🎉' },
+        { name: 'Escape Room Macera', city: 'İstanbul', desc: 'Takım halinde kapalı oda macerası — 60 dk adrenalin', emoji: '🔑', category: 'Macera', vibe: '😱' },
+        { name: 'Emirgan Korusu Piknik', city: 'İstanbul', desc: 'Lale bahçeleri, Boğaz manzaralı çim, mangal alanı', emoji: '🇩🇪', category: 'Piknik', vibe: '☀️' },
+        { name: 'Maçka Parkı Spor', city: 'İstanbul', desc: 'Outdoor fitness, koşu parkuru ve ardından kahve', emoji: '🏃', category: 'Spor', vibe: '💪' },
+        { name: 'Çiçek Pasajı Meze', city: 'İstanbul', desc: 'Tarihi pasajda meze, rakı ve muhabbet', emoji: '🍽️', category: 'Yemek', vibe: '🌟' },
+        { name: 'Ortaköy Waffle Walk', city: 'İstanbul', desc: 'Waffle + kuymak + Boğaz manzarası yürüyüşü', emoji: '🧇', category: 'Yürüyüş', vibe: '😋' },
+        { name: 'Tekne Partisi', city: 'İstanbul', desc: 'Özel tekne kirala, DJ + denize atlama + Boğaz turu', emoji: '🚢', category: 'Parti', vibe: '🌊' },
+        { name: 'Kapadokya ATV Safari', city: 'Kapadokya', desc: 'Peri bacaları arasında ATV turu ve gece ışık show', emoji: '🏎️', category: 'Macera', vibe: '⚡' },
+        { name: 'Alaçatı Windsurf', city: 'Alaçatı', desc: 'Rüzgar sörfü + taş sokaklar + brunch', emoji: '🏄', category: 'Spor', vibe: '🌊' },
+        { name: 'Pamukkale Antik Havuz', city: 'Pamukkale', desc: 'Antik havuzda yüzme + travertenler üzerinde fotoğraf', emoji: '💧', category: 'Doğa', vibe: '✨' },
+    ],
+}
+
 const GUEST_PRESETS = [
     { count: 2, label: 'İkimiz', emoji: '👫' },
     { count: 4, label: 'Küçük Grup', emoji: '👥' },
@@ -99,6 +127,7 @@ export default function MeetupsPage() {
     const { toast } = useToast()
     const supabase = createClient()
     const router = useRouter()
+    const [spotMode, setSpotMode] = useState('couples') // 'couples' or 'friends'
 
     useEffect(() => {
         if (space || user) loadMeetups()
@@ -106,12 +135,17 @@ export default function MeetupsPage() {
     }, [space, user])
 
     const loadMeetups = async () => {
-        let query = supabase.from('meetups').select('*, meetup_rsvps(status, user_id)')
-        if (space) query = query.eq('space_id', space.id)
-        else if (user) query = query.eq('created_by', user.id)
-        else { setLoading(false); return }
-        const { data } = await query.order('start_time', { ascending: true })
-        if (data) setMeetups(data)
+        try {
+            let query = supabase.from('meetups').select('*, meetup_rsvps(status, user_id)')
+            if (space) query = query.eq('space_id', space.id)
+            else if (user) query = query.eq('created_by', user.id)
+            else { setLoading(false); return }
+            const { data, error } = await query.order('start_time', { ascending: true })
+            if (error) { console.warn('Meetups table may not exist:', error.message); setLoading(false); return }
+            if (data) setMeetups(data)
+        } catch (e) {
+            console.warn('Could not load meetups:', e.message)
+        }
         setLoading(false)
     }
 
@@ -260,6 +294,70 @@ export default function MeetupsPage() {
                             }}>
                             {showCreate ? <><X size={16} /> İptal</> : <><Zap size={16} /> Hızlı Planla</>}
                         </motion.button>
+                    </motion.div>
+
+                    {/* ═══ NICHE SPOT SUGGESTIONS ═══ */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                        style={sectionStyle}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+                            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
+                                <Sparkles size={16} style={{ color: '#F59E0B', marginRight: 6 }} /> İlham Al
+                            </h2>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                {[
+                                    { key: 'couples', label: '💕 Çiftler', color: '#EF4444' },
+                                    { key: 'friends', label: '🤝 Arkadaşlar', color: '#6366F1' },
+                                ].map(mode => (
+                                    <motion.button key={mode.key} whileTap={{ scale: 0.95 }}
+                                        onClick={() => setSpotMode(mode.key)}
+                                        style={{
+                                            padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                            fontSize: '0.78rem', fontWeight: 700,
+                                            background: spotMode === mode.key ? mode.color : 'var(--bg-tertiary)',
+                                            color: spotMode === mode.key ? 'white' : 'var(--text-secondary)',
+                                            transition: 'all 200ms',
+                                        }}>{mode.label}</motion.button>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                            {NICHE_SPOTS[spotMode].map((spot, i) => (
+                                <motion.div key={i}
+                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.04 }}
+                                    whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.12)' }}
+                                    onClick={() => {
+                                        setForm(prev => ({ ...prev, title: spot.name, description: spot.desc, city: spot.city, location_name: spot.name }))
+                                        setShowCreate(true)
+                                        setStep(2)
+                                    }}
+                                    style={{
+                                        background: 'var(--bg-primary)', borderRadius: 16,
+                                        border: '1px solid var(--border)', padding: 16,
+                                        cursor: 'pointer', transition: 'all 200ms',
+                                    }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                                        <span style={{ fontSize: '1.6rem' }}>{spot.emoji}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <h3 style={{ margin: '0 0 2px', fontSize: '0.92rem', fontWeight: 800 }}>{spot.name}</h3>
+                                            <p style={{ margin: '0 0 6px', fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>📍 {spot.city}</p>
+                                            <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{spot.desc}</p>
+                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                <span style={{
+                                                    fontSize: '0.62rem', padding: '2px 8px', borderRadius: 6,
+                                                    background: spotMode === 'couples' ? 'rgba(239,68,68,0.1)' : 'rgba(99,102,241,0.1)',
+                                                    color: spotMode === 'couples' ? '#EF4444' : '#6366F1',
+                                                    fontWeight: 600,
+                                                }}>{spot.category}</span>
+                                                <span style={{ fontSize: '0.62rem', padding: '2px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 600 }}>
+                                                    {spot.vibe}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </motion.div>
 
                     {/* ═══ QUICK PLAN WIZARD ═══ */}
