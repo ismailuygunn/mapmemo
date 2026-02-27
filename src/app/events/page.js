@@ -392,6 +392,14 @@ export default function EventsPage() {
                                                                 color: 'white', fontSize: '0.65rem', fontWeight: 700,
                                                             }}>🎉 Ücretsiz</span>
                                                         )}
+                                                        {!event.is_free && event.price_label && (
+                                                            <span style={{
+                                                                position: 'absolute', top: 10, right: 10,
+                                                                background: 'rgba(79,70,229,0.85)', backdropFilter: 'blur(4px)',
+                                                                padding: '4px 10px', borderRadius: 8,
+                                                                color: 'white', fontSize: '0.65rem', fontWeight: 700,
+                                                            }}>💰 {event.price_label}</span>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <div style={{

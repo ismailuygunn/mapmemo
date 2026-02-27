@@ -207,12 +207,30 @@ async function fetchTicketmasterEvents(city, format, startDate, endDate, isTurki
         return {
             events: items.map(event => {
                 const venue = event._embedded?.venues?.[0] || {}
+                // Get best quality image (prefer 16:9 ratio, largest width)
+                const images = event.images || []
+                const sorted = [...images].sort((a, b) => (b.width || 0) - (a.width || 0))
+                const best16_9 = sorted.find(i => i.ratio === '16_9')
+                const bestImage = best16_9?.url || sorted[0]?.url || ''
+                // All photos (for gallery)
+                const allPhotos = sorted.filter(i => i.width > 200).map(i => i.url).slice(0, 6)
+
+                // Price info
+                const priceRanges = event.priceRanges || []
+                const minPrice = priceRanges[0]?.min || 0
+                const maxPrice = priceRanges[0]?.max || 0
+                const priceCurrency = priceRanges[0]?.currency || 'TRY'
+                const priceLabel = minPrice > 0
+                    ? (minPrice === maxPrice ? `${priceCurrency} ${minPrice}` : `${priceCurrency} ${minPrice} - ${maxPrice}`)
+                    : ''
+
                 return {
                     id: `tm-${event.id}`,
                     name: event.name || '',
                     description: (event.info || event.pleaseNote || '').substring(0, 200),
                     url: event.url || '',
-                    poster_url: event.images?.find(i => i.ratio === '16_9')?.url || event.images?.[0]?.url || '',
+                    poster_url: bestImage,
+                    photos: allPhotos,
                     ticket_url: event.url || '',
                     start: event.dates?.start?.dateTime || event.dates?.start?.localDate || '',
                     end: event.dates?.end?.dateTime || '',
@@ -228,6 +246,11 @@ async function fetchTicketmasterEvents(city, format, startDate, endDate, isTurki
                     district: venue.state?.name || '',
                     tags: (event.classifications || []).map(c => c.genre?.name).filter(Boolean),
                     source: 'ticketmaster',
+                    // Price fields
+                    price_min: minPrice,
+                    price_max: maxPrice,
+                    price_currency: priceCurrency,
+                    price_label: priceLabel,
                 }
             }),
             source: 'ticketmaster',

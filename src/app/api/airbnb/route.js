@@ -38,17 +38,19 @@ export async function GET(request) {
         const data = await res.json()
         let results = data?.results || []
 
-        // Fetch page 2 for more results
-        try {
-            const res2 = await fetch(`${baseUrl}&page=2`, {
-                headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': 'airbnb13.p.rapidapi.com' },
-            })
-            if (res2.ok) {
-                const d2 = await res2.json()
-                const r2 = d2?.results || []
-                if (r2.length > 0) results = [...results, ...r2]
-            }
-        } catch { /* page 2 optional */ }
+        // Fetch pages 2-4 for more results
+        for (const pageNum of [2, 3, 4]) {
+            try {
+                const resP = await fetch(`${baseUrl}&page=${pageNum}`, {
+                    headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': 'airbnb13.p.rapidapi.com' },
+                })
+                if (resP.ok) {
+                    const dp = await resP.json()
+                    const rp = dp?.results || []
+                    if (rp.length > 0) results = [...results, ...rp]
+                }
+            } catch { /* optional pages */ }
+        }
 
         // Deduplicate
         const seen = new Set()

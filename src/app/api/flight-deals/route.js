@@ -371,92 +371,79 @@ async function scanAllSources(origin, dest, departDate, returnDate) {
 }
 
 // ═══════════════════════════════════════
-// MAIN HANDLER — Smart multi-date scanning
+// MAIN HANDLER
 // ═══════════════════════════════════════
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
-        const originInput = searchParams.get('origin') || 'IST'
+        const origin = searchParams.get('origin') || 'IST'
         const duration = searchParams.get('duration') || '4'
         const month = searchParams.get('month') || 'any'
         const pattern = searchParams.get('pattern') || 'any'
         const visaFilter = searchParams.get('visa') || 'all'
         const maxBudget = parseInt(searchParams.get('budget') || '0')
 
-        // Resolve origin: may be a city with multiple airports
-        const origins = resolveAirportCodes(originInput)
-        const origin = origins[0] || 'IST'
-
         const dateRanges = generateDates(month, duration, pattern)
         if (dateRanges.length === 0) {
             return NextResponse.json({ deals: [], error: 'Uygun tarih bulunamadı' })
         }
+        const dateRange = dateRanges[0]
 
-        // Pick up to 3 date ranges to scan (spread across the month)
-        const samplesToScan = dateRanges.length <= 3 ? dateRanges :
-            [dateRanges[0], dateRanges[Math.floor(dateRanges.length / 2)], dateRanges[dateRanges.length - 1]]
-
-        let dests = [...DESTINATIONS].filter(d => !origins.includes(d.code))
+        let dests = [...DESTINATIONS].filter(d => d.code !== origin)
         if (visaFilter === 'visa_free') dests = dests.filter(d => ['visa_free', 'domestic'].includes(d.visa))
         else if (visaFilter === 'visa_on_arrival') dests = dests.filter(d => ['visa_free', 'visa_on_arrival', 'domestic'].includes(d.visa))
 
-        // Scan all destinations across multiple date windows — keep cheapest per destination
+        // Scan all destinations (batched for performance)
         const batchSize = 6
-        const bestByDest = new Map() // destCode -> best deal
+        const allDeals = []
 
-        // For each date range sample
-        for (const dateRange of samplesToScan) {
-            for (let i = 0; i < dests.length; i += batchSize) {
-                const batch = dests.slice(i, i + batchSize)
-                const results = await Promise.allSettled(
-                    batch.map(dest =>
-                        scanAllSources(origin, dest.code, dateRange.depart, dateRange.ret)
-                            .then(priceData => ({ dest, priceData, dateRange }))
-                    )
+        for (let i = 0; i < dests.length; i += batchSize) {
+            const batch = dests.slice(i, i + batchSize)
+            const results = await Promise.allSettled(
+                batch.map(dest =>
+                    scanAllSources(origin, dest.code, dateRange.depart, dateRange.ret)
+                        .then(priceData => ({ dest, priceData }))
                 )
-                for (const result of results) {
-                    if (result.status === 'fulfilled' && result.value.priceData) {
-                        const { dest, priceData, dateRange: dr } = result.value
-                        if (maxBudget > 0 && priceData.price > maxBudget) continue
-
-                        const existing = bestByDest.get(dest.code)
-                        if (!existing || priceData.price < existing.price) {
-                            bestByDest.set(dest.code, {
-                                destination: dest.code,
-                                city: dest.city,
-                                country: dest.country,
-                                emoji: dest.emoji,
-                                flightHours: dest.flightH,
-                                visa: { type: dest.visa, label: VISA_LABELS[dest.visa], color: VISA_COLORS[dest.visa] },
-                                price: priceData.price,
-                                priceFormatted: new Intl.NumberFormat('tr-TR').format(priceData.price),
-                                airline: priceData.airline,
-                                stops: priceData.stops,
-                                seatsLeft: priceData.seats,
-                                source: priceData.source,
-                                departTime: priceData.departTime || '',
-                                arriveTime: priceData.arriveTime || '',
-                                alternatives: priceData.alternatives || [],
-                                allPrices: priceData.allPrices,
-                                sourcesFound: priceData.sourcesFound,
-                                fallback: priceData.fallback || false,
-                                departDate: dr.depart,
-                                returnDate: dr.ret,
-                                tripLabel: dr.label,
-                                platforms: buildDeeplinks(origin, dest.code, dr.depart, dr.ret),
-                            })
-                        }
-                    }
+            )
+            for (const result of results) {
+                if (result.status === 'fulfilled' && result.value.priceData) {
+                    const { dest, priceData } = result.value
+                    if (maxBudget > 0 && priceData.price > maxBudget) continue
+                    allDeals.push({
+                        destination: dest.code,
+                        city: dest.city,
+                        country: dest.country,
+                        emoji: dest.emoji,
+                        flightHours: dest.flightH,
+                        visa: { type: dest.visa, label: VISA_LABELS[dest.visa], color: VISA_COLORS[dest.visa] },
+                        price: priceData.price,
+                        priceFormatted: new Intl.NumberFormat('tr-TR').format(priceData.price),
+                        airline: priceData.airline,
+                        stops: priceData.stops,
+                        seatsLeft: priceData.seats,
+                        source: priceData.source,
+                        departTime: priceData.departTime || '',
+                        arriveTime: priceData.arriveTime || '',
+                        alternatives: priceData.alternatives || [],
+                        allPrices: priceData.allPrices,
+                        sourcesFound: priceData.sourcesFound,
+                        fallback: priceData.fallback || false,
+                        departDate: dateRange.depart,
+                        returnDate: dateRange.ret,
+                        tripLabel: dateRange.label,
+                        platforms: buildDeeplinks(origin, dest.code, dateRange.depart, dateRange.ret),
+                    })
                 }
             }
         }
 
-        const allDeals = Array.from(bestByDest.values()).sort((a, b) => a.price - b.price)
+        allDeals.sort((a, b) => a.price - b.price)
 
         return NextResponse.json({
             deals: allDeals,
             origin,
-            searchedDates: samplesToScan.map(d => `${d.depart} → ${d.ret}`),
+            departDate: dateRange.depart,
+            returnDate: dateRange.ret,
             total: allDeals.length,
             scannedAt: new Date().toISOString(),
             sources: ['Duffel', 'Amadeus (yedek)'],
@@ -466,4 +453,5 @@ export async function GET(request) {
         return NextResponse.json({ deals: [], error: err.message }, { status: 500 })
     }
 }
+
 
