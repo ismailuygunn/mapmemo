@@ -204,7 +204,7 @@ export default function MeetupsPage() {
             setAiPlan(data)
         } catch (err) {
             console.error('AI plan error:', err)
-            toast?.({ title: 'Plan oluşturulamadı', description: err.message || 'Tekrar deneyin', type: 'error' })
+            toast?.error(err.message || 'Plan oluşturulamadı, tekrar deneyin')
         }
         setAiLoading(false)
     }

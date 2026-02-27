@@ -13,7 +13,11 @@ export function ToastProvider({ children }) {
 
     const addToast = useCallback((message, type = 'success', duration = 3000) => {
         const id = ++toastId
-        setToasts(prev => [...prev, { id, message, type }])
+        // Defensive: if message is an object, extract string from it
+        const msg = (typeof message === 'object' && message !== null)
+            ? (message.description || message.title || message.message || JSON.stringify(message))
+            : String(message || '')
+        setToasts(prev => [...prev, { id, message: msg, type: typeof message === 'object' && message.type ? message.type : type }])
         if (duration > 0) {
             setTimeout(() => {
                 setToasts(prev => prev.filter(t => t.id !== id))
