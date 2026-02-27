@@ -517,25 +517,61 @@ export default function PlannerPage() {
             <Sidebar />
             <div className="main-content">
                 <div className="page">
-                    {/* Header */}
-                    <div className="page-header" style={{ background: 'linear-gradient(135deg, rgba(79,70,229,0.08), rgba(124,58,237,0.04))', padding: '20px 24px', borderRadius: 'var(--radius-xl)', marginBottom: 'var(--space-6)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                    {/* Premium Hero Header */}
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+                        style={{
+                            borderRadius: 24, overflow: 'hidden', marginBottom: 24,
+                            position: 'relative', minHeight: 180,
+                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED, #A855F7)',
+                        }}>
+                        {/* Floating decorations */}
+                        <motion.span animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
+                            style={{ position: 'absolute', top: 20, right: 30, fontSize: '2.5rem', opacity: 0.3 }}>🌍</motion.span>
+                        <motion.span animate={{ y: [0, 8, 0], x: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+                            style={{ position: 'absolute', bottom: 20, right: 80, fontSize: '1.8rem', opacity: 0.2 }}>✈️</motion.span>
+                        <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
+                            style={{ position: 'absolute', top: 30, right: 140, fontSize: '1.5rem', opacity: 0.15 }}>🗺️</motion.span>
+                        <div style={{
+                            position: 'relative', zIndex: 1,
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '28px 36px', flexWrap: 'wrap', gap: 16,
+                        }}>
                             <div>
-                                <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>✈️ {t('planner.title')}</h1>
-                                <p style={{ fontSize: '0.875rem' }}>{t('planner.subtitle')}</p>
+                                <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    ✈️ {t('planner.title')}
+                                </h1>
+                                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.92rem', margin: '6px 0 0' }}>
+                                    {view === 'result' ? (locale === 'tr' ? '🎉 Planınız hazır! Aşağıda düzenleyebilirsiniz.' : '🎉 Your plan is ready! Edit below.')
+                                        : view === 'trips' ? (locale === 'tr' ? '📁 Kayıtlı seyahat planlarınız' : '📁 Your saved travel plans')
+                                            : t('planner.subtitle')}
+                                </p>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                                <button type="button" className={`btn ${view !== 'trips' ? 'btn-primary' : 'btn-secondary'}`}
-                                    onClick={() => { setView('form'); setItinerary(null); setFormStep(0) }}>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                    type="button" onClick={() => { setView('form'); setItinerary(null); setFormStep(0) }}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                                        background: view !== 'trips' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                                        color: 'white', fontSize: '0.85rem', fontWeight: 700,
+                                        backdropFilter: 'blur(8px)',
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                    }}>
                                     <Plane size={16} /> {t('planner.newPlan')}
-                                </button>
-                                <button type="button" className={`btn ${view === 'trips' ? 'btn-primary' : 'btn-secondary'}`}
-                                    onClick={() => setView('trips')}>
-                                    <Save size={16} /> ({savedTrips.length})
-                                </button>
+                                </motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                    type="button" onClick={() => setView('trips')}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                                        background: view === 'trips' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                                        color: 'white', fontSize: '0.85rem', fontWeight: 700,
+                                        backdropFilter: 'blur(8px)',
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                    }}>
+                                    <Save size={16} /> {savedTrips.length > 0 ? `${savedTrips.length} ${locale === 'tr' ? 'plan' : 'plans'}` : (locale === 'tr' ? 'Seyahatlerim' : 'My Trips')}
+                                </motion.button>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* ═══ FUN LOADING OVERLAY ═══ */}
                     <AnimatePresence>
@@ -1135,6 +1171,47 @@ export default function PlannerPage() {
                                 <div className="form-error">{error}</div>
                             )}
 
+                            {/* Trip Preview — shows on last step before generate */}
+                            {formStep === 3 && formData.cities.length > 0 && (
+                                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                    style={{
+                                        marginTop: 16, padding: '16px 20px', borderRadius: 16,
+                                        background: 'linear-gradient(135deg, rgba(79,70,229,0.06), rgba(168,85,247,0.04))',
+                                        border: '1px solid rgba(79,70,229,0.15)',
+                                    }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary-1)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        ✨ {locale === 'tr' ? 'Seyahat Özeti' : 'Trip Preview'}
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 8 }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>📍 {locale === 'tr' ? 'Rota' : 'Route'}</div>
+                                            <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>{formData.cities.join(' → ')}</div>
+                                        </div>
+                                        {formData.startDate && formData.endDate && (
+                                            <div>
+                                                <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>📅 {locale === 'tr' ? 'Tarih' : 'Dates'}</div>
+                                                <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                                                    {new Date(formData.startDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - {new Date(formData.endDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    <span style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', fontWeight: 500 }}> ({tripDays} {locale === 'tr' ? 'gün' : 'days'})</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>👥 {locale === 'tr' ? 'Grup' : 'Group'}</div>
+                                            <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                                                {formData.groupType === 'solo' ? '🧑 Solo' : formData.groupType === 'couple' ? '💑 Çift' : formData.groupType === 'friends' ? '👫 Arkadaşlar' : '👨‍👩‍👧‍👦 Aile'}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.58rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>⚡ {locale === 'tr' ? 'Tempo' : 'Tempo'}</div>
+                                            <div style={{ fontSize: '0.78rem', fontWeight: 700 }}>
+                                                {formData.tempo === 'slow' ? '🐢 Sakin' : formData.tempo === 'moderate' ? '🚶 Dengeli' : '🏃 Yoğun'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             {/* Step Navigation */}
                             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                                 {formStep > 0 && (
@@ -1219,10 +1296,41 @@ export default function PlannerPage() {
                                 </motion.div>
                             )}
 
+                            {/* Trip Stats Summary */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                style={{
+                                    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                                    gap: 10, marginBottom: 16,
+                                }}>
+                                {[
+                                    { icon: '📍', label: locale === 'tr' ? 'Şehirler' : 'Cities', value: formData.cities.join(' → ') || '—', color: '#4F46E5' },
+                                    { icon: '📅', label: locale === 'tr' ? 'Tarih' : 'Dates', value: formData.startDate && formData.endDate ? `${new Date(formData.startDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${new Date(formData.endDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}` : '—', color: '#EC4899' },
+                                    { icon: '🗓️', label: locale === 'tr' ? 'Süre' : 'Duration', value: `${itinerary.days?.length || tripDays} ${locale === 'tr' ? 'gün' : 'days'}`, color: '#10B981' },
+                                    { icon: '💰', label: locale === 'tr' ? 'Bütçe' : 'Budget', value: formData.budget === 'budget' ? '💵' : formData.budget === 'moderate' ? '💵💵' : '💵💵💵', color: '#F59E0B' },
+                                ].map((stat, si) => (
+                                    <div key={si} style={{
+                                        background: 'var(--bg-secondary)', borderRadius: 14,
+                                        border: '1px solid var(--border)', padding: '12px 14px',
+                                        borderLeft: `3px solid ${stat.color}`,
+                                    }}>
+                                        <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: 2 }}>{stat.icon} {stat.label}</div>
+                                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>{stat.value}</div>
+                                    </div>
+                                ))}
+                            </motion.div>
+
                             {/* Overview */}
-                            <div className="result-overview">
-                                <h3>📋 {t('planner.overview')}</h3>
-                                <p>{itinerary.overview}</p>
+                            <div className="result-overview" style={{
+                                background: 'linear-gradient(135deg, rgba(79,70,229,0.04), rgba(168,85,247,0.04))',
+                                border: '1px solid rgba(79,70,229,0.15)',
+                                borderRadius: 16, padding: '20px 24px', marginBottom: 20,
+                            }}>
+                                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    📋 {t('planner.overview')}
+                                    {itinerary.tripTitle && <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 500 }}>— {itinerary.tripTitle}</span>}
+                                </h3>
+                                <p style={{ lineHeight: 1.7, fontSize: '0.88rem' }}>{itinerary.overview}</p>
                             </div>
 
                             {/* ═══ AI SUGGESTIONS ═══ */}
