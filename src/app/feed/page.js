@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
+import { getAuthHeaders } from '@/lib/authHeaders'
 import Sidebar from '@/components/layout/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Heart, MessageCircle, MapPin, Plus, X, Send, Camera, Star,
     Clock, ChevronRight, Loader2, Coffee, UtensilsCrossed, Landmark,
-    TreePine, Wine, Hotel, Navigation, Sparkles
+    TreePine, Wine, Hotel, Navigation, Sparkles, Share2, Bookmark,
+    ThumbsUp, Flame, Laugh, Frown
 } from 'lucide-react'
 
 const CATEGORIES = [
@@ -23,6 +25,9 @@ const CATEGORIES = [
     { key: 'landmark', emoji: '📸', label: 'Gezi Noktası', icon: Navigation },
     { key: 'other', emoji: '📍', label: 'Diğer', icon: MapPin },
 ]
+
+const STORY_REACTIONS = ['❤️', '🔥', '😍', '👏', '🥰', '😮']
+const STORY_DURATION = 5000 // 5 seconds per story
 
 const timeAgo = (date) => {
     const now = new Date()
@@ -42,8 +47,13 @@ export default function FeedPage() {
     const [showCheckin, setShowCheckin] = useState(false)
     const [checkinData, setCheckinData] = useState({ placeName: '', city: '', note: '', emoji: '📍', category: 'other', rating: 0 })
     const [submitting, setSubmitting] = useState(false)
-    const [activeStory, setActiveStory] = useState(null) // { groupIndex, storyIndex }
+    const [activeStory, setActiveStory] = useState(null)
     const [liking, setLiking] = useState({})
+    const [storyProgress, setStoryProgress] = useState(0)
+    const [showReactions, setShowReactions] = useState(null) // checkin id
+    const [sentReaction, setSentReaction] = useState(null)
+    const storyTimerRef = useRef(null)
+    const storyProgressRef = useRef(null)
 
     const { user } = useAuth()
     const { locale } = useLanguage()
@@ -55,15 +65,66 @@ export default function FeedPage() {
         if (user) loadFeed()
     }, [user])
 
+    // Story auto-advance
+    useEffect(() => {
+        if (!activeStory) {
+            clearInterval(storyTimerRef.current)
+            clearInterval(storyProgressRef.current)
+            return
+        }
+
+        setStoryProgress(0)
+        const startTime = Date.now()
+
+        storyProgressRef.current = setInterval(() => {
+            const elapsed = Date.now() - startTime
+            setStoryProgress(Math.min(elapsed / STORY_DURATION, 1))
+        }, 50)
+
+        storyTimerRef.current = setTimeout(() => {
+            advanceStory()
+        }, STORY_DURATION)
+
+        return () => {
+            clearTimeout(storyTimerRef.current)
+            clearInterval(storyProgressRef.current)
+        }
+    }, [activeStory?.groupIndex, activeStory?.storyIndex])
+
+    const advanceStory = () => {
+        if (!activeStory) return
+        const group = storyGroups[activeStory.groupIndex]
+        if (!group) return
+
+        if (activeStory.storyIndex < group.stories.length - 1) {
+            setActiveStory(prev => ({ ...prev, storyIndex: prev.storyIndex + 1 }))
+        } else if (activeStory.groupIndex < storyGroups.length - 1) {
+            setActiveStory({ groupIndex: activeStory.groupIndex + 1, storyIndex: 0 })
+        } else {
+            setActiveStory(null)
+        }
+    }
+
+    const prevStory = () => {
+        if (!activeStory) return
+        if (activeStory.storyIndex > 0) {
+            setActiveStory(prev => ({ ...prev, storyIndex: prev.storyIndex - 1 }))
+        } else if (activeStory.groupIndex > 0) {
+            const prevGroup = storyGroups[activeStory.groupIndex - 1]
+            setActiveStory({ groupIndex: activeStory.groupIndex - 1, storyIndex: prevGroup.stories.length - 1 })
+        }
+    }
+
     const loadFeed = async () => {
         setLoading(true)
         try {
-            const res = await fetch(`/api/social/feed?userId=${user.id}`)
+            const authH = await getAuthHeaders()
+            const res = await fetch(`/api/social/feed?userId=${user.id}`, { headers: authH })
             const data = await res.json()
             setFeed(data.feed || [])
             setStoryGroups(data.storyGroups || [])
         } catch (err) {
-            console.error('Feed load error:', err)
+            console.error('Feed error:', err)
         }
         setLoading(false)
     }
@@ -72,9 +133,10 @@ export default function FeedPage() {
         if (!checkinData.placeName.trim()) return
         setSubmitting(true)
         try {
+            const authH = await getAuthHeaders()
             const res = await fetch('/api/social/checkin', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authH },
                 body: JSON.stringify({
                     userId: user.id,
                     placeName: checkinData.placeName,
@@ -82,16 +144,17 @@ export default function FeedPage() {
                     note: checkinData.note,
                     emoji: checkinData.emoji,
                     category: checkinData.category,
-                    rating: checkinData.rating || null,
+                    rating: checkinData.rating,
                 }),
             })
-            if (!res.ok) throw new Error('Check-in failed')
-            toast.success('📍 Check-in yapıldı!')
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+            toast.success('📍 Check-in başarılı!')
             setShowCheckin(false)
             setCheckinData({ placeName: '', city: '', note: '', emoji: '📍', category: 'other', rating: 0 })
             loadFeed()
         } catch (err) {
-            toast.error(err.message)
+            toast.error(err.message || 'Hata oluştu')
         }
         setSubmitting(false)
     }
@@ -99,21 +162,25 @@ export default function FeedPage() {
     const handleLike = async (targetId, targetType = 'check_in') => {
         setLiking(prev => ({ ...prev, [targetId]: true }))
         try {
+            const authH = await getAuthHeaders()
             const res = await fetch('/api/social/like', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, targetType, targetId }),
+                headers: { 'Content-Type': 'application/json', ...authH },
+                body: JSON.stringify({ userId: user.id, targetId, targetType }),
             })
             const data = await res.json()
             setFeed(prev => prev.map(item =>
-                item.id === targetId ? {
-                    ...item,
-                    isLiked: data.liked,
-                    likeCount: data.liked ? (item.likeCount || 0) + 1 : Math.max((item.likeCount || 0) - 1, 0)
-                } : item
+                item.id === targetId ? { ...item, isLiked: data.liked, likeCount: data.liked ? (item.likeCount || 0) + 1 : Math.max((item.likeCount || 0) - 1, 0) } : item
             ))
         } catch (err) { console.error(err) }
         setLiking(prev => ({ ...prev, [targetId]: false }))
+    }
+
+    const handleReaction = (checkinId, emoji) => {
+        setSentReaction({ id: checkinId, emoji })
+        setTimeout(() => setSentReaction(null), 1500)
+        setShowReactions(null)
+        handleLike(checkinId)
     }
 
     const getCatEmoji = (cat) => CATEGORIES.find(c => c.key === cat)?.emoji || '📍'
@@ -156,33 +223,33 @@ export default function FeedPage() {
                     {storyGroups.length > 0 && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                             style={{
-                                display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 16,
+                                display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 16,
                                 marginBottom: 20, scrollbarWidth: 'none',
                             }}>
                             {storyGroups.map((group, gi) => (
                                 <motion.button key={gi}
-                                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                                    whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }}
                                     onClick={() => setActiveStory({ groupIndex: gi, storyIndex: 0 })}
                                     style={{
                                         flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                        gap: 4, background: 'none', border: 'none', cursor: 'pointer', minWidth: 68,
+                                        gap: 6, background: 'none', border: 'none', cursor: 'pointer', minWidth: 72,
                                     }}>
                                     <div style={{
-                                        width: 56, height: 56, borderRadius: '50%',
+                                        width: 64, height: 64, borderRadius: '50%',
                                         background: 'linear-gradient(135deg, #EC4899, #8B5CF6, #4F46E5)',
-                                        padding: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
                                         <div style={{
-                                            width: 50, height: 50, borderRadius: '50%',
+                                            width: 56, height: 56, borderRadius: '50%',
                                             background: group.user?.avatar_url ? `url(${group.user.avatar_url}) center/cover` : 'var(--bg-tertiary)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-secondary)',
-                                            border: '2px solid var(--bg-primary)',
+                                            fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-secondary)',
+                                            border: '3px solid var(--bg-primary)',
                                         }}>
                                             {!group.user?.avatar_url && (group.user?.display_name?.[0] || '?')}
                                         </div>
                                     </div>
-                                    <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', maxWidth: 64, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', maxWidth: 68, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                                         {group.user?.display_name?.split(' ')[0] || 'User'}
                                     </span>
                                 </motion.button>
@@ -190,102 +257,150 @@ export default function FeedPage() {
                         </motion.div>
                     )}
 
-                    {/* ═══ STORY VIEWER MODAL ═══ */}
+                    {/* ═══ STORY VIEWER MODAL — FULL UPGRADE ═══ */}
                     <AnimatePresence>
-                        {activeStory && storyGroups[activeStory.groupIndex] && (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                                style={{
-                                    position: 'fixed', inset: 0, zIndex: 9999,
-                                    background: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}
-                                onClick={() => setActiveStory(null)}>
+                        {activeStory && storyGroups[activeStory.groupIndex] && (() => {
+                            const group = storyGroups[activeStory.groupIndex]
+                            const story = group.stories[activeStory.storyIndex]
+                            if (!story) return null
+                            return (
                                 <motion.div
-                                    initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                                    onClick={e => e.stopPropagation()}
+                                    key="story-modal"
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                                     style={{
-                                        width: '90%', maxWidth: 400, maxHeight: '80vh',
-                                        borderRadius: 24, overflow: 'hidden',
-                                        background: storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex]?.bgColor || '#4F46E5',
-                                        color: '#fff', display: 'flex', flexDirection: 'column',
+                                        position: 'fixed', inset: 0, zIndex: 9999,
+                                        background: 'rgba(0,0,0,0.96)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
-                                    {/* Story header */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 16 }}>
-                                        <div style={{
-                                            width: 36, height: 36, borderRadius: '50%',
-                                            background: 'rgba(255,255,255,0.2)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '0.9rem', fontWeight: 800,
+                                    <motion.div
+                                        initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                                        style={{
+                                            width: '90%', maxWidth: 420, height: '80vh', maxHeight: 680,
+                                            borderRadius: 24, overflow: 'hidden', position: 'relative',
+                                            background: story.bgColor || '#4F46E5',
+                                            color: '#fff', display: 'flex', flexDirection: 'column',
                                         }}>
-                                            {storyGroups[activeStory.groupIndex].user?.display_name?.[0] || '?'}
+                                        {/* Progress bars */}
+                                        <div style={{ display: 'flex', gap: 3, padding: '12px 16px 6px' }}>
+                                            {group.stories.map((_, si) => (
+                                                <div key={si} style={{
+                                                    flex: 1, height: 3, borderRadius: 2,
+                                                    background: 'rgba(255,255,255,0.25)', overflow: 'hidden',
+                                                }}>
+                                                    <div style={{
+                                                        height: '100%', borderRadius: 2,
+                                                        background: '#fff',
+                                                        width: si < activeStory.storyIndex ? '100%' :
+                                                            si === activeStory.storyIndex ? `${storyProgress * 100}%` : '0%',
+                                                        transition: si === activeStory.storyIndex ? 'none' : 'width 0.3s',
+                                                    }} />
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                                                {storyGroups[activeStory.groupIndex].user?.display_name}
+
+                                        {/* Story header with avatar */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px 6px' }}>
+                                            <div style={{
+                                                width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                                                background: group.user?.avatar_url ? `url(${group.user.avatar_url}) center/cover` : 'rgba(255,255,255,0.2)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '0.9rem', fontWeight: 800,
+                                                border: '2px solid rgba(255,255,255,0.5)',
+                                            }}>
+                                                {!group.user?.avatar_url && (group.user?.display_name?.[0] || '?')}
                                             </div>
-                                            <div style={{ fontSize: '0.68rem', opacity: 0.7 }}>
-                                                {timeAgo(storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex]?.createdAt)}
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>
+                                                    {group.user?.display_name}
+                                                </div>
+                                                <div style={{ fontSize: '0.68rem', opacity: 0.7 }}>
+                                                    {timeAgo(story.createdAt)}
+                                                </div>
+                                            </div>
+                                            <button onClick={() => setActiveStory(null)}
+                                                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+
+                                        {/* Tap zones (left/right) */}
+                                        <div style={{ flex: 1, display: 'flex', position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30%', cursor: 'pointer', zIndex: 2 }}
+                                                onClick={prevStory} />
+                                            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '70%', cursor: 'pointer', zIndex: 2 }}
+                                                onClick={advanceStory} />
+
+                                            {/* Story content */}
+                                            <div style={{
+                                                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                                justifyContent: 'center', padding: '30px 28px', textAlign: 'center',
+                                            }}>
+                                                <motion.div
+                                                    key={`${activeStory.groupIndex}-${activeStory.storyIndex}`}
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    style={{ fontSize: '4rem', marginBottom: 20 }}>
+                                                    {story.emoji || '✈️'}
+                                                </motion.div>
+                                                <motion.p
+                                                    key={`text-${activeStory.groupIndex}-${activeStory.storyIndex}`}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                                    style={{ fontSize: '1.15rem', fontWeight: 600, lineHeight: 1.6, textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                                                    {story.content}
+                                                </motion.p>
+                                                {story.city && (
+                                                    <motion.p
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 0.7 }}
+                                                        style={{ fontSize: '0.82rem', marginTop: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                        <MapPin size={14} /> {story.city}
+                                                    </motion.p>
+                                                )}
                                             </div>
                                         </div>
-                                        <button onClick={() => setActiveStory(null)}
-                                            style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                    {/* Progress bar */}
-                                    <div style={{ display: 'flex', gap: 3, padding: '0 16px 8px' }}>
-                                        {storyGroups[activeStory.groupIndex].stories.map((_, si) => (
-                                            <div key={si} style={{
-                                                flex: 1, height: 3, borderRadius: 2,
-                                                background: si <= activeStory.storyIndex ? '#fff' : 'rgba(255,255,255,0.3)',
-                                            }} />
-                                        ))}
-                                    </div>
-                                    {/* Story content */}
-                                    <div style={{
-                                        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                        padding: '40px 24px', textAlign: 'center', minHeight: 300,
-                                    }}>
-                                        <div style={{ fontSize: '3rem', marginBottom: 16 }}>
-                                            {storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex]?.emoji || '✈️'}
+
+                                        {/* Emoji reactions */}
+                                        <div style={{ padding: '12px 20px 20px', display: 'flex', justifyContent: 'center', gap: 12 }}>
+                                            {STORY_REACTIONS.map(emoji => (
+                                                <motion.button key={emoji}
+                                                    whileHover={{ scale: 1.3 }} whileTap={{ scale: 0.8 }}
+                                                    onClick={() => {
+                                                        setSentReaction({ id: 'story', emoji })
+                                                        setTimeout(() => setSentReaction(null), 1200)
+                                                    }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.12)', border: 'none',
+                                                        borderRadius: '50%', width: 44, height: 44, cursor: 'pointer',
+                                                        fontSize: '1.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        transition: 'all 200ms',
+                                                    }}>
+                                                    {emoji}
+                                                </motion.button>
+                                            ))}
                                         </div>
-                                        <p style={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1.5 }}>
-                                            {storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex]?.content}
-                                        </p>
-                                        {storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex]?.city && (
-                                            <p style={{ fontSize: '0.78rem', opacity: 0.7, marginTop: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <MapPin size={12} /> {storyGroups[activeStory.groupIndex].stories[activeStory.storyIndex].city}
-                                            </p>
+                                    </motion.div>
+
+                                    {/* Floating sent reaction animation */}
+                                    <AnimatePresence>
+                                        {sentReaction?.id === 'story' && (
+                                            <motion.div
+                                                initial={{ opacity: 1, scale: 1, y: 0 }}
+                                                animate={{ opacity: 0, scale: 2.5, y: -100 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 1 }}
+                                                style={{
+                                                    position: 'fixed', bottom: '20%', left: '50%', transform: 'translateX(-50%)',
+                                                    fontSize: '3rem', zIndex: 10001, pointerEvents: 'none',
+                                                }}>
+                                                {sentReaction.emoji}
+                                            </motion.div>
                                         )}
-                                    </div>
-                                    {/* Nav */}
-                                    <div style={{ display: 'flex', gap: 8, padding: 16, justifyContent: 'center' }}>
-                                        <button
-                                            disabled={activeStory.storyIndex === 0}
-                                            onClick={() => setActiveStory(prev => ({ ...prev, storyIndex: prev.storyIndex - 1 }))}
-                                            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 10, padding: '8px 20px', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', opacity: activeStory.storyIndex === 0 ? 0.4 : 1 }}>
-                                            ← {t('Önceki', 'Prev')}
-                                        </button>
-                                        <button
-                                            disabled={activeStory.storyIndex >= storyGroups[activeStory.groupIndex].stories.length - 1}
-                                            onClick={() => {
-                                                const maxI = storyGroups[activeStory.groupIndex].stories.length - 1
-                                                if (activeStory.storyIndex < maxI) {
-                                                    setActiveStory(prev => ({ ...prev, storyIndex: prev.storyIndex + 1 }))
-                                                } else {
-                                                    // Go to next group
-                                                    if (activeStory.groupIndex < storyGroups.length - 1) {
-                                                        setActiveStory({ groupIndex: activeStory.groupIndex + 1, storyIndex: 0 })
-                                                    } else setActiveStory(null)
-                                                }
-                                            }}
-                                            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 10, padding: '8px 20px', color: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>
-                                            {t('Sonraki', 'Next')} →
-                                        </button>
-                                    </div>
+                                    </AnimatePresence>
                                 </motion.div>
-                            </motion.div>
-                        )}
+                            )
+                        })()}
                     </AnimatePresence>
 
                     {/* ═══ FEED ITEMS ═══ */}
@@ -318,7 +433,7 @@ export default function FeedPage() {
                             </div>
                         </motion.div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                             {feed.map((item, i) => (
                                 <motion.div key={item.id}
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -332,10 +447,11 @@ export default function FeedPage() {
                                         <div
                                             onClick={() => item.user?.username && router.push(`/u/${item.user.username}`)}
                                             style={{
-                                                width: 40, height: 40, borderRadius: '50%',
+                                                width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
                                                 background: item.user?.avatar_url ? `url(${item.user.avatar_url}) center/cover` : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
+                                                border: '2px solid var(--border)',
                                             }}>
                                             {!item.user?.avatar_url && (item.user?.display_name?.[0] || '?')}
                                         </div>
@@ -354,8 +470,8 @@ export default function FeedPage() {
                                     </div>
 
                                     {/* Check-in content */}
-                                    <div style={{ padding: '4px 16px 12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                    <div style={{ padding: '4px 16px 10px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                                             <span style={{
                                                 background: 'rgba(79,70,229,0.08)', color: '#4F46E5',
                                                 padding: '3px 10px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 700,
@@ -388,15 +504,22 @@ export default function FeedPage() {
                                     {/* Photo */}
                                     {item.photoUrl && (
                                         <div style={{
-                                            width: '100%', height: 240,
+                                            width: '100%', height: 280, position: 'relative',
                                             backgroundImage: `url(${item.photoUrl})`,
                                             backgroundSize: 'cover', backgroundPosition: 'center',
-                                        }} />
+                                            borderTop: '1px solid var(--border)',
+                                        }}>
+                                            {/* Gradient overlay at bottom */}
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, right: 0, height: 60,
+                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.3))',
+                                            }} />
+                                        </div>
                                     )}
 
                                     {/* Actions */}
                                     <div style={{
-                                        display: 'flex', alignItems: 'center', gap: 16, padding: '10px 16px',
+                                        display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px',
                                         borderTop: '1px solid var(--border)',
                                     }}>
                                         <button
@@ -406,12 +529,87 @@ export default function FeedPage() {
                                                 background: 'none', border: 'none', cursor: 'pointer',
                                                 display: 'flex', alignItems: 'center', gap: 4,
                                                 color: item.isLiked ? '#EF4444' : 'var(--text-tertiary)',
-                                                fontWeight: 600, fontSize: '0.8rem', transition: 'color 200ms',
+                                                fontWeight: 600, fontSize: '0.8rem', transition: 'all 200ms',
+                                                padding: '4px 8px', borderRadius: 8,
                                             }}>
                                             <Heart size={18} fill={item.isLiked ? '#EF4444' : 'none'} />
                                             {item.likeCount > 0 && item.likeCount}
                                         </button>
+
+                                        {/* Quick reactions */}
+                                        <div style={{ position: 'relative' }}>
+                                            <button
+                                                onClick={() => setShowReactions(showReactions === item.id ? null : item.id)}
+                                                style={{
+                                                    background: 'none', border: 'none', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: 4,
+                                                    color: 'var(--text-tertiary)', fontSize: '0.8rem', fontWeight: 600,
+                                                    padding: '4px 8px', borderRadius: 8,
+                                                }}>
+                                                😀
+                                            </button>
+                                            <AnimatePresence>
+                                                {showReactions === item.id && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.8, y: 5 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.8 }}
+                                                        style={{
+                                                            position: 'absolute', bottom: '100%', left: -20,
+                                                            background: 'var(--bg-primary)', borderRadius: 20,
+                                                            border: '1px solid var(--border)', padding: '6px 10px',
+                                                            display: 'flex', gap: 4, zIndex: 100,
+                                                            boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                                                        }}>
+                                                        {STORY_REACTIONS.map(emoji => (
+                                                            <motion.button key={emoji}
+                                                                whileHover={{ scale: 1.3 }} whileTap={{ scale: 0.8 }}
+                                                                onClick={() => handleReaction(item.id, emoji)}
+                                                                style={{
+                                                                    background: 'none', border: 'none', cursor: 'pointer',
+                                                                    fontSize: '1.2rem', padding: 4,
+                                                                }}>
+                                                                {emoji}
+                                                            </motion.button>
+                                                        ))}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+
+                                        <div style={{ flex: 1 }} />
+
+                                        <button
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                color: 'var(--text-tertiary)', padding: '4px 8px', borderRadius: 8,
+                                            }}>
+                                            <Bookmark size={16} />
+                                        </button>
+                                        <button
+                                            style={{
+                                                background: 'none', border: 'none', cursor: 'pointer',
+                                                color: 'var(--text-tertiary)', padding: '4px 8px', borderRadius: 8,
+                                            }}>
+                                            <Share2 size={16} />
+                                        </button>
                                     </div>
+
+                                    {/* Floating reaction animation */}
+                                    <AnimatePresence>
+                                        {sentReaction?.id === item.id && (
+                                            <motion.div
+                                                initial={{ opacity: 1, scale: 1, y: 0 }}
+                                                animate={{ opacity: 0, scale: 2, y: -60 }}
+                                                exit={{ opacity: 0 }}
+                                                style={{
+                                                    position: 'absolute', bottom: 40, left: '50%',
+                                                    fontSize: '2.5rem', pointerEvents: 'none',
+                                                }}>
+                                                {sentReaction.emoji}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             ))}
                         </div>

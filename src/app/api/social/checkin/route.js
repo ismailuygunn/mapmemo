@@ -1,15 +1,36 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-function getSupabase() {
-    return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)
+function getSupabase(req) {
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        token ? { global: { headers: { Authorization: `Bearer ${token}` } } } : {}
+    )
+    return supabase
+}
+
+/** Fetch profiles for a list of user_ids and attach to items */
+async function attachProfiles(supabase, items, userIdField = 'user_id') {
+    const userIds = [...new Set(items.map(i => i[userIdField]).filter(Boolean))]
+    if (userIds.length === 0) return items
+
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, display_name, username, avatar_url')
+        .in('id', userIds)
+
+    const profileMap = {}
+        ; (profiles || []).forEach(p => { profileMap[p.id] = p })
+    return items.map(item => ({ ...item, profiles: profileMap[item[userIdField]] || null }))
 }
 
 // POST: Create check-in
 // GET: Get check-ins
 export async function POST(request) {
     try {
-        const supabase = getSupabase()
+        const supabase = getSupabase(request)
         const body = await request.json()
         const { userId, placeName, city, country, lat, lng, note, photoUrl, emoji, category, rating } = body
 
@@ -38,14 +59,18 @@ export async function POST(request) {
         if (error) throw error
 
         // Auto-create story
-        await supabase.from('stories').insert({
-            user_id: userId,
-            type: 'checkin',
-            content: note || `📍 ${placeName}`,
-            city: city || null,
-            emoji: emoji || '📍',
-            checkin_id: data.id,
-        }).catch(() => {})
+        try {
+            await supabase.from('stories').insert({
+                user_id: userId,
+                type: 'checkin',
+                content: note || `📍 ${placeName}`,
+                city: city || null,
+                emoji: emoji || '📍',
+                checkin_id: data.id,
+            })
+        } catch (storyErr) {
+            console.warn('Story creation failed (non-critical):', storyErr.message)
+        }
 
         return NextResponse.json({ checkin: data })
     } catch (err) {
@@ -56,24 +81,49 @@ export async function POST(request) {
 
 export async function GET(request) {
     try {
-        const supabase = getSupabase()
+        const supabase = getSupabase(request)
         const { searchParams } = new URL(request.url)
         const userId = searchParams.get('userId')
         const city = searchParams.get('city')
         const limit = parseInt(searchParams.get('limit') || '30')
 
-        let query = supabase
+        // Try with profiles join first, fallback to separate query
+        let data = null
+        let error = null
+
+        const baseQuery = () => {
+            let q = supabase
+                .from('check_ins')
+                .select('*')
+                .eq('is_public', true)
+                .order('created_at', { ascending: false })
+                .limit(limit)
+            if (userId) q = q.eq('user_id', userId)
+            if (city) q = q.eq('city', city)
+            return q
+        }
+
+        // Try embedded join
+        let joinQuery = supabase
             .from('check_ins')
             .select('*, profiles(id, display_name, username, avatar_url)')
             .eq('is_public', true)
             .order('created_at', { ascending: false })
             .limit(limit)
+        if (userId) joinQuery = joinQuery.eq('user_id', userId)
+        if (city) joinQuery = joinQuery.eq('city', city)
 
-        if (userId) query = query.eq('user_id', userId)
-        if (city) query = query.eq('city', city)
-
-        const { data, error } = await query
-        if (error) throw error
+        const joinResult = await joinQuery
+        if (joinResult.error?.message?.includes('relationship')) {
+            // Fallback: fetch without join, then attach profiles separately
+            const plainResult = await baseQuery()
+            if (plainResult.error) throw plainResult.error
+            data = await attachProfiles(supabase, plainResult.data || [])
+        } else if (joinResult.error) {
+            throw joinResult.error
+        } else {
+            data = joinResult.data
+        }
 
         // Get like counts
         const checkinIds = (data || []).map(c => c.id)
@@ -85,7 +135,7 @@ export async function GET(request) {
                 .in('target_id', checkinIds)
 
             const likeCounts = {}
-            ;(likes || []).forEach(l => { likeCounts[l.target_id] = (likeCounts[l.target_id] || 0) + 1 })
+                ; (likes || []).forEach(l => { likeCounts[l.target_id] = (likeCounts[l.target_id] || 0) + 1 })
             data.forEach(c => { c.likeCount = likeCounts[c.id] || 0 })
         }
 

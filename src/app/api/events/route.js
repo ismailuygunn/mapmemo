@@ -73,41 +73,117 @@ function stripHtml(html) {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
 }
 
-// ─── Etkinlik.io fetch — tries multiple approaches for future events ───
+// ─── Etkinlik.io fetch — dual-source: site-api/search + api/v2/events ───
+// Strategy:
+// 1. /site-api/search?query={city} → returns future event IDs grouped by city
+// 2. /api/v2/events/{id} → batch fetch full details for found IDs
+// 3. /api/v2/events?page=N → paginated today's events (filtered client-side)
 async function fetchEtkinlikEvents(city, format) {
     const token = process.env.ETKINLIK_TOKEN
     if (!token) return { events: [], error: 'no_token' }
 
-    const today = new Date().toISOString().split('T')[0]
+    const normalizedCity = normalize(city)
 
     try {
-        // Try multiple endpoint patterns for future events
-        const endpoints = [
-            `${ETKINLIK_BASE}/events?start_from=${today}`,
-            `${ETKINLIK_BASE}/events?start=${today}`,
-            `${ETKINLIK_BASE}/events?date_from=${today}`,
-            `${ETKINLIK_BASE}/events`,
+        // ── SOURCE 1: /site-api/search for future events ──
+        let futureEventIds = []
+        // Multiple queries maximize coverage: city name + common event keywords
+        const searchQueries = [
+            city,
+            `${city} konser`,
+            `${city} tiyatro`,
+            `${city} festival`,
+            `${city} sergi`,
+            `${city} atölye`,
+            `${city} parti`,
+            `${city} stand-up`,
         ]
+        // Add format-specific search if specified
+        if (format) {
+            const formatLabel = FORMAT_MAP[format]?.[0] || format
+            searchQueries.unshift(`${city} ${formatLabel}`)
+        }
 
-        let allItems = []
-        for (const url of endpoints) {
+        for (const query of searchQueries) {
             try {
-                const res = await fetch(url, {
+                const searchRes = await fetch(
+                    `https://etkinlik.io/site-api/search?query=${encodeURIComponent(query)}`,
+                    { next: { revalidate: 300 } }
+                )
+                if (!searchRes.ok) continue
+                const searchData = await searchRes.json()
+
+                // Extract event IDs from matching city results
+                for (const group of (searchData.results || [])) {
+                    const groupCity = normalize(group.name || '')
+                    const cityMatch = groupCity === normalizedCity ||
+                        groupCity.includes(normalizedCity) ||
+                        normalizedCity.includes(groupCity)
+                    if (!cityMatch) continue
+
+                    for (const item of (group.results || [])) {
+                        const match = item.url?.match(/etkinlik\/(\d+)/)
+                        if (match) futureEventIds.push(match[1])
+                    }
+                }
+            } catch { /* skip failed search */ }
+        }
+
+        // Deduplicate IDs
+        futureEventIds = [...new Set(futureEventIds)]
+
+        // Batch fetch full details for future events (max 30 concurrent)
+        let futureEvents = []
+        if (futureEventIds.length > 0) {
+            const batchSize = 10
+            for (let i = 0; i < futureEventIds.length && i < 60; i += batchSize) {
+                const batch = futureEventIds.slice(i, i + batchSize)
+                const results = await Promise.allSettled(
+                    batch.map(id =>
+                        fetch(`${ETKINLIK_BASE}/events/${id}`, {
+                            headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
+                            next: { revalidate: 300 },
+                        }).then(r => r.ok ? r.json() : null)
+                    )
+                )
+                for (const r of results) {
+                    if (r.status === 'fulfilled' && r.value) {
+                        futureEvents.push(r.value)
+                    }
+                }
+            }
+        }
+
+        // ── SOURCE 2: /api/v2/events (paginated) for today's events ──
+        const MAX_PAGES = 4
+        let todayItems = []
+        let cityEventCount = 0
+        for (let page = 1; page <= MAX_PAGES; page++) {
+            try {
+                const res = await fetch(`${ETKINLIK_BASE}/events?page=${page}`, {
                     headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
                     next: { revalidate: 300 },
                 })
-                if (!res.ok) continue
+                if (!res.ok) break
                 const raw = await res.json()
-                const items = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
-                if (items.length > 0) {
-                    allItems = items
-                    break
-                }
-            } catch { continue }
+                const items = raw.items || raw.data || []
+                if (items.length === 0) break
+                todayItems = [...todayItems, ...items]
+                // Count per-city to stop early
+                const cityItems = items.filter(e => {
+                    const ec = normalize(e.venue?.city?.name || '')
+                    return ec === normalizedCity || ec.includes(normalizedCity) || normalizedCity.includes(ec)
+                })
+                cityEventCount += cityItems.length
+                if (cityEventCount >= 25) break
+            } catch { break }
         }
 
-        if (allItems.length === 0) return { events: [], error: 'no_events' }
-        let events = allItems.map(event => ({
+        // ── COMBINE both sources ──
+        const allRaw = [...futureEvents, ...todayItems]
+        if (allRaw.length === 0) return { events: [], error: 'no_events' }
+
+        const mapEvent = (event) => ({
             id: `etk-${event.id}`,
             name: event.name || '',
             description: stripHtml(event.content || ''),
@@ -128,10 +204,11 @@ async function fetchEtkinlikEvents(city, format) {
             district: event.venue?.district?.name || '',
             tags: (event.tags || []).map(t => t.name || t),
             source: 'etkinlik.io',
-        }))
+        })
 
-        // CRITICAL: Filter by city (since etkinlik.io ignores city param)
-        const normalizedCity = normalize(city)
+        let events = allRaw.map(mapEvent)
+
+        // Filter by city
         events = events.filter(e => {
             const eventCity = normalize(e.city_name)
             return eventCity === normalizedCity ||
@@ -139,10 +216,10 @@ async function fetchEtkinlikEvents(city, format) {
                 normalizedCity.includes(eventCity)
         })
 
-        // IMPORTANT: Only keep future events (safety net regardless of API params)
+        // Only keep future events
         const now = new Date()
         events = events.filter(e => {
-            if (!e.start) return true // Keep events without dates
+            if (!e.start) return true
             const eventDate = new Date(e.start)
             return eventDate >= now || isNaN(eventDate.getTime())
         })

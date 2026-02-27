@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
+import { getAuthHeaders } from '@/lib/authHeaders'
 import Sidebar from '@/components/layout/Sidebar'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -39,6 +40,7 @@ export default function DiscoverPage() {
     const loadData = async () => {
         setLoading(true)
         try {
+            const authH = await getAuthHeaders()
             // Get all public profiles (excluding self)
             const { data: profiles } = await supabase
                 .from('profiles')
@@ -50,7 +52,7 @@ export default function DiscoverPage() {
             setUsers(profiles || [])
 
             // Get recent check-ins from all users
-            const res = await fetch(`/api/social/checkin?limit=20`)
+            const res = await fetch(`/api/social/checkin?limit=20`, { headers: authH })
             const data = await res.json()
             setRecentCheckins(data.checkins || [])
         } catch (err) {
@@ -61,7 +63,8 @@ export default function DiscoverPage() {
 
     const loadFollowing = async () => {
         try {
-            const res = await fetch(`/api/social/follow?userId=${user.id}&type=following`)
+            const authH = await getAuthHeaders()
+            const res = await fetch(`/api/social/follow?userId=${user.id}&type=following`, { headers: authH })
             const data = await res.json()
             setFollowingIds(new Set((data.users || []).map(u => u.id)))
         } catch (err) { console.error(err) }
@@ -70,9 +73,10 @@ export default function DiscoverPage() {
     const handleFollow = async (targetId) => {
         setFollowLoading(prev => ({ ...prev, [targetId]: true }))
         try {
+            const authH = await getAuthHeaders()
             const res = await fetch('/api/social/follow', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authH },
                 body: JSON.stringify({ followerId: user.id, followingId: targetId }),
             })
             const data = await res.json()
@@ -184,7 +188,7 @@ export default function DiscoverPage() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                                             <div style={{
                                                 width: 48, height: 48, borderRadius: '50%',
-                                                background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : `linear-gradient(135deg, ${['#4F46E5','#EC4899','#10B981','#F59E0B','#8B5CF6'][i%5]}, ${['#7C3AED','#F43F5E','#06B6D4','#EF4444','#EC4899'][i%5]})`,
+                                                background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : `linear-gradient(135deg, ${['#4F46E5', '#EC4899', '#10B981', '#F59E0B', '#8B5CF6'][i % 5]}, ${['#7C3AED', '#F43F5E', '#06B6D4', '#EF4444', '#EC4899'][i % 5]})`,
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: '#fff', fontWeight: 800, fontSize: '1rem',
                                             }}>

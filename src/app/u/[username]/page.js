@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
+import { getAuthHeaders } from '@/lib/authHeaders'
 import Sidebar from '@/components/layout/Sidebar'
 import { motion } from 'framer-motion'
 import {
@@ -77,7 +78,8 @@ export default function PublicProfilePage() {
             }
 
             // Get check-ins
-            const res = await fetch(`/api/social/checkin?userId=${profile.id}&limit=20`)
+            const authH = await getAuthHeaders()
+            const res = await fetch(`/api/social/checkin?userId=${profile.id}&limit=20`, { headers: authH })
             const checkinData = await res.json()
             setCheckins(checkinData.checkins || [])
 
@@ -99,9 +101,10 @@ export default function PublicProfilePage() {
         if (!user || !profileData) return
         setFollowLoading(true)
         try {
+            const authH = await getAuthHeaders()
             const res = await fetch('/api/social/follow', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...authH },
                 body: JSON.stringify({ followerId: user.id, followingId: profileData.id }),
             })
             const data = await res.json()
