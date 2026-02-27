@@ -15,7 +15,7 @@ import {
 import {
     Plane, Calendar, Loader2, Save, CloudRain, DollarSign,
     Lightbulb, ChevronDown, ChevronUp, Heart, Plus, X, MapPin,
-    Shield, AlertTriangle, Shirt, RefreshCw, Utensils, Map as MapIcon, Bus
+    Shield, AlertTriangle, Shirt, RefreshCw, Utensils, Map as MapIcon, Bus, Printer
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/context/ToastContext'
@@ -127,8 +127,14 @@ export default function PlannerPage() {
         }
     }, [])
 
-    // Load all user spaces for save selector
+    // Load all user spaces for save selector — ALWAYS set SpaceContext as immediate fallback
     useEffect(() => {
+        // Immediately populate from SpaceContext so selector is never empty
+        if (space && userSpaces.length === 0) {
+            setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+            setSelectedSpaceId(space.id)
+        }
+
         const loadUserSpaces = async () => {
             try {
                 const { data: memberships, error: memErr } = await supabase
@@ -138,51 +144,23 @@ export default function PlannerPage() {
 
                 if (memErr) {
                     console.warn('Planner: space_members query failed:', memErr.message)
-                    // Fallback: use SpaceContext space if available
-                    if (space) {
-                        setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
-                        setSelectedSpaceId(space.id)
-                    }
-                    return
+                    return // SpaceContext fallback already set above
                 }
 
                 if (memberships && memberships.length > 0) {
                     const spaceIds = memberships.map(m => m.space_id)
-                    const { data: spacesData, error: spErr } = await supabase
+                    const { data: spacesData } = await supabase
                         .from('spaces')
                         .select('id, name')
                         .in('id', spaceIds)
 
-                    if (spErr) {
-                        console.warn('Planner: spaces query failed:', spErr.message)
-                        // Fallback: use SpaceContext space
-                        if (space) {
-                            setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
-                            setSelectedSpaceId(space.id)
-                        }
-                        return
-                    }
-
                     if (spacesData && spacesData.length > 0) {
                         setUserSpaces(spacesData)
                         setSelectedSpaceId(space?.id || spacesData[0]?.id || null)
-                    } else if (space) {
-                        // Query returned empty but context has space
-                        setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
-                        setSelectedSpaceId(space.id)
                     }
-                } else if (space) {
-                    // No memberships found but context has space
-                    setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
-                    setSelectedSpaceId(space.id)
                 }
             } catch (err) {
                 console.error('Failed to load spaces:', err)
-                // Last resort fallback
-                if (space) {
-                    setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
-                    setSelectedSpaceId(space.id)
-                }
             }
         }
         if (user?.id) loadUserSpaces()
@@ -470,10 +448,14 @@ export default function PlannerPage() {
             let targetSpaceId = selectedSpaceId
             // If no spaces exist, auto-create one
             if (!targetSpaceId) {
-                const newSpace = await createSpace(locale === 'tr' ? 'Seyahat Planlarım' : 'My Travel Plans')
-                targetSpaceId = newSpace.id
-                setUserSpaces(prev => [...prev, { id: newSpace.id, name: newSpace.name }])
-                setSelectedSpaceId(newSpace.id)
+                if (space?.id) {
+                    targetSpaceId = space.id
+                } else {
+                    const newSpace = await createSpace(locale === 'tr' ? 'Seyahat Planlarım' : 'My Travel Plans')
+                    targetSpaceId = newSpace.id
+                    setUserSpaces(prev => [...prev, { id: newSpace.id, name: newSpace.name }])
+                    setSelectedSpaceId(newSpace.id)
+                }
             }
             const { data: trip, error: e } = await supabase
                 .from('trips')
@@ -492,13 +474,57 @@ export default function PlannerPage() {
             if (e) throw e
             setSavedTrips(prev => [trip, ...prev])
             setSavedTripId(trip.id)
-            const spaceName = userSpaces.find(s => s.id === targetSpaceId)?.name || ''
             toast.success(locale === 'tr' ? '💾 Plan kaydedildi!' : '💾 Plan saved!')
         } catch (err) {
             setError(err.message)
             toast.error(err.message || (locale === 'tr' ? 'Kayıt başarısız' : 'Save failed'))
         }
         setSaving(false)
+    }
+
+    // ── PRINT / EXPORT ──
+    const handlePrint = () => {
+        if (!itinerary) return
+        const pw = window.open('', '_blank')
+        if (!pw) { toast.error('Popup engelleyiciyi kapatın'); return }
+        const cities = formData.cities.join(' → ') || formData.cityInput
+        const daysHTML = (itinerary.days || []).map((day, di) => `
+            <div style="page-break-inside:avoid;margin-bottom:24px;">
+                <h3 style="color:#4F46E5;margin:0 0 8px;">📅 ${day.title || 'Gün ' + (di+1)}</h3>
+                ${day.theme ? `<p style="font-size:12px;color:#64748B;margin:0 0 12px;">🎯 ${day.theme}</p>` : ''}
+                ${(day.items || []).map(item => `
+                    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                            <span style="background:#4F46E515;color:#4F46E5;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${item.timeStart || ''}${item.timeEnd ? ' - '+item.timeEnd : ''}</span>
+                            <strong style="font-size:14px;">${item.title}</strong>
+                        </div>
+                        ${item.description ? `<p style="font-size:12px;color:#4a5568;margin:4px 0;">${item.description}</p>` : ''}
+                        <div style="display:flex;gap:12px;font-size:11px;color:#718096;">
+                            ${item.cost ? `<span>💰 ${item.cost}</span>` : ''}
+                            ${item.rating ? `<span>⭐ ${item.rating}</span>` : ''}
+                            ${item.type ? `<span>🏷️ ${item.type}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('')
+        const extrasHTML = []
+        if (itinerary.overview) extrasHTML.push(`<div style="background:#f0f9ff;padding:14px;border-radius:10px;margin-bottom:16px;"><p style="font-size:13px;color:#1e40af;margin:0;">📝 ${itinerary.overview}</p></div>`)
+        if (itinerary.budgetBreakdown) extrasHTML.push(`<div style="margin-bottom:16px;"><h3>💰 Bütçe</h3><p style="font-size:13px;">${JSON.stringify(itinerary.budgetBreakdown).replace(/[{}"/]/g, ' ')}</p></div>`)
+        if (itinerary.packingList?.length) extrasHTML.push(`<div style="margin-bottom:16px;"><h3>🎒 Valiz</h3>${itinerary.packingList.map(p => `<span style="display:inline-block;padding:3px 10px;margin:2px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">✓ ${p}</span>`).join('')}</div>`)
+        pw.document.write(`<!DOCTYPE html><html><head><title>Seyahat Planı — ${cities}</title>
+        <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:700px;margin:0 auto;padding:32px 24px;color:#1a202c;}h2{font-size:20px;margin-bottom:4px;}@media print{body{padding:16px;}}</style></head><body>
+            <div style="text-align:center;margin-bottom:24px;padding:20px;border-radius:16px;background:linear-gradient(135deg,#4F46E515,#7C3AED15);">
+                <div style="font-size:36px;margin-bottom:8px;">✈️</div>
+                <h2>${cities}</h2>
+                <p style="color:#64748B;font-size:13px;">${formData.startDate ? new Date(formData.startDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} ${formData.endDate ? ' → ' + new Date(formData.endDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} · ${itinerary.days?.length || 0} gün</p>
+            </div>
+            ${extrasHTML.join('')}
+            ${daysHTML}
+            <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#a0aec0;">NAVISO Planlayıcı · ${new Date().toLocaleDateString('tr-TR')}</div>
+        </body></html>`)
+        pw.document.close()
+        setTimeout(() => pw.print(), 500)
     }
 
     // ── Chip component ──
@@ -1489,6 +1515,9 @@ export default function PlannerPage() {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                                <button className="btn btn-primary" onClick={handlePrint} style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
+                                    <Printer size={16} /> {locale === 'tr' ? 'Çıktı Al / Yazdır' : 'Print / Export'}
+                                </button>
                                 <button className="btn btn-secondary" onClick={() => setShowRainPlan(!showRainPlan)}>
                                     <CloudRain size={16} /> {t('planner.rainPlan')}
                                 </button>
