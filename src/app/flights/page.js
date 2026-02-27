@@ -185,27 +185,27 @@ const TRAVEL_TYPES = [
 ]
 
 const ORIGIN_CITIES = [
-    { code: 'IST', name: 'İstanbul' }, { code: 'ESB', name: 'Ankara' },
-    { code: 'ADB', name: 'İzmir' }, { code: 'AYT', name: 'Antalya' },
-    { code: 'SAW', name: 'İstanbul SAW' }, { code: 'ADA', name: 'Adana' },
-    { code: 'TZX', name: 'Trabzon' }, { code: 'GZT', name: 'Gaziantep' },
+    { code: 'IST', name: 'İstanbul (IST)', emoji: '🌉' },
+    { code: 'SAW', name: 'İstanbul (SAW)', emoji: '🛬' },
+    { code: 'ESB', name: 'Ankara', emoji: '🏛️' },
+    { code: 'ADB', name: 'İzmir', emoji: '🌊' },
+    { code: 'AYT', name: 'Antalya', emoji: '🏖️' },
+    { code: 'ADA', name: 'Adana', emoji: '🌶️' },
+    { code: 'TZX', name: 'Trabzon', emoji: '⛰️' },
+    { code: 'GZT', name: 'Gaziantep', emoji: '🍽️' },
+    { code: 'BJV', name: 'Bodrum', emoji: '⛵' },
+    { code: 'DLM', name: 'Dalaman', emoji: '🏝️' },
+    { code: 'ASR', name: 'Kayseri', emoji: '🗻' },
+    { code: 'VAS', name: 'Sivas', emoji: '🏔️' },
+    { code: 'DNZ', name: 'Denizli', emoji: '♨️' },
+    { code: 'KYA', name: 'Konya', emoji: '🕌' },
+    { code: 'SZF', name: 'Samsun', emoji: '🚢' },
+    { code: 'DIY', name: 'Diyarbakır', emoji: '🏰' },
 ]
 
 const VISA_COLORS = {
     visa_free: '#22C55E', visa_on_arrival: '#F59E0B', visa_required: '#EF4444',
     e_visa: '#3B82F6', domestic: '#6366F1',
-}
-
-// ═══ DEEPLINK BUILDERS ═══
-function buildDeeplinks(origin, dest, departDate, returnDate) {
-    const dep = departDate || ''
-    const ret = returnDate || ''
-    return {
-        googleFlights: `https://www.google.com/travel/flights?q=Flights+from+${origin}+to+${dest}+on+${dep}+return+${ret}&curr=TRY`,
-        skyscanner: `https://www.skyscanner.com.tr/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${dep.replace(/-/g, '').slice(2)}/${ret.replace(/-/g, '').slice(2)}/?adults=1&currency=TRY`,
-        turna: `https://www.turna.com/ucak-bileti/${origin}-${dest}?departureDate=${dep}&returnDate=${ret}&adult=1`,
-        enuygun: `https://www.enuygun.com/ucak-bileti/arama/${origin.toLowerCase()}-${dest.toLowerCase()}/?gidis=${dep}&donus=${ret}&yetiskin=1`,
-    }
 }
 
 function formatPrice(p) {
@@ -483,39 +483,41 @@ export default function FlightsPage() {
                                     </h2>
                                 </div>
                                 <p style={{ margin: '0 0 16px', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                                    💡 Fiyatlar tahmini aralıktır. Güncel fiyat için platformlara tıklayın — bilet orada, gösterilen fiyataen alınır.
+                                    💡 En düşük fiyat üstte gösterilir. Satıra tıklayıp ilgili siteden biletinizi alabilirsiniz.
                                 </p>
 
                                 {deals.length > 0 ? (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 }}>
                                         {deals.map((deal, i) => {
                                             const visaColor = VISA_COLORS[deal.visa?.type] || '#6366F1'
+                                            const cheapest = deal.platforms?.[0]
                                             return (
                                                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                                                     whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.12)' }}
-                                                    style={{ background: 'var(--bg-primary)', borderRadius: 18, overflow: 'hidden', border: '1px solid var(--border)', transition: 'all 200ms' }}>
-                                                    {/* Header */}
+                                                    style={{ background: 'var(--bg-primary)', borderRadius: 20, overflow: 'hidden', border: '1px solid var(--border)', transition: 'all 200ms' }}>
+                                                    {/* Header with lowest price */}
                                                     <div style={{
                                                         background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B', '#6366F1', '#10B981', '#EF4444'][i % 8]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488', '#818CF8', '#34D399', '#F472B6'][i % 8]})`,
-                                                        padding: '16px 20px', color: 'white',
+                                                        padding: '18px 22px', color: 'white',
                                                     }}>
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                             <div>
-                                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{deal.emoji} {deal.city}</h3>
+                                                                <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0, letterSpacing: '-0.02em' }}>{deal.emoji} {deal.city}</h3>
                                                                 <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>{deal.country}</p>
                                                             </div>
                                                             <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '6px 12px' }}>
-                                                                    <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>₺{formatPrice(deal.priceMin)}</span>
-                                                                    <span style={{ fontSize: '0.68rem', opacity: 0.7 }}> - ₺{formatPrice(deal.priceMax)}</span>
+                                                                <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 12, padding: '8px 16px', backdropFilter: 'blur(8px)' }}>
+                                                                    <div style={{ fontSize: '1.3rem', fontWeight: 900, lineHeight: 1 }}>₺{formatPrice(cheapest?.price || deal.lowestPrice)}</div>
+                                                                    <div style={{ fontSize: '0.6rem', opacity: 0.7, marginTop: 2 }}>en düşük fiyat</div>
                                                                 </div>
-                                                                <span style={{ fontSize: '0.58rem', opacity: 0.6 }}>gidiş-dönüş tahmini</span>
                                                             </div>
                                                         </div>
                                                     </div>
+
                                                     {/* Body */}
-                                                    <div style={{ padding: '14px 20px 18px' }}>
-                                                        <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                                                    <div style={{ padding: '14px 22px 20px' }}>
+                                                        {/* Meta badges */}
+                                                        <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
                                                             <span style={{
                                                                 fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6,
                                                                 background: visaColor + '18', color: visaColor,
@@ -523,34 +525,51 @@ export default function FlightsPage() {
                                                             <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(129,140,248,0.1)', color: '#818CF8' }}>
                                                                 ✈️ ~{deal.flightHours} saat
                                                             </span>
-                                                        </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 10 }}>
-                                                            <Calendar size={13} />
-                                                            {new Date(deal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                            <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>({deal.tripLabel})</span>
+                                                            <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(251,191,36,0.1)', color: '#F59E0B' }}>
+                                                                <Calendar size={10} style={{ marginRight: 3 }} />
+                                                                {new Date(deal.departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deal.returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} ({deal.tripLabel})
+                                                            </span>
                                                         </div>
 
-                                                        {/* 4 Booking Platform Buttons */}
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
-                                                            <a href={deal.links.skyscanner} target="_blank" rel="noopener noreferrer"
-                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#0770e3', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
-                                                                🔍 Skyscanner <ExternalLink size={10} />
-                                                            </a>
-                                                            <a href={deal.links.googleFlights} target="_blank" rel="noopener noreferrer"
-                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#4285F4', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
-                                                                ✈️ Google <ExternalLink size={10} />
-                                                            </a>
-                                                            <a href={deal.links.enuygun} target="_blank" rel="noopener noreferrer"
-                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#FF3366', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
-                                                                🎫 Enuygun <ExternalLink size={10} />
-                                                            </a>
-                                                            <a href={deal.links.turna} target="_blank" rel="noopener noreferrer"
-                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#FF6B00', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
-                                                                🛫 Turna <ExternalLink size={10} />
-                                                            </a>
+                                                        {/* ═══ PER-PLATFORM PRICE LIST ═══ */}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                            {(deal.platforms || []).map((platform, pi) => (
+                                                                <a key={pi} href={platform.url} target="_blank" rel="noopener noreferrer"
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                                        padding: '11px 14px', borderRadius: 12, textDecoration: 'none',
+                                                                        background: pi === 0 ? `${platform.color}12` : 'var(--bg-secondary)',
+                                                                        border: pi === 0 ? `2px solid ${platform.color}40` : '1px solid var(--border)',
+                                                                        transition: 'all 150ms', cursor: 'pointer',
+                                                                        position: 'relative',
+                                                                    }}
+                                                                    onMouseOver={e => { e.currentTarget.style.background = `${platform.color}20`; e.currentTarget.style.transform = 'translateX(4px)' }}
+                                                                    onMouseOut={e => { e.currentTarget.style.background = pi === 0 ? `${platform.color}12` : 'var(--bg-secondary)'; e.currentTarget.style.transform = 'translateX(0)' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                                        {pi === 0 && (
+                                                                            <span style={{
+                                                                                background: platform.color, color: 'white',
+                                                                                fontSize: '0.55rem', fontWeight: 800, padding: '2px 6px',
+                                                                                borderRadius: 4, textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                                            }}>EN UCUZ</span>
+                                                                        )}
+                                                                        <span style={{ fontSize: '1rem' }}>{platform.icon}</span>
+                                                                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>{platform.name}</span>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                        <span style={{
+                                                                            fontSize: pi === 0 ? '1.05rem' : '0.9rem',
+                                                                            fontWeight: 800,
+                                                                            color: pi === 0 ? platform.color : 'var(--text-primary)',
+                                                                        }}>₺{formatPrice(platform.price)}</span>
+                                                                        <ExternalLink size={12} style={{ color: 'var(--text-tertiary)' }} />
+                                                                    </div>
+                                                                </a>
+                                                            ))}
                                                         </div>
-                                                        <p style={{ margin: 0, fontSize: '0.6rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                                            Güncel fiyat için platforma tıklayın
+
+                                                        <p style={{ margin: '8px 0 0', fontSize: '0.6rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                                                            Gidiş-dönüş tahmini fiyatlar · Güncel fiyat için tıklayın
                                                         </p>
                                                     </div>
                                                 </motion.div>
