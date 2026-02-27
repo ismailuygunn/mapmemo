@@ -39,8 +39,48 @@ const CITIES = [
     { key: 'kapadokya', name: 'Kapadokya', emoji: '🎈' },
 ]
 
-// ═══ CURATED A→Z PLANS (City-based) ═══
-const CITY_PLANS = {
+// ═══ AI WIZARD CONFIG ═══
+const GROUP_TYPES = [
+    { key: 'couple', label: 'Başbaşa', emoji: '💕', desc: 'Romantik çift buluşması' },
+    { key: 'guys', label: 'Agalar', emoji: '🍻', desc: 'Erkek grubu eğlencesi' },
+    { key: 'girls', label: 'Kız Kıza', emoji: '💅', desc: 'Kız arkadaşlarla' },
+    { key: 'mixed', label: 'Karma', emoji: '🎭', desc: 'Kız-erkek karma grup' },
+    { key: 'solo', label: 'Solo', emoji: '🎯', desc: 'Tek başıma macera' },
+]
+
+const ENERGY_LEVELS = [
+    { key: 'chill', label: 'Sakin', emoji: '🧘', color: '#06B6D4', desc: 'Sohbet, kahve, manzara' },
+    { key: 'balanced', label: 'Dengeli', emoji: '⚡', color: '#F59E0B', desc: 'Hem otur hem gez' },
+    { key: 'active', label: 'Hareketli', emoji: '🔥', color: '#EF4444', desc: 'Keşif, yürü, eğlen' },
+    { key: 'crazy', label: 'Delilik', emoji: '💥', color: '#8B5CF6', desc: 'Adrenalin, sürpriz, parti!' },
+]
+
+const BUDGET_OPTIONS = [
+    { key: 'economic', label: 'Ekonomik', emoji: '💰', desc: '₺100-300/kişi' },
+    { key: 'mid', label: 'Orta', emoji: '💎', desc: '₺300-600/kişi' },
+    { key: 'luxury', label: 'Lüks', emoji: '👑', desc: '₺600-1500/kişi' },
+    { key: 'unlimited', label: 'Sınırsız', emoji: '♾️', desc: 'Para önemli değil' },
+]
+
+const PREF_TAGS = [
+    { key: 'food', label: 'Yemek', emoji: '🍽️' },
+    { key: 'drinks', label: 'İçki', emoji: '🍸' },
+    { key: 'nature', label: 'Doğa', emoji: '🌳' },
+    { key: 'culture', label: 'Kültür', emoji: '🏛️' },
+    { key: 'adventure', label: 'Macera', emoji: '🪂' },
+    { key: 'romantic', label: 'Romantik', emoji: '🌹' },
+    { key: 'nightlife', label: 'Gece Hayatı', emoji: '🌙' },
+    { key: 'sports', label: 'Spor', emoji: '⚽' },
+    { key: 'shopping', label: 'Alışveriş', emoji: '🛍️' },
+    { key: 'photo', label: 'Fotoğraf', emoji: '📸' },
+    { key: 'music', label: 'Müzik', emoji: '🎵' },
+    { key: 'experience', label: 'Deneyim', emoji: '🎨' },
+]
+
+const WIZARD_STEPS = ['city', 'group', 'count', 'age', 'energy', 'time', 'budget', 'prefs', 'extra']
+
+// Legacy data removed — plans are now AI-generated
+const _LEGACY = {
     istanbul: {
         couples: [
             {
@@ -287,9 +327,42 @@ export default function MeetupsPage() {
     const { toast } = useToast()
     const supabase = createClient()
     const router = useRouter()
-    const [spotMode, setSpotMode] = useState('couples') // 'couples' or 'friends'
+    const [spotMode, setSpotMode] = useState('couples')
     const [selectedCity, setSelectedCity] = useState('istanbul')
     const [expandedPlan, setExpandedPlan] = useState(null)
+    // AI Wizard states
+    const [wizardStep, setWizardStep] = useState(0) // 0=city, 1=group, ...
+    const [wizardData, setWizardData] = useState({
+        city: 'İstanbul', groupType: 'guys', maleCount: 2, femaleCount: 2,
+        ageRange: '25-35', energyLevel: 'balanced', timeStart: '19:00', timeEnd: '00:00',
+        budget: 'mid', preferences: [], extraNotes: '',
+    })
+    const [aiPlan, setAiPlan] = useState(null)
+    const [aiLoading, setAiLoading] = useState(false)
+    const [expandedStep, setExpandedStep] = useState(null)
+    const [showWizard, setShowWizard] = useState(false)
+
+    const updateWizard = (key, val) => setWizardData(d => ({ ...d, [key]: val }))
+    const togglePref = (key) => setWizardData(d => ({
+        ...d, preferences: d.preferences.includes(key) ? d.preferences.filter(p => p !== key) : [...d.preferences, key]
+    }))
+
+    const generateAIPlan = async () => {
+        setAiLoading(true); setAiPlan(null); setExpandedStep(null)
+        try {
+            const res = await fetch('/api/ai/meetup-plan', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(wizardData),
+            })
+            if (!res.ok) throw new Error('API error')
+            const data = await res.json()
+            setAiPlan(data)
+            setShowWizard(false)
+        } catch (err) {
+            toast?.({ title: 'Plan oluşturulamadı', description: 'Tekrar deneyin', type: 'error' })
+        }
+        setAiLoading(false)
+    }
 
     useEffect(() => {
         if (space || user) loadMeetups()
@@ -458,163 +531,305 @@ export default function MeetupsPage() {
                         </motion.button>
                     </motion.div>
 
-                    {/* ═══ HERO BANNER ═══ */}
+                    {/* ═══ AI MEETUP PLANNER ═══ */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                         style={{
                             borderRadius: 24, overflow: 'hidden', marginBottom: 20,
-                            position: 'relative', height: 180,
-                            backgroundImage: 'url(/meetup_hero.png)',
-                            backgroundSize: 'cover', backgroundPosition: 'center',
+                            position: 'relative', height: 160,
+                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED, #EC4899)',
                         }}>
                         <div style={{
                             position: 'absolute', inset: 0,
-                            background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
-                            display: 'flex', alignItems: 'flex-end', padding: 24,
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 28px',
                         }}>
                             <div>
-                                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', margin: '0 0 4px' }}>Şehir seç, plan seç, tadını çıkar</p>
-                                <h2 style={{ color: 'white', margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>A'dan Z'ye Buluşma Planları</h2>
+                                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.78rem', margin: '0 0 6px' }}>🤖 AI ile kişiye özel plan</p>
+                                <h2 style={{ color: 'white', margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 900 }}>Buluşma Planı Üret</h2>
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem', margin: 0 }}>Detaylarını söyle, sana özel A-Z plan çıkaralım</p>
                             </div>
-                        </div>
-                    </motion.div>
-
-                    {/* ═══ CITY SELECTOR ═══ */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                        style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
-                        {CITIES.map(city => (
-                            <motion.button key={city.key} whileTap={{ scale: 0.95 }}
-                                onClick={() => { setSelectedCity(city.key); setExpandedPlan(null) }}
+                            <motion.button whileTap={{ scale: 0.95 }}
+                                onClick={() => { setShowWizard(true); setAiPlan(null); setWizardStep(0) }}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-                                    borderRadius: 12, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-                                    fontSize: '0.82rem', fontWeight: 700,
-                                    background: selectedCity === city.key ? 'linear-gradient(135deg, #F59E0B, #EF4444)' : 'var(--bg-secondary)',
-                                    color: selectedCity === city.key ? 'white' : 'var(--text-secondary)',
-                                    boxShadow: selectedCity === city.key ? '0 4px 15px rgba(245,158,11,0.3)' : 'none',
-                                    transition: 'all 200ms',
-                                }}>
-                                <span style={{ fontSize: '1.1rem' }}>{city.emoji}</span> {city.name}
-                            </motion.button>
-                        ))}
+                                    padding: '12px 24px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                                    background: 'white', color: '#4F46E5', fontSize: '0.85rem', fontWeight: 800,
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                }}>🔮 Başla</motion.button>
+                        </div>
                     </motion.div>
 
-                    {/* ═══ MODE TOGGLE + A→Z PLANS ═══ */}
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                        style={sectionStyle}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-                            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>
-                                <Sparkles size={16} style={{ color: '#F59E0B', marginRight: 6 }} />
-                                {CITIES.find(c => c.key === selectedCity)?.emoji} {CITIES.find(c => c.key === selectedCity)?.name} Planları
-                            </h2>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                                {[
-                                    { key: 'couples', label: '💕 Çiftler', color: '#EF4444' },
-                                    { key: 'friends', label: '🤝 Arkadaşlar', color: '#6366F1' },
-                                ].map(mode => (
-                                    <motion.button key={mode.key} whileTap={{ scale: 0.95 }}
-                                        onClick={() => { setSpotMode(mode.key); setExpandedPlan(null) }}
-                                        style={{
-                                            padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                            fontSize: '0.78rem', fontWeight: 700,
-                                            background: spotMode === mode.key ? mode.color : 'var(--bg-tertiary)',
-                                            color: spotMode === mode.key ? 'white' : 'var(--text-secondary)',
-                                            transition: 'all 200ms',
-                                        }}>{mode.label}</motion.button>
-                                ))}
-                            </div>
-                        </div>
+                    {/* ═══ AI WIZARD MODAL ═══ */}
+                    <AnimatePresence>
+                        {showWizard && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+                                onClick={() => !aiLoading && setShowWizard(false)}>
+                                <motion.div initial={{ opacity: 0, y: 40, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40 }}
+                                    transition={{ type: 'spring', damping: 25 }} onClick={e => e.stopPropagation()}
+                                    style={{ width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto', background: 'var(--bg-primary)', borderRadius: 28, boxShadow: '0 25px 80px rgba(0,0,0,0.3)', border: '1px solid var(--border)' }}>
 
-                        {/* Plan cards */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            {(CITY_PLANS[selectedCity]?.[spotMode] || []).map((plan, pi) => (
-                                <motion.div key={pi}
-                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: pi * 0.08 }}
-                                    style={{
-                                        background: 'var(--bg-primary)', borderRadius: 18,
-                                        border: expandedPlan === pi ? '2px solid #F59E0B' : '1px solid var(--border)',
-                                        overflow: 'hidden', transition: 'all 200ms',
-                                    }}>
-                                    {/* Plan header */}
-                                    <div
-                                        onClick={() => setExpandedPlan(expandedPlan === pi ? null : pi)}
-                                        style={{
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '16px 20px', cursor: 'pointer',
-                                        }}>
-                                        <div>
-                                            <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 800 }}>{plan.title}</h3>
-                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{plan.subtitle}</p>
+                                    {/* Progress bar */}
+                                    <div style={{ padding: '20px 24px 0' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-tertiary)' }}>{wizardStep + 1} / {WIZARD_STEPS.length}</span>
+                                            <button onClick={() => setShowWizard(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: '1.2rem' }}>✕</button>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#F59E0B' }}>{plan.budget}</div>
-                                                <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>{plan.duration}</div>
-                                            </div>
-                                            <motion.div animate={{ rotate: expandedPlan === pi ? 180 : 0 }}>
-                                                <ChevronDown size={18} style={{ color: 'var(--text-tertiary)' }} />
-                                            </motion.div>
+                                        <div style={{ height: 4, borderRadius: 2, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
+                                            <motion.div animate={{ width: `${((wizardStep + 1) / WIZARD_STEPS.length) * 100}%` }} style={{ height: '100%', borderRadius: 2, background: 'linear-gradient(90deg, #4F46E5, #EC4899)' }} />
                                         </div>
                                     </div>
 
-                                    {/* Expanded steps */}
-                                    <AnimatePresence>
-                                        {expandedPlan === pi && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}
-                                                style={{ overflow: 'hidden' }}>
-                                                <div style={{ padding: '0 20px 20px' }}>
-                                                    {/* Timeline */}
-                                                    <div style={{ position: 'relative' }}>
-                                                        {/* Vertical line */}
-                                                        <div style={{
-                                                            position: 'absolute', left: 15, top: 12, bottom: 12,
-                                                            width: 2, background: 'linear-gradient(to bottom, #F59E0B, #EF4444)',
-                                                            borderRadius: 2, opacity: 0.3,
-                                                        }} />
-                                                        {plan.steps.map((step, si) => (
-                                                            <motion.div key={si}
-                                                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                                                                transition={{ delay: si * 0.06 }}
-                                                                style={{
-                                                                    display: 'flex', gap: 14, padding: '10px 0',
-                                                                    position: 'relative',
-                                                                }}>
-                                                                {/* Time dot */}
-                                                                <div style={{
-                                                                    width: 32, minWidth: 32, display: 'flex', flexDirection: 'column',
-                                                                    alignItems: 'center', gap: 2, zIndex: 1,
-                                                                }}>
-                                                                    <span style={{ fontSize: '1.2rem' }}>{step.emoji}</span>
-                                                                    <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#F59E0B' }}>{step.time}</span>
-                                                                </div>
-                                                                {/* Content */}
-                                                                <div style={{
-                                                                    flex: 1, background: 'var(--bg-secondary)', borderRadius: 14,
-                                                                    padding: '12px 16px', border: '1px solid var(--border)',
-                                                                }}>
-                                                                    <div style={{ fontSize: '0.85rem', fontWeight: 800, marginBottom: 3 }}>{step.action}</div>
-                                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{step.detail}</div>
-                                                                    {step.tip && (
-                                                                        <div style={{
-                                                                            fontSize: '0.68rem', marginTop: 6, padding: '5px 10px',
-                                                                            background: 'rgba(245,158,11,0.08)', borderRadius: 8,
-                                                                            color: '#D97706', fontWeight: 600,
-                                                                        }}>💡 {step.tip}</div>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
+                                    <div style={{ padding: '20px 24px 28px' }}>
+                                        {/* Step 0: City */}
+                                        {wizardStep === 0 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>📍 Hangi şehirde?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Buluşma nerede olacak?</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                                                {CITIES.map(c => (
+                                                    <motion.button key={c.key} whileTap={{ scale: 0.95 }} onClick={() => { updateWizard('city', c.name); setWizardStep(1) }}
+                                                        style={{ padding: '16px', borderRadius: 16, border: wizardData.city === c.name ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData.city === c.name ? 'rgba(79,70,229,0.08)' : 'var(--bg-secondary)', cursor: 'pointer', textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '1.8rem', marginBottom: 4 }}>{c.emoji}</div>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{c.name}</div>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>)}
+
+                                        {/* Step 1: Group type */}
+                                        {wizardStep === 1 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>👥 Nasıl bir buluşma?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Grup tipini seç</p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {GROUP_TYPES.map(g => (
+                                                    <motion.button key={g.key} whileTap={{ scale: 0.98 }} onClick={() => { updateWizard('groupType', g.key); setWizardStep(g.key === 'solo' ? 3 : 2) }}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 16, border: wizardData.groupType === g.key ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData.groupType === g.key ? 'rgba(79,70,229,0.08)' : 'var(--bg-secondary)', cursor: 'pointer', textAlign: 'left' }}>
+                                                        <span style={{ fontSize: '1.6rem' }}>{g.emoji}</span>
+                                                        <div><div style={{ fontSize: '0.88rem', fontWeight: 700 }}>{g.label}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{g.desc}</div></div>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>)}
+
+                                        {/* Step 2: Count */}
+                                        {wizardStep === 2 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>🔢 Kaç kişi?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Kız-erkek sayısını belirle</p>
+                                            {['maleCount', 'femaleCount'].map(field => (
+                                                <div key={field} style={{ marginBottom: 16 }}>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 700, marginBottom: 8 }}>{field === 'maleCount' ? '👦 Erkek' : '👧 Kız'}</div>
+                                                    <div style={{ display: 'flex', gap: 8 }}>
+                                                        {[0, 1, 2, 3, 4, 5, 6].map(n => (
+                                                            <motion.button key={n} whileTap={{ scale: 0.9 }} onClick={() => updateWizard(field, n)}
+                                                                style={{ width: 44, height: 44, borderRadius: 12, border: wizardData[field] === n ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData[field] === n ? '#4F46E5' : 'var(--bg-secondary)', color: wizardData[field] === n ? 'white' : 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}>{n}</motion.button>
                                                         ))}
                                                     </div>
                                                 </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                            ))}
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setWizardStep(3)}
+                                                style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', color: 'white', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Devam →</motion.button>
+                                        </div>)}
+
+                                        {/* Step 3: Age */}
+                                        {wizardStep === 3 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>🎂 Yaş aralığı?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Ortam/mekan seçimini etkiler</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                                                {['18-25', '25-35', '35-45', '45+'].map(age => (
+                                                    <motion.button key={age} whileTap={{ scale: 0.95 }} onClick={() => { updateWizard('ageRange', age); setWizardStep(4) }}
+                                                        style={{ padding: '18px', borderRadius: 16, border: wizardData.ageRange === age ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData.ageRange === age ? 'rgba(79,70,229,0.08)' : 'var(--bg-secondary)', cursor: 'pointer', fontSize: '1rem', fontWeight: 800 }}>{age}</motion.button>
+                                                ))}
+                                            </div>
+                                        </div>)}
+
+                                        {/* Step 4: Energy */}
+                                        {wizardStep === 4 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>⚡ Enerji seviyesi?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Ne kadar hareketli olsun?</p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {ENERGY_LEVELS.map(e => (
+                                                    <motion.button key={e.key} whileTap={{ scale: 0.98 }} onClick={() => { updateWizard('energyLevel', e.key); setWizardStep(5) }}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 16, border: wizardData.energyLevel === e.key ? `2px solid ${e.color}` : '1px solid var(--border)', background: wizardData.energyLevel === e.key ? `${e.color}15` : 'var(--bg-secondary)', cursor: 'pointer', textAlign: 'left' }}>
+                                                        <span style={{ fontSize: '1.6rem' }}>{e.emoji}</span>
+                                                        <div><div style={{ fontSize: '0.88rem', fontWeight: 700 }}>{e.label}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{e.desc}</div></div>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>)}
+
+                                        {/* Step 5: Time range */}
+                                        {wizardStep === 5 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>🕐 Saat aralığı?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Planın başlangıç ve bitiş saati</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                                                <div>
+                                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: 6 }}>Başlangıç</div>
+                                                    <input type="time" value={wizardData.timeStart} onChange={e => updateWizard('timeStart', e.target.value)}
+                                                        style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700 }} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: 6 }}>Bitiş</div>
+                                                    <input type="time" value={wizardData.timeEnd} onChange={e => updateWizard('timeEnd', e.target.value)}
+                                                        style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700 }} />
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                                                {[{ l: 'Öğleden sonra', s: '14:00', e: '19:00' }, { l: 'Akşam', s: '18:00', e: '23:00' }, { l: 'Gece', s: '21:00', e: '03:00' }, { l: 'Tam gün', s: '10:00', e: '00:00' }].map(q => (
+                                                    <button key={q.l} onClick={() => { updateWizard('timeStart', q.s); updateWizard('timeEnd', q.e) }}
+                                                        style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{q.l}</button>
+                                                ))}
+                                            </div>
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setWizardStep(6)}
+                                                style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', color: 'white', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer' }}>Devam →</motion.button>
+                                        </div>)}
+
+                                        {/* Step 6: Budget */}
+                                        {wizardStep === 6 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>💰 Bütçe?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Kişi başı harcama limiti</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                                                {BUDGET_OPTIONS.map(b => (
+                                                    <motion.button key={b.key} whileTap={{ scale: 0.95 }} onClick={() => { updateWizard('budget', b.key); setWizardStep(7) }}
+                                                        style={{ padding: '18px', borderRadius: 16, border: wizardData.budget === b.key ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData.budget === b.key ? 'rgba(79,70,229,0.08)' : 'var(--bg-secondary)', cursor: 'pointer', textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{b.emoji}</div>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{b.label}</div>
+                                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>{b.desc}</div>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                        </div>)}
+
+                                        {/* Step 7: Preferences */}
+                                        {wizardStep === 7 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>🎯 Ne yapak?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Birden fazla seçebilirsin</p>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
+                                                {PREF_TAGS.map(p => (
+                                                    <motion.button key={p.key} whileTap={{ scale: 0.95 }} onClick={() => togglePref(p.key)}
+                                                        style={{ padding: '14px 8px', borderRadius: 14, border: wizardData.preferences.includes(p.key) ? '2px solid #4F46E5' : '1px solid var(--border)', background: wizardData.preferences.includes(p.key) ? 'rgba(79,70,229,0.1)' : 'var(--bg-secondary)', cursor: 'pointer', textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '1.3rem', marginBottom: 2 }}>{p.emoji}</div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{p.label}</div>
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setWizardStep(8)}
+                                                style={{ width: '100%', padding: '14px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', color: 'white', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer' }}>Devam →</motion.button>
+                                        </div>)}
+
+                                        {/* Step 8: Extra notes + Generate */}
+                                        {wizardStep === 8 && (<div>
+                                            <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 900 }}>📝 Ekstra bir şey var mı?</h3>
+                                            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 16px' }}>Özel istekler, alerjiler, sürpriz planı...</p>
+                                            <textarea value={wizardData.extraNotes} onChange={e => updateWizard('extraNotes', e.target.value)} placeholder="Örn: Arkadaşım vegan, sürpriz doğum günü planı, sessiz mekan tercih ederiz..."
+                                                style={{ width: '100%', padding: '14px', borderRadius: 14, border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: 100, resize: 'vertical', fontFamily: 'inherit' }} />
+                                            <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, padding: '12px 16px', marginTop: 12, marginBottom: 16, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 6 }}>📋 Özet</div>
+                                                <div style={{ fontSize: '0.78rem', lineHeight: 1.6, color: 'var(--text-secondary)' }}>
+                                                    📍 {wizardData.city} · {GROUP_TYPES.find(g => g.key === wizardData.groupType)?.emoji} {GROUP_TYPES.find(g => g.key === wizardData.groupType)?.label}
+                                                    {wizardData.groupType !== 'solo' && ` · ${wizardData.maleCount + wizardData.femaleCount} kişi`}
+                                                    {' · '}{wizardData.ageRange} yaş · {ENERGY_LEVELS.find(e => e.key === wizardData.energyLevel)?.emoji} {ENERGY_LEVELS.find(e => e.key === wizardData.energyLevel)?.label}
+                                                    {' · '}{wizardData.timeStart}–{wizardData.timeEnd} · {BUDGET_OPTIONS.find(b => b.key === wizardData.budget)?.emoji} {BUDGET_OPTIONS.find(b => b.key === wizardData.budget)?.label}
+                                                    {wizardData.preferences.length > 0 && ` · ${wizardData.preferences.map(p => PREF_TAGS.find(t => t.key === p)?.emoji).join(' ')}`}
+                                                </div>
+                                            </div>
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={generateAIPlan} disabled={aiLoading}
+                                                style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #4F46E5, #EC4899)', color: 'white', fontSize: '1rem', fontWeight: 800, cursor: aiLoading ? 'wait' : 'pointer', opacity: aiLoading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                                {aiLoading ? <><Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} /> AI düşünüyor...</> : <>🔮 Plan Üret!</>}
+                                            </motion.button>
+                                        </div>)}
+                                    </div>
+
+                                    {/* Back button */}
+                                    {wizardStep > 0 && !aiLoading && (
+                                        <div style={{ padding: '0 24px 20px' }}>
+                                            <button onClick={() => setWizardStep(s => s - 1)}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: '0.78rem', fontWeight: 600 }}>← Geri</button>
+                                        </div>
+                                    )}
                                 </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* ═══ AI LOADING ═══ */}
+                    {aiLoading && !showWizard && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            style={{ textAlign: 'center', padding: '60px 20px', ...sectionStyle }}>
+                            <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                style={{ fontSize: '3rem', marginBottom: 16 }}>🔮</motion.div>
+                            <h3 style={{ margin: '0 0 8px', fontWeight: 800 }}>AI sizin için düşünüyor...</h3>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', margin: 0 }}>Google Places'tan mekanlar çekiliyor, plan hazırlanıyor</p>
+                        </motion.div>
+                    )}
+
+                    {/* ═══ AI PLAN RESULT ═══ */}
+                    {aiPlan && !aiLoading && (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={sectionStyle}>
+                            {/* Plan header */}
+                            <div style={{ marginBottom: 20 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                                    <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900 }}>{aiPlan.planTitle || '🎯 Planınız Hazır!'}</h2>
+                                    <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setShowWizard(true); setWizardStep(0) }}
+                                        style={{ padding: '6px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-secondary)' }}>🔄 Yeniden</motion.button>
+                                </div>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 8px', lineHeight: 1.5 }}>{aiPlan.vibeDescription}</p>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: '0.68rem', padding: '4px 10px', borderRadius: 8, background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 700 }}>💰 {aiPlan.totalBudget}</span>
+                                    {aiPlan.whatToWear && <span style={{ fontSize: '0.68rem', padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', color: '#D97706', fontWeight: 700 }}>👗 {aiPlan.whatToWear}</span>}
+                                </div>
+                            </div>
+
+                            {/* Timeline steps */}
+                            <div style={{ position: 'relative' }}>
+                                <div style={{ position: 'absolute', left: 15, top: 24, bottom: 24, width: 2, background: 'linear-gradient(to bottom, #4F46E5, #EC4899)', borderRadius: 2, opacity: 0.3 }} />
+                                {(aiPlan.steps || []).map((s, si) => (
+                                    <motion.div key={si} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: si * 0.08 }}
+                                        style={{ display: 'flex', gap: 14, padding: '8px 0', position: 'relative' }}>
+                                        <div style={{ width: 32, minWidth: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, zIndex: 1 }}>
+                                            <span style={{ fontSize: '1.2rem' }}>{s.emoji}</span>
+                                            <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#4F46E5' }}>{s.time}</span>
+                                        </div>
+                                        <div onClick={() => setExpandedStep(expandedStep === si ? null : si)} style={{ flex: 1, background: 'var(--bg-secondary)', borderRadius: 16, padding: '14px 18px', border: expandedStep === si ? '2px solid #4F46E5' : '1px solid var(--border)', cursor: 'pointer', transition: 'all 200ms' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>{s.action}</div>
+                                                <ChevronDown size={16} style={{ color: 'var(--text-tertiary)', transform: expandedStep === si ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }} />
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4F46E5', marginTop: 2 }}>{s.placeName}</div>
+                                            <AnimatePresence>
+                                                {expandedStep === si && (
+                                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                                                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginTop: 8, marginBottom: 0 }}>{s.detail}</p>
+                                                        {s.placeRating && <div style={{ fontSize: '0.68rem', color: '#F59E0B', fontWeight: 700, marginTop: 6 }}>⭐ {s.placeRating} ({s.placeReviews?.toLocaleString()} yorum)</div>}
+                                                        {s.estimatedCost && <div style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginTop: 2 }}>💰 {s.estimatedCost}</div>}
+                                                        {s.proTip && <div style={{ fontSize: '0.68rem', marginTop: 8, padding: '6px 12px', background: 'rgba(79,70,229,0.06)', borderRadius: 10, color: '#4F46E5', fontWeight: 600 }}>💡 {s.proTip}</div>}
+                                                        {s.transportNote && <div style={{ fontSize: '0.65rem', marginTop: 4, color: 'var(--text-tertiary)' }}>🚕 {s.transportNote}</div>}
+                                                        {s.alternative && <div style={{ fontSize: '0.65rem', marginTop: 4, color: 'var(--text-tertiary)', fontStyle: 'italic' }}>🔄 Alternatif: {s.alternative.name} — {s.alternative.reason}</div>}
+                                                        {s.googleMapsUrl && <a href={s.googleMapsUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', fontSize: '0.65rem', marginTop: 6, color: '#4F46E5', fontWeight: 600, textDecoration: 'none' }}>📍 Google Maps'te Aç →</a>}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+
+                            {/* Pro tips */}
+                            {aiPlan.proTips?.length > 0 && (
+                                <div style={{ marginTop: 20, padding: '14px 18px', borderRadius: 16, background: 'rgba(79,70,229,0.05)', border: '1px solid rgba(79,70,229,0.1)' }}>
+                                    <div style={{ fontSize: '0.78rem', fontWeight: 800, marginBottom: 8 }}>💡 Pro Tips</div>
+                                    {aiPlan.proTips.map((tip, i) => (
+                                        <div key={i} style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 4 }}>• {tip}</div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Emergency plan */}
+                            {aiPlan.emergencyPlan && (
+                                <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 14, background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)' }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#EF4444' }}>☔ Yağmur Planı</div>
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: 2 }}>{aiPlan.emergencyPlan}</div>
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
 
                     {/* ═══ QUICK PLAN WIZARD ═══ */}
                     <AnimatePresence>
