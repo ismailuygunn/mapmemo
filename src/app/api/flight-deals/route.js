@@ -387,7 +387,8 @@ export async function GET(request) {
         if (dateRanges.length === 0) {
             return NextResponse.json({ deals: [], error: 'Uygun tarih bulunamadı' })
         }
-        const dateRange = dateRanges[0]
+        // Pick a date range from the middle of the month (not the beginning)
+        const dateRange = dateRanges[Math.floor(dateRanges.length / 2)]
 
         let dests = [...DESTINATIONS].filter(d => d.code !== origin)
         if (visaFilter === 'visa_free') dests = dests.filter(d => ['visa_free', 'domestic'].includes(d.visa))

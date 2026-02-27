@@ -64,7 +64,7 @@ export default function MapPage() {
                     ? 'mapbox://styles/mapbox/dark-v11'
                     : 'mapbox://styles/mapbox/light-v11',
                 center: [28.9784, 41.0082], // Istanbul default [lng, lat]
-                zoom: 1.8,
+                zoom: 3,
                 projection: 'globe',
                 attributionControl: false,
                 logoPosition: 'bottom-right',
@@ -87,37 +87,7 @@ export default function MapPage() {
                 })
             })
 
-            // Slow auto-rotation
-            let isUserInteracting = false
-            let spinResumeTimer = null
-            const spinSpeed = 5 // degrees per second
-
-            const spinGlobe = () => {
-                if (!isUserInteracting && map) {
-                    const center = map.getCenter()
-                    center.lng -= spinSpeed / 60
-                    map.easeTo({ center, duration: 1000 / 60, easing: (n) => n })
-                }
-                requestAnimationFrame(spinGlobe)
-            }
-
-            const pauseSpin = () => {
-                isUserInteracting = true
-                if (spinResumeTimer) clearTimeout(spinResumeTimer)
-            }
-            const resumeSpin = () => {
-                spinResumeTimer = setTimeout(() => { isUserInteracting = false }, 3000)
-            }
-
-            map.on('mousedown', pauseSpin)
-            map.on('touchstart', pauseSpin)
-            map.on('wheel', pauseSpin)
-            map.on('mouseup', resumeSpin)
-            map.on('touchend', resumeSpin)
-            map.on('dragend', resumeSpin)
-            map.on('zoomend', resumeSpin)
-
-            spinGlobe()
+            // No auto-rotation — user controls the map
 
             map.on('load', () => {
                 setMapLoaded(true)
@@ -222,17 +192,17 @@ export default function MapPage() {
             el.className = 'mapbox-pin-marker'
             el.innerHTML = `
                 <div style="
-                    width: 36px; height: 36px;
+                    width: 24px; height: 24px;
                     background: ${pinType.color};
                     border-radius: 50% 50% 50% 0;
                     transform: rotate(-45deg);
                     display: flex; align-items: center; justify-content: center;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-                    border: 2px solid rgba(255,255,255,0.3);
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+                    border: 1.5px solid rgba(255,255,255,0.4);
                     cursor: pointer;
                     transition: transform 150ms, box-shadow 150ms;
                 ">
-                    <span style="transform: rotate(45deg); font-size: 16px;">${pinType.emoji}</span>
+                    <span style="transform: rotate(45deg); font-size: 11px;">${pinType.emoji}</span>
                 </div>
             `
             el.addEventListener('mouseenter', () => {
