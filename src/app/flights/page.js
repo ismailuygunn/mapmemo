@@ -13,22 +13,10 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-const ORIGIN_CITIES = [
-    { code: 'IST', name: 'İstanbul (IST)', emoji: '🌉' },
-    { code: 'SAW', name: 'İstanbul (SAW)', emoji: '🛬' },
-    { code: 'ESB', name: 'Ankara', emoji: '🏛️' },
-    { code: 'ADB', name: 'İzmir', emoji: '🌊' },
-    { code: 'AYT', name: 'Antalya', emoji: '🏖️' },
-    { code: 'ADA', name: 'Adana', emoji: '🌶️' },
-    { code: 'TZX', name: 'Trabzon', emoji: '⛰️' },
-    { code: 'GZT', name: 'Gaziantep', emoji: '🍽️' },
-    { code: 'BJV', name: 'Bodrum', emoji: '⛵' },
-    { code: 'DLM', name: 'Dalaman', emoji: '🏝️' },
-    { code: 'ASR', name: 'Kayseri', emoji: '🗻' },
-    { code: 'KYA', name: 'Konya', emoji: '🕌' },
-    { code: 'SZF', name: 'Samsun', emoji: '🚢' },
-    { code: 'DIY', name: 'Diyarbakır', emoji: '🏰' },
-]
+// Build origin list from all Turkish airports in the database
+const ORIGIN_CITIES = AIRPORTS.filter(a => a.country === 'Türkiye').map(a => ({
+    code: a.code, name: `${a.city} (${a.code})`, emoji: a.emoji,
+}))
 
 const VISA_COLORS = {
     domestic: '#6366F1', visa_free: '#22C55E',
@@ -66,6 +54,19 @@ export default function FlightsPage() {
     const [searchDone, setSearchDone] = useState(false)
     const [error, setError] = useState('')
     const [activeTab, setActiveTab] = useState('deals') // 'deals' or 'search'
+    const [loadingProgress, setLoadingProgress] = useState(0)
+    const [loadingMessage, setLoadingMessage] = useState('')
+
+    const SCAN_MESSAGES = [
+        '🔍 Fiyat avcısı yola çıktı...',
+        '✈️ Havalimanları taranıyor...',
+        '💰 En ucuz fırsatlar aranıyor...',
+        '🌍 Dünya çapında tarama yapılıyor...',
+        '📊 Fiyatlar karşılaştırılıyor...',
+        '🎯 En iyi tarihleri buluyoruz...',
+        '⚡ Neredeyse bitti...',
+        '🏆 Son kontroller yapılıyor...',
+    ]
 
     // Flight search state
     const [searchFrom, setSearchFrom] = useState('IST')
@@ -106,6 +107,17 @@ export default function FlightsPage() {
         setLoading(true)
         setSearchDone(false)
         setError('')
+        setLoadingProgress(0)
+        setLoadingMessage(SCAN_MESSAGES[0])
+
+        // Animate progress bar while loading
+        let msgIdx = 0
+        const progressInterval = setInterval(() => {
+            setLoadingProgress(prev => Math.min(prev + 3 + Math.random() * 5, 92))
+            msgIdx = (msgIdx + 1) % SCAN_MESSAGES.length
+            setLoadingMessage(SCAN_MESSAGES[msgIdx])
+        }, 800)
+
         try {
             const params = new URLSearchParams({ origin, duration, month, pattern, visa: visaFilter })
             if (maxBudget) params.set('budget', maxBudget)
@@ -113,10 +125,13 @@ export default function FlightsPage() {
             const data = await res.json()
             if (data.error) setError(data.error)
             setDeals(data.deals || [])
+            setLoadingProgress(100)
+            setLoadingMessage('✅ Tarama tamamlandı!')
         } catch (e) {
             setError(e.message)
             setDeals([])
         }
+        clearInterval(progressInterval)
         setLoading(false)
         setSearchDone(true)
         setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200)
@@ -344,6 +359,47 @@ export default function FlightsPage() {
                                 {loading ? <Loader2 size={18} className="spin" /> : <Search size={18} />}
                                 {loading ? 'Fiyatlar Taranıyor...' : 'Fiyatları Karşılaştır'}
                             </motion.button>
+
+                            {/* Fun animated progress bar */}
+                            {loading && (
+                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                                    style={{ marginTop: 16 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                            {loadingMessage}
+                                        </span>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7C3AED' }}>
+                                            {Math.round(loadingProgress)}%
+                                        </span>
+                                    </div>
+                                    <div style={{
+                                        height: 8, borderRadius: 10,
+                                        background: 'var(--bg-primary)',
+                                        overflow: 'hidden',
+                                        border: '1px solid var(--border)',
+                                    }}>
+                                        <motion.div
+                                            animate={{ width: `${loadingProgress}%` }}
+                                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                                            style={{
+                                                height: '100%', borderRadius: 10,
+                                                background: 'linear-gradient(90deg, #4F46E5, #7C3AED, #EC4899, #F59E0B)',
+                                                backgroundSize: '200% 100%',
+                                                animation: 'gradientShift 2s ease infinite',
+                                            }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 10 }}>
+                                        {['✈️', '🌍', '💰', '🎯'].map((emoji, i) => (
+                                            <motion.span key={i}
+                                                animate={{ y: [0, -6, 0] }}
+                                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                                                style={{ fontSize: '1.2rem' }}
+                                            >{emoji}</motion.span>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
                         </motion.div>
 
                         {/* ═══ RESULTS ═══ */}
@@ -768,7 +824,7 @@ export default function FlightsPage() {
 
                 </div>
             </main>
-            <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
+            <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; } @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }`}</style>
         </div>
     )
 }

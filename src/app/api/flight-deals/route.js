@@ -371,7 +371,7 @@ async function scanAllSources(origin, dest, departDate, returnDate) {
 }
 
 // ═══════════════════════════════════════
-// MAIN HANDLER
+// MAIN HANDLER — Per-destination cheapest date
 // ═══════════════════════════════════════
 export async function GET(request) {
     try {
@@ -387,30 +387,42 @@ export async function GET(request) {
         if (dateRanges.length === 0) {
             return NextResponse.json({ deals: [], error: 'Uygun tarih bulunamadı' })
         }
-        // Pick a date range from the middle of the month (not the beginning)
-        const dateRange = dateRanges[Math.floor(dateRanges.length / 2)]
+
+        // Pick 3 date samples spread across the month (start/middle/end)
+        const samples = dateRanges.length <= 3 ? dateRanges :
+            [dateRanges[0], dateRanges[Math.floor(dateRanges.length / 2)], dateRanges[dateRanges.length - 1]]
 
         let dests = [...DESTINATIONS].filter(d => d.code !== origin)
         if (visaFilter === 'visa_free') dests = dests.filter(d => ['visa_free', 'domestic'].includes(d.visa))
         else if (visaFilter === 'visa_on_arrival') dests = dests.filter(d => ['visa_free', 'visa_on_arrival', 'domestic'].includes(d.visa))
 
-        // Scan all destinations (batched for performance)
-        const batchSize = 6
-        const allDeals = []
+        // For each destination: scan ALL sample dates in parallel, keep cheapest
+        const batchSize = 4 // 4 dests × 3 dates = 12 parallel calls per batch
+        const bestByDest = new Map()
 
         for (let i = 0; i < dests.length; i += batchSize) {
             const batch = dests.slice(i, i + batchSize)
-            const results = await Promise.allSettled(
-                batch.map(dest =>
-                    scanAllSources(origin, dest.code, dateRange.depart, dateRange.ret)
-                        .then(priceData => ({ dest, priceData }))
-                )
-            )
+            // Fire all dests × all dates in ONE Promise.allSettled
+            const allCalls = []
+            for (const dest of batch) {
+                for (const dr of samples) {
+                    allCalls.push(
+                        scanAllSources(origin, dest.code, dr.depart, dr.ret)
+                            .then(priceData => ({ dest, priceData, dr }))
+                            .catch(() => ({ dest, priceData: null, dr }))
+                    )
+                }
+            }
+            const results = await Promise.allSettled(allCalls)
+
             for (const result of results) {
-                if (result.status === 'fulfilled' && result.value.priceData) {
-                    const { dest, priceData } = result.value
-                    if (maxBudget > 0 && priceData.price > maxBudget) continue
-                    allDeals.push({
+                if (result.status !== 'fulfilled' || !result.value.priceData) continue
+                const { dest, priceData, dr } = result.value
+                if (maxBudget > 0 && priceData.price > maxBudget) continue
+
+                const existing = bestByDest.get(dest.code)
+                if (!existing || priceData.price < existing.price) {
+                    bestByDest.set(dest.code, {
                         destination: dest.code,
                         city: dest.city,
                         country: dest.country,
@@ -429,22 +441,21 @@ export async function GET(request) {
                         allPrices: priceData.allPrices,
                         sourcesFound: priceData.sourcesFound,
                         fallback: priceData.fallback || false,
-                        departDate: dateRange.depart,
-                        returnDate: dateRange.ret,
-                        tripLabel: dateRange.label,
-                        platforms: buildDeeplinks(origin, dest.code, dateRange.depart, dateRange.ret),
+                        departDate: dr.depart,
+                        returnDate: dr.ret,
+                        tripLabel: dr.label,
+                        platforms: buildDeeplinks(origin, dest.code, dr.depart, dr.ret),
                     })
                 }
             }
         }
 
-        allDeals.sort((a, b) => a.price - b.price)
+        const allDeals = Array.from(bestByDest.values()).sort((a, b) => a.price - b.price)
 
         return NextResponse.json({
             deals: allDeals,
             origin,
-            departDate: dateRange.depart,
-            returnDate: dateRange.ret,
+            datesScanned: samples.map(s => `${s.depart} → ${s.ret}`),
             total: allDeals.length,
             scannedAt: new Date().toISOString(),
             sources: ['Duffel', 'Amadeus (yedek)'],
@@ -454,5 +465,3 @@ export async function GET(request) {
         return NextResponse.json({ deals: [], error: err.message }, { status: 500 })
     }
 }
-
-
