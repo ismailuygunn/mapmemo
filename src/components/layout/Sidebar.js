@@ -40,7 +40,7 @@ export default function Sidebar() {
         { icon: Home, label: 'Konaklama', href: '/airbnb' },
         { icon: Zap, label: 'SOS Plan', href: '/meetups' },
         { icon: Ticket, label: 'Etkinlikler', href: '/events' },
-        { icon: Users, label: 'Gruplar', href: '/groups' },
+        { icon: Users, label: 'Seyahat Ekipleri', href: '/groups' },
         { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
         { icon: Gift, label: t('nav.capsules') || 'Kapsüller', href: '/capsules' },
         { icon: User, label: 'Profil', href: '/profile' },
