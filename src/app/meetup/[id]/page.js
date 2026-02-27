@@ -10,7 +10,7 @@ import { useToast } from '@/context/ToastContext'
 import Sidebar from '@/components/layout/Sidebar'
 import {
     ArrowLeft, MapPin, Clock, Users, Link as LinkIcon, ExternalLink,
-    Check, HelpCircle, AlertCircle, XCircle, Plus, Trash2, Loader2,
+    Check, HelpCircle, AlertCircle, XCircle, X, Plus, Trash2, Loader2,
     Edit3, CalendarDays, MessageCircle
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -190,38 +190,34 @@ export default function MeetupDetailPage() {
 
     if (loading) {
         return (
-            <>
+            <div className="page-layout">
                 <Sidebar />
-                <div className="main-content">
-                    <div className="page" style={{ display: 'flex', justifyContent: 'center', padding: 64 }}>
-                        <Loader2 size={32} className="spin" style={{ color: 'var(--primary-1)' }} />
-                    </div>
-                </div>
-            </>
+                <main className="page-main" style={{ display: 'flex', justifyContent: 'center', padding: 64 }}>
+                    <Loader2 size={32} className="spin" style={{ color: 'var(--primary-1)' }} />
+                </main>
+            </div>
         )
     }
 
     if (!meetup) {
         return (
-            <>
+            <div className="page-layout">
                 <Sidebar />
-                <div className="main-content">
-                    <div className="page">
-                        <div className="empty-state">
-                            <h3>Meetup bulunamadı</h3>
-                            <button className="btn btn-primary" onClick={() => router.push('/meetups')}>Meetups'a Dön</button>
-                        </div>
+                <main className="page-main" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 64 }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <h3>Meetup bulunamadı</h3>
+                        <button className="btn btn-primary" onClick={() => router.push('/meetups')}>Meetups'a Dön</button>
                     </div>
-                </div>
-            </>
+                </main>
+            </div>
         )
     }
 
     return (
-        <>
+        <div className="page-layout">
             <Sidebar />
-            <div className="main-content">
-                <div className="page" style={{ maxWidth: 800 }}>
+            <main className="page-main" style={{ overflowY: 'auto' }}>
+                <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px 60px' }}>
                     {/* Back Button */}
                     <button className="btn btn-ghost" onClick={() => router.push('/meetups')}
                         style={{ marginBottom: 16 }}>
@@ -402,8 +398,8 @@ export default function MeetupDetailPage() {
                         )}
                     </div>
                 </div>
-            </div>
+            </main>
             <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 1s linear infinite; }`}</style>
-        </>
+        </div>
     )
 }
