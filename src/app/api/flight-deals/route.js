@@ -312,7 +312,7 @@ export async function GET(request) {
 
             // Sort by price, take cheapest
             sources.sort((a, b) => a.price - b.price)
-            best = sources[0]
+            const best = sources[0]
 
             const visa = VISA_INFO[dest] || { city: dest, visa: 'unknown' }
 
@@ -354,7 +354,7 @@ export async function GET(request) {
             origin,
             filters: { duration, month, pattern },
             scannedAt: new Date().toISOString(),
-            totalScanned: shuffled.length,
+            totalScanned: destinationsToScan.length,
             sources: ['amadeus', process.env.DUFFEL_API_KEY ? 'duffel' : null].filter(Boolean),
         })
     } catch (err) {

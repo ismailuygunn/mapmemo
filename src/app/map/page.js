@@ -64,7 +64,8 @@ export default function MapPage() {
                     ? 'mapbox://styles/mapbox/dark-v11'
                     : 'mapbox://styles/mapbox/light-v11',
                 center: [28.9784, 41.0082], // Istanbul default [lng, lat]
-                zoom: 3,
+                zoom: 1.8,
+                projection: 'globe',
                 attributionControl: false,
                 logoPosition: 'bottom-right',
             })
@@ -74,6 +75,49 @@ export default function MapPage() {
                 showCompass: true,
                 showZoom: true,
             }), 'bottom-right')
+
+            // Globe atmosphere styling
+            map.on('style.load', () => {
+                map.setFog({
+                    color: theme === 'dark' ? 'rgb(10, 10, 30)' : 'rgb(186, 210, 235)',
+                    'high-color': theme === 'dark' ? 'rgb(20, 20, 60)' : 'rgb(36, 92, 223)',
+                    'horizon-blend': 0.04,
+                    'space-color': theme === 'dark' ? 'rgb(5, 5, 15)' : 'rgb(11, 11, 25)',
+                    'star-intensity': theme === 'dark' ? 0.6 : 0.15,
+                })
+            })
+
+            // Slow auto-rotation
+            let isUserInteracting = false
+            let spinResumeTimer = null
+            const spinSpeed = 5 // degrees per second
+
+            const spinGlobe = () => {
+                if (!isUserInteracting && map) {
+                    const center = map.getCenter()
+                    center.lng -= spinSpeed / 60
+                    map.easeTo({ center, duration: 1000 / 60, easing: (n) => n })
+                }
+                requestAnimationFrame(spinGlobe)
+            }
+
+            const pauseSpin = () => {
+                isUserInteracting = true
+                if (spinResumeTimer) clearTimeout(spinResumeTimer)
+            }
+            const resumeSpin = () => {
+                spinResumeTimer = setTimeout(() => { isUserInteracting = false }, 3000)
+            }
+
+            map.on('mousedown', pauseSpin)
+            map.on('touchstart', pauseSpin)
+            map.on('wheel', pauseSpin)
+            map.on('mouseup', resumeSpin)
+            map.on('touchend', resumeSpin)
+            map.on('dragend', resumeSpin)
+            map.on('zoomend', resumeSpin)
+
+            spinGlobe()
 
             map.on('load', () => {
                 setMapLoaded(true)
@@ -131,17 +175,17 @@ export default function MapPage() {
 
     // Load pins
     useEffect(() => {
-        if (!space) return
-        loadPins()
-    }, [space])
+        if (space || user) loadPins()
+    }, [space, user])
 
     const loadPins = async () => {
         setLoading(true)
-        const { data, error } = await supabase
-            .from('pins')
-            .select('*, pin_media(*)')
-            .eq('space_id', space.id)
-            .order('created_at', { ascending: false })
+        let query = supabase.from('pins').select('*, pin_media(*)')
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('user_id', user.id)
+        else { setLoading(false); return }
+
+        const { data, error } = await query.order('created_at', { ascending: false })
 
         if (!error && data) {
             setPins(data)
