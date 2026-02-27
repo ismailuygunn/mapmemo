@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Plane, User, Ticket, Home, Zap } from 'lucide-react'
+import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Plane, User, Ticket, Home, Zap, Newspaper, Search } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -28,7 +28,8 @@ export default function Sidebar() {
 
     const navItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard') || 'Panel', href: '/dashboard' },
-        { icon: Compass, label: 'Keşfet', href: '/explore' },
+        { icon: Newspaper, label: 'Feed', href: '/feed' },
+        { icon: Search, label: t('Keşfet', 'Discover'), href: '/discover' },
         { icon: Map, label: t('nav.map') || 'Harita', href: '/map' },
         { icon: Compass, label: t('nav.cities') || 'Şehirler', href: '/cities' },
         { icon: Calendar, label: t('nav.planner') || 'Planla', href: '/planner' },
