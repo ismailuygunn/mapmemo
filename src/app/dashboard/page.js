@@ -8,10 +8,28 @@ import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import {
     MapPin, Plane, Calendar, Users, Sun, Cloud, CloudRain, Snowflake,
-    TrendingUp, ArrowRight, Plus, DollarSign, Thermometer, Wind, Droplets
+    TrendingUp, ArrowRight, Plus, DollarSign, Thermometer, Wind, Droplets,
+    Sparkles, Bus, Car, Train, Utensils, Ticket, Bed, Lightbulb, ChevronRight,
+    Send, X, Edit3, Check, Star, Loader2, RefreshCw, Wallet
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+
+const CATEGORY_ICONS = {
+    transport: Bus,
+    food: Utensils,
+    activity: Ticket,
+    accommodation: Bed,
+    hack: Lightbulb,
+}
+const CATEGORY_COLORS = {
+    transport: { bg: 'rgba(99,102,241,0.12)', color: '#818CF8' },
+    food: { bg: 'rgba(251,146,60,0.12)', color: '#FB923C' },
+    activity: { bg: 'rgba(52,211,153,0.12)', color: '#34D399' },
+    accommodation: { bg: 'rgba(244,114,182,0.12)', color: '#F472B6' },
+    hack: { bg: 'rgba(250,204,21,0.12)', color: '#FACC15' },
+}
 
 export default function DashboardPage() {
     const [trips, setTrips] = useState([])
@@ -20,6 +38,17 @@ export default function DashboardPage() {
     const [weather, setWeather] = useState(null)
     const [currency, setCurrency] = useState(null)
     const [loading, setLoading] = useState(true)
+
+    // Quick tips state
+    const [quickTipsCity, setQuickTipsCity] = useState('')
+    const [quickTips, setQuickTips] = useState(null)
+    const [tipsLoading, setTipsLoading] = useState(false)
+    const [tipsError, setTipsError] = useState('')
+    const [dismissedTips, setDismissedTips] = useState([])
+    const [savedTips, setSavedTips] = useState([])
+    const [userSpaces, setUserSpaces] = useState([])
+    const [showAssignModal, setShowAssignModal] = useState(false)
+
     const { user, profile } = useAuth()
     const { space } = useSpace()
     const { locale } = useLanguage()
@@ -29,7 +58,14 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (space) loadDashboard()
-    }, [space])
+        if (user?.id) loadUserSpaces()
+    }, [space, user?.id])
+
+    // Load saved tips from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('naviso-saved-tips')
+        if (saved) setSavedTips(JSON.parse(saved))
+    }, [])
 
     const loadDashboard = async () => {
         setLoading(true)
@@ -62,6 +98,80 @@ export default function DashboardPage() {
         setLoading(false)
     }
 
+    const loadUserSpaces = async () => {
+        try {
+            const { data: memberships } = await supabase
+                .from('space_members')
+                .select('space_id')
+                .eq('user_id', user.id)
+            if (memberships?.length > 0) {
+                const { data: spaces } = await supabase
+                    .from('spaces')
+                    .select('id, name')
+                    .in('id', memberships.map(m => m.space_id))
+                setUserSpaces(spaces || [])
+            }
+        } catch { }
+    }
+
+    // ─── Quick Tips ───
+    const loadQuickTips = async (city) => {
+        if (!city.trim()) return
+        setTipsLoading(true)
+        setTipsError('')
+        setDismissedTips([])
+        try {
+            const res = await fetch('/api/ai/quick-tips', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ city: city.trim(), locale }),
+            })
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+            setQuickTips(data)
+            toast.success(`${city} ${t('önerileri hazır!', 'tips ready!')} ✨`)
+        } catch (err) {
+            setTipsError(err.message)
+            toast.error(t('Öneri yüklenemedi', 'Could not load tips'))
+        }
+        setTipsLoading(false)
+    }
+
+    const dismissTip = (idx) => setDismissedTips(prev => [...prev, idx])
+
+    const saveTip = (tip) => {
+        const updated = [...savedTips, { ...tip, city: quickTips?.city, savedAt: new Date().toISOString() }]
+        setSavedTips(updated)
+        localStorage.setItem('naviso-saved-tips', JSON.stringify(updated))
+        toast.success(t('İpucu kaydedildi!', 'Tip saved!'))
+    }
+
+    const planFromTips = () => {
+        if (quickTips?.city) {
+            router.push(`/planner?city=${encodeURIComponent(quickTips.city)}`)
+        }
+    }
+
+    const assignToGroup = async (spaceId) => {
+        if (!quickTips) return
+        // Save tips as a note/pin to the space
+        try {
+            await supabase.from('pins').insert({
+                space_id: spaceId,
+                city: quickTips.city,
+                type: 'tip',
+                notes: JSON.stringify(quickTips),
+                user_id: user.id,
+            })
+            toast.success(t('Gruba atandı!', 'Assigned to group!'))
+            setShowAssignModal(false)
+        } catch (err) {
+            // Fallback: save to localStorage
+            toast.success(t('Kaydedildi!', 'Saved!'))
+            setShowAssignModal(false)
+        }
+    }
+
     const now = new Date()
     const upcomingTrips = trips.filter(t => t.start_date && new Date(t.start_date) >= now)
     const pastTrips = trips.filter(t => t.end_date && new Date(t.end_date) < now)
@@ -88,7 +198,7 @@ export default function DashboardPage() {
             <Sidebar />
             <main className="page-main">
                 <div className="dash-container">
-                    {/* Header */}
+                    {/* ── Header ── */}
                     <motion.div className="dash-header" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                         <div>
                             <h1 className="dash-greeting">{greeting}, <span className="dash-name">{profile?.display_name || user?.email?.split('@')[0]}</span> 👋</h1>
@@ -99,7 +209,7 @@ export default function DashboardPage() {
                         </button>
                     </motion.div>
 
-                    {/* Stats Row */}
+                    {/* ── Stats Row ── */}
                     <motion.div className="dash-stats" variants={containerAnim} initial="hidden" animate="show">
                         {[
                             { icon: <Plane size={20} />, value: trips.length, label: t('Trip', 'Trips'), color: '#818CF8', bg: 'rgba(129,140,248,0.12)' },
@@ -115,7 +225,381 @@ export default function DashboardPage() {
                         ))}
                     </motion.div>
 
-                    {/* Upcoming Trips */}
+                    {/* ═══════════════════════════════════════ */}
+                    {/* ══ AI QUICK TIPS - PREMIUM SECTION ══ */}
+                    {/* ═══════════════════════════════════════ */}
+                    <motion.section
+                        className="dash-section"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            marginBottom: 16,
+                        }}>
+                            <h2 className="dash-section-title" style={{ margin: 0 }}>
+                                <Sparkles size={18} style={{ color: '#FBBF24' }} /> {t('Hızlı Gezi Önerileri', 'Quick Travel Tips')}
+                            </h2>
+                            {quickTips && (
+                                <button
+                                    className="btn btn-ghost"
+                                    onClick={() => loadQuickTips(quickTipsCity)}
+                                    disabled={tipsLoading}
+                                    style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                                >
+                                    <RefreshCw size={12} /> {t('Yenile', 'Refresh')}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* City Search Bar */}
+                        <div style={{
+                            display: 'flex', gap: 8, marginBottom: 16,
+                            background: 'var(--bg-secondary)', borderRadius: 14,
+                            padding: '6px 6px 6px 16px', border: '1px solid var(--border)',
+                        }}>
+                            <MapPin size={18} style={{ color: 'var(--text-tertiary)', marginTop: 8, flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                placeholder={t('Şehir yaz... (ör: Kapadokya, Paris, Tokyo)', 'Type a city... (e.g. Cappadocia, Paris, Tokyo)')}
+                                value={quickTipsCity}
+                                onChange={e => setQuickTipsCity(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && loadQuickTips(quickTipsCity)}
+                                style={{
+                                    flex: 1, background: 'transparent', border: 'none', outline: 'none',
+                                    color: 'var(--text-primary)', fontSize: '0.88rem', padding: '8px 0',
+                                }}
+                            />
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => loadQuickTips(quickTipsCity)}
+                                disabled={tipsLoading || !quickTipsCity.trim()}
+                                style={{ borderRadius: 10, padding: '8px 16px', fontSize: '0.8rem' }}
+                            >
+                                {tipsLoading
+                                    ? <Loader2 size={14} className="spin" />
+                                    : <><Sparkles size={14} /> {t('Öner', 'Suggest')}</>}
+                            </button>
+                        </div>
+
+                        {/* Tips Error */}
+                        {tipsError && (
+                            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                style={{ color: '#EF4444', fontSize: '0.78rem', marginBottom: 12 }}>
+                                ⚠️ {tipsError}
+                            </motion.p>
+                        )}
+
+                        {/* Tips Results */}
+                        <AnimatePresence>
+                            {quickTips && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -12 }}
+                                >
+                                    {/* ── City Header + Slogan ── */}
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        borderRadius: 16, padding: '20px 24px', marginBottom: 16,
+                                        color: 'white', position: 'relative', overflow: 'hidden',
+                                    }}>
+                                        <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+                                        <div style={{ position: 'absolute', bottom: -30, left: -30, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                                        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: 4 }}>
+                                            📍 {quickTips.city}
+                                        </h3>
+                                        {quickTips.slogan && (
+                                            <p style={{ fontSize: '0.82rem', opacity: 0.8, fontStyle: 'italic', marginBottom: 8 }}>
+                                                "{quickTips.slogan}"
+                                            </p>
+                                        )}
+                                        {/* Daily budget badges */}
+                                        {quickTips.dailyBudget && (
+                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                                                <span style={{
+                                                    background: 'rgba(255,255,255,0.15)', borderRadius: 20,
+                                                    padding: '4px 12px', fontSize: '0.72rem', backdropFilter: 'blur(4px)',
+                                                }}>
+                                                    💰 {t('Ultra Bütçe', 'Ultra Budget')}: {quickTips.dailyBudget.ultraBudget}
+                                                </span>
+                                                <span style={{
+                                                    background: 'rgba(255,255,255,0.15)', borderRadius: 20,
+                                                    padding: '4px 12px', fontSize: '0.72rem', backdropFilter: 'blur(4px)',
+                                                }}>
+                                                    ✨ {t('Rahat', 'Comfortable')}: {quickTips.dailyBudget.comfortable}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Action buttons */}
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                                            <button
+                                                onClick={planFromTips}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.2)', border: 'none',
+                                                    borderRadius: 10, padding: '8px 16px', color: 'white',
+                                                    fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    backdropFilter: 'blur(4px)', transition: 'all 200ms',
+                                                }}
+                                                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+                                                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                                            >
+                                                <Plane size={14} /> {t('Buradan Planla', 'Plan from Here')}
+                                            </button>
+                                            <button
+                                                onClick={() => setShowAssignModal(true)}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
+                                                    borderRadius: 10, padding: '8px 16px', color: 'white',
+                                                    fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', gap: 6,
+                                                    transition: 'all 200ms',
+                                                }}
+                                                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                                                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+                                            >
+                                                <Users size={14} /> {t('Gruba Ata', 'Assign to Group')}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* ── Quick Tips Cards Grid ── */}
+                                    <div style={{
+                                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                                        gap: 12, marginBottom: 16,
+                                    }}>
+                                        {(quickTips.quickTips || []).map((tip, idx) => {
+                                            if (dismissedTips.includes(idx)) return null
+                                            const cat = CATEGORY_COLORS[tip.category] || CATEGORY_COLORS.hack
+                                            const CatIcon = CATEGORY_ICONS[tip.category] || Lightbulb
+                                            return (
+                                                <motion.div
+                                                    key={idx}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.05 }}
+                                                    style={{
+                                                        background: 'var(--bg-secondary)',
+                                                        borderRadius: 14, padding: '16px 18px',
+                                                        border: '1px solid var(--border)',
+                                                        position: 'relative',
+                                                    }}
+                                                >
+                                                    {/* Dismiss button */}
+                                                    <button
+                                                        onClick={() => dismissTip(idx)}
+                                                        style={{
+                                                            position: 'absolute', top: 8, right: 8,
+                                                            background: 'none', border: 'none',
+                                                            color: 'var(--text-tertiary)', cursor: 'pointer',
+                                                            padding: 2,
+                                                        }}
+                                                    ><X size={13} /></button>
+
+                                                    {/* Category badge */}
+                                                    <div style={{
+                                                        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
+                                                    }}>
+                                                        <div style={{
+                                                            width: 32, height: 32, borderRadius: 10,
+                                                            background: cat.bg, color: cat.color,
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        }}>
+                                                            <CatIcon size={16} />
+                                                        </div>
+                                                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                                            {tip.emoji} {tip.title}
+                                                        </span>
+                                                    </div>
+
+                                                    <p style={{
+                                                        fontSize: '0.76rem', color: 'var(--text-secondary)',
+                                                        lineHeight: 1.5, margin: '0 0 10px',
+                                                    }}>
+                                                        {tip.description}
+                                                    </p>
+
+                                                    {tip.savingsEstimate && (
+                                                        <div style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                            background: 'rgba(52,211,153,0.12)', color: '#34D399',
+                                                            borderRadius: 8, padding: '3px 10px', fontSize: '0.68rem',
+                                                            fontWeight: 600,
+                                                        }}>
+                                                            <Wallet size={11} /> {tip.savingsEstimate}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Save button */}
+                                                    <button
+                                                        onClick={() => saveTip(tip)}
+                                                        style={{
+                                                            position: 'absolute', bottom: 10, right: 12,
+                                                            background: 'none', border: 'none',
+                                                            color: 'var(--text-tertiary)', cursor: 'pointer',
+                                                            fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: 3,
+                                                        }}
+                                                    >
+                                                        <Star size={12} /> {t('Kaydet', 'Save')}
+                                                    </button>
+                                                </motion.div>
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* ── Transport + Cheap Eats + Free Activities ── */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12, marginBottom: 16 }}>
+                                        {/* Budget Transport */}
+                                        {quickTips.budgetTransport && (
+                                            <div style={{
+                                                background: 'var(--bg-secondary)', borderRadius: 14,
+                                                padding: '16px 18px', border: '1px solid var(--border)',
+                                            }}>
+                                                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    🚌 {t('Ulaşım', 'Transport')}
+                                                </h4>
+                                                <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 6 }}>
+                                                    {quickTips.budgetTransport.cheapestFromIstanbul}
+                                                </p>
+                                                <p style={{ fontSize: '0.73rem', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                                                    🏙️ {quickTips.budgetTransport.localTransport}
+                                                </p>
+                                                {(quickTips.budgetTransport.tips || []).map((tip, i) => (
+                                                    <p key={i} style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginBottom: 2 }}>
+                                                        💡 {tip}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Cheap Eats */}
+                                        {quickTips.cheapEats && quickTips.cheapEats.length > 0 && (
+                                            <div style={{
+                                                background: 'var(--bg-secondary)', borderRadius: 14,
+                                                padding: '16px 18px', border: '1px solid var(--border)',
+                                            }}>
+                                                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    🍽️ {t('Ucuz Yemek', 'Cheap Eats')}
+                                                </h4>
+                                                {quickTips.cheapEats.slice(0, 4).map((eat, i) => (
+                                                    <div key={i} style={{
+                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                        padding: '6px 0', borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+                                                    }}>
+                                                        <div>
+                                                            <span style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-primary)' }}>{eat.name}</span>
+                                                            <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>{eat.dish}</span>
+                                                        </div>
+                                                        <span style={{
+                                                            fontSize: '0.72rem', fontWeight: 700, color: '#34D399',
+                                                            background: 'rgba(52,211,153,0.1)', padding: '2px 8px', borderRadius: 6,
+                                                        }}>{eat.price}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Free Activities */}
+                                        {quickTips.freeActivities && quickTips.freeActivities.length > 0 && (
+                                            <div style={{
+                                                background: 'var(--bg-secondary)', borderRadius: 14,
+                                                padding: '16px 18px', border: '1px solid var(--border)',
+                                            }}>
+                                                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                    🎯 {t('Ücretsiz Aktiviteler', 'Free Activities')}
+                                                </h4>
+                                                {quickTips.freeActivities.slice(0, 4).map((act, i) => (
+                                                    <div key={i} style={{ marginBottom: 8 }}>
+                                                        <span style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--text-primary)' }}>{act.name}</span>
+                                                        <p style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', margin: '2px 0 0', lineHeight: 1.4 }}>
+                                                            {act.description} · <span style={{ color: 'var(--primary-1)' }}>{act.bestTime}</span>
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* ── Assign to Group Modal ── */}
+                        <AnimatePresence>
+                            {showAssignModal && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    style={{
+                                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        zIndex: 1000, backdropFilter: 'blur(4px)',
+                                    }}
+                                    onClick={() => setShowAssignModal(false)}
+                                >
+                                    <motion.div
+                                        initial={{ scale: 0.9, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        exit={{ scale: 0.9, opacity: 0 }}
+                                        onClick={e => e.stopPropagation()}
+                                        style={{
+                                            background: 'var(--bg-primary)', borderRadius: 20,
+                                            padding: '24px', minWidth: 320, maxWidth: 400,
+                                            border: '1px solid var(--border)',
+                                        }}
+                                    >
+                                        <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700 }}>
+                                            👥 {t('Gruba Ata', 'Assign to Group')}
+                                        </h3>
+                                        {userSpaces.length === 0 ? (
+                                            <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>
+                                                {t('Henüz grubun yok. Önce bir grup oluştur.', 'No groups yet. Create one first.')}
+                                            </p>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                {userSpaces.map(s => (
+                                                    <button
+                                                        key={s.id}
+                                                        onClick={() => assignToGroup(s.id)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: 10,
+                                                            padding: '12px 16px', background: 'var(--bg-secondary)',
+                                                            border: '1px solid var(--border)', borderRadius: 12,
+                                                            cursor: 'pointer', color: 'var(--text-primary)',
+                                                            fontSize: '0.85rem', fontWeight: 600,
+                                                            transition: 'all 200ms',
+                                                        }}
+                                                        onMouseOver={e => e.currentTarget.style.borderColor = 'var(--primary-1)'}
+                                                        onMouseOut={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                                    >
+                                                        <Users size={16} style={{ color: 'var(--primary-1)' }} />
+                                                        {s.name}
+                                                        <ChevronRight size={14} style={{ marginLeft: 'auto', color: 'var(--text-tertiary)' }} />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={() => setShowAssignModal(false)}
+                                            style={{
+                                                marginTop: 16, width: '100%', padding: '10px',
+                                                background: 'var(--bg-tertiary)', border: 'none',
+                                                borderRadius: 10, cursor: 'pointer', color: 'var(--text-secondary)',
+                                                fontSize: '0.8rem',
+                                            }}
+                                        >
+                                            {t('İptal', 'Cancel')}
+                                        </button>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.section>
+
+                    {/* ── Upcoming Trips ── */}
                     <motion.section className="dash-section" variants={containerAnim} initial="hidden" animate="show">
                         <h2 className="dash-section-title">{t('Yaklaşan Seyahatler', 'Upcoming Trips')} ✈️</h2>
                         {upcomingTrips.length === 0 ? (
@@ -146,9 +630,8 @@ export default function DashboardPage() {
                         )}
                     </motion.section>
 
-                    {/* Widgets Row */}
+                    {/* ── Widgets Row ── */}
                     <div className="dash-widgets">
-                        {/* Weather Widget */}
                         {weather && weather.forecasts && (
                             <motion.div className="dash-widget dash-weather" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                                 <h3 className="dash-widget-title">{t('Hava Durumu', 'Weather')} — {weather.tripCity}</h3>
@@ -164,7 +647,6 @@ export default function DashboardPage() {
                             </motion.div>
                         )}
 
-                        {/* Currency Widget */}
                         {currency && currency.popular && (
                             <motion.div className="dash-widget dash-currency" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                                 <h3 className="dash-widget-title"><DollarSign size={16} /> {t('Döviz Kurları', 'Exchange Rates')}</h3>
@@ -181,13 +663,13 @@ export default function DashboardPage() {
                         )}
                     </div>
 
-                    {/* Quick Actions */}
+                    {/* ── Quick Actions ── */}
                     <motion.div className="dash-actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
                         {[
                             { label: t('Haritayı Aç', 'Open Map'), emoji: '🗺️', href: '/map' },
                             { label: t('Trip Planla', 'Plan Trip'), emoji: '✈️', href: '/planner' },
                             { label: t('Şehirleri Keşfet', 'Explore Cities'), emoji: '🌍', href: '/cities' },
-                            { label: t('Meetup Oluştur', 'Create Meetup'), emoji: '📅', href: '/meetups' },
+                            { label: t('Gruplar', 'Groups'), emoji: '👥', href: '/spaces' },
                         ].map(action => (
                             <button key={action.href} className="dash-action-btn" onClick={() => router.push(action.href)}>
                                 <span className="dash-action-emoji">{action.emoji}</span>
