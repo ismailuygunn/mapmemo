@@ -290,11 +290,19 @@ export default function FlightsPage() {
                                                                     <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>{deal.country}</p>
                                                                 </div>
                                                                 <div style={{ textAlign: 'right' }}>
-                                                                    <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 12, padding: '8px 16px', backdropFilter: 'blur(8px)' }}>
+                                                                    <a href={deal.platforms?.[0]?.url || '#'} target="_blank" rel="noopener noreferrer"
+                                                                        onClick={e => e.stopPropagation()}
+                                                                        style={{
+                                                                            display: 'block', background: 'rgba(255,255,255,0.2)', borderRadius: 12,
+                                                                            padding: '8px 16px', backdropFilter: 'blur(8px)', textDecoration: 'none', color: 'white',
+                                                                            transition: 'all 200ms', cursor: 'pointer',
+                                                                        }}
+                                                                        onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.35)'}
+                                                                        onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}>
                                                                         {i === 0 && <div style={{ fontSize: '0.52rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, opacity: 0.9 }}>🏆 En Ucuz</div>}
                                                                         <div style={{ fontSize: '1.4rem', fontWeight: 900, lineHeight: 1 }}>₺{deal.priceFormatted}</div>
-                                                                        <div style={{ fontSize: '0.52rem', opacity: 0.7, marginTop: 2 }}>{deal.source} · kişi başı</div>
-                                                                    </div>
+                                                                        <div style={{ fontSize: '0.52rem', opacity: 0.7, marginTop: 2 }}>{deal.source} · tıkla → al 🎫</div>
+                                                                    </a>
                                                                 </div>
                                                             </div>
                                                             {/* Multi-source price comparison */}
@@ -395,6 +403,25 @@ export default function FlightsPage() {
                                                                 {deal.seatsLeft && <span style={{ fontSize: '0.62rem', color: '#EF4444', fontWeight: 600 }}>· {deal.seatsLeft} koltuk</span>}
                                                             </div>
 
+                                                            {/* ═══ BIG CTA BUTTON ═══ */}
+                                                            {deal.platforms?.[0] && (
+                                                                <a href={deal.platforms[0].url} target="_blank" rel="noopener noreferrer"
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                                        width: '100%', padding: '14px', borderRadius: 14, border: 'none',
+                                                                        background: 'linear-gradient(135deg, #22C55E, #16A34A)',
+                                                                        color: 'white', fontSize: '0.95rem', fontWeight: 800,
+                                                                        textDecoration: 'none', cursor: 'pointer',
+                                                                        boxShadow: '0 4px 14px rgba(34,197,94,0.3)',
+                                                                        marginBottom: 10, transition: 'all 200ms',
+                                                                    }}
+                                                                    onMouseOver={e => e.currentTarget.style.boxShadow = '0 6px 20px rgba(34,197,94,0.45)'}
+                                                                    onMouseOut={e => e.currentTarget.style.boxShadow = '0 4px 14px rgba(34,197,94,0.3)'}>
+                                                                    🎫 ₺{deal.priceFormatted} — Bilet Al
+                                                                    <ExternalLink size={14} />
+                                                                </a>
+                                                            )}
+
                                                             {/* ═══ BOOKING PLATFORMS ═══ */}
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                                                                 {(deal.platforms || []).map((platform, pi) => (
@@ -413,15 +440,15 @@ export default function FlightsPage() {
                                                                             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>{platform.name}</span>
                                                                         </div>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                                            <span style={{ fontSize: '0.72rem', color: platform.color, fontWeight: 700 }}>Fiyat Gör</span>
-                                                                            <ExternalLink size={12} style={{ color: 'var(--text-tertiary)' }} />
+                                                                            <span style={{ fontSize: '0.72rem', color: platform.color, fontWeight: 700 }}>Bilet Al →</span>
+                                                                            <ExternalLink size={12} style={{ color: platform.color }} />
                                                                         </div>
                                                                     </a>
                                                                 ))}
                                                             </div>
 
                                                             <p style={{ margin: '8px 0 0', fontSize: '0.58rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                                                ₺{deal.priceFormatted} · {deal.source} · Platformlara tıklayıp biletinizi alabilirsiniz
+                                                                ₺{deal.priceFormatted} · {deal.source} · Yukarıdaki butonlardan biletinizi alabilirsiniz
                                                             </p>
                                                         </div>
                                                     </motion.div>

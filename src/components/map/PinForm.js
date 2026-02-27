@@ -8,7 +8,7 @@ import { useToast } from '@/context/ToastContext'
 import { X, Upload, Star, Loader2, Image as ImageIcon, MapPin } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-export default function PinForm({ coords, locationData, editPin, spaceId, onClose, onCreated, onUpdated }) {
+export default function PinForm({ coords, locationData, editPin, spaceId, userId, onClose, onCreated, onUpdated }) {
     const isEditing = !!editPin
     const { t } = useLanguage()
     const { toast } = useToast()
@@ -99,6 +99,7 @@ export default function PinForm({ coords, locationData, editPin, spaceId, onClos
 
             const pinData = {
                 space_id: spaceId,
+                user_id: userId,
                 title: formData.title,
                 type: formData.type,
                 status: formData.status,

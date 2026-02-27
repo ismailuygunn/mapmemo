@@ -8935,6 +8935,31 @@ select.input {
   gap: 14px;
 }
 
+/* Group Type Cards */
+.gh-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  background: var(--bg-tertiary);
+}
+
+.gh-type-card:hover {
+  border-color: var(--primary-1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.gh-type-card-active {
+  border-color: var(--primary-1) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
 .gh-card {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);

@@ -73,23 +73,40 @@ function stripHtml(html) {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
 }
 
-// ─── Etkinlik.io fetch (returns ALL events, we filter after) ───
+// ─── Etkinlik.io fetch — tries multiple approaches for future events ───
 async function fetchEtkinlikEvents(city, format) {
     const token = process.env.ETKINLIK_TOKEN
     if (!token) return { events: [], error: 'no_token' }
 
-    try {
-        // etkinlik.io pagination is broken — all pages return same data
-        // Single fetch gets all available events
-        const res = await fetch(`${ETKINLIK_BASE}/events`, {
-            headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
-            next: { revalidate: 300 },
-        })
-        if (!res.ok) return { events: [], error: 'api_error' }
-        const raw = await res.json()
-        const allItems = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
+    const today = new Date().toISOString().split('T')[0]
 
-        // Map to our format
+    try {
+        // Try multiple endpoint patterns for future events
+        const endpoints = [
+            `${ETKINLIK_BASE}/events?start_from=${today}`,
+            `${ETKINLIK_BASE}/events?start=${today}`,
+            `${ETKINLIK_BASE}/events?date_from=${today}`,
+            `${ETKINLIK_BASE}/events`,
+        ]
+
+        let allItems = []
+        for (const url of endpoints) {
+            try {
+                const res = await fetch(url, {
+                    headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
+                    next: { revalidate: 300 },
+                })
+                if (!res.ok) continue
+                const raw = await res.json()
+                const items = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
+                if (items.length > 0) {
+                    allItems = items
+                    break
+                }
+            } catch { continue }
+        }
+
+        if (allItems.length === 0) return { events: [], error: 'no_events' }
         let events = allItems.map(event => ({
             id: `etk-${event.id}`,
             name: event.name || '',
@@ -122,6 +139,14 @@ async function fetchEtkinlikEvents(city, format) {
                 normalizedCity.includes(eventCity)
         })
 
+        // IMPORTANT: Only keep future events (safety net regardless of API params)
+        const now = new Date()
+        events = events.filter(e => {
+            if (!e.start) return true // Keep events without dates
+            const eventDate = new Date(e.start)
+            return eventDate >= now || isNaN(eventDate.getTime())
+        })
+
         // Filter by format/category
         if (format) {
             events = events.filter(e => matchesFormat(e, format))
@@ -142,20 +167,26 @@ async function fetchEtkinlikEvents(city, format) {
     }
 }
 
-// ─── Ticketmaster fetch (International) ───
-async function fetchTicketmasterEvents(city, format, startDate, endDate) {
+// ─── Ticketmaster fetch (International + Turkish cities) ───
+async function fetchTicketmasterEvents(city, format, startDate, endDate, isTurkish = false) {
     const apiKey = process.env.TICKETMASTER_API_KEY
     if (!apiKey) return { events: [], error: 'no_key' }
 
     try {
+        // Always search from today if no startDate
+        const today = new Date().toISOString().split('T')[0]
+        const effectiveStart = startDate || today
+
         const params = new URLSearchParams({
             apikey: apiKey,
             keyword: city,
-            size: '30',
+            size: '50',
             sort: 'date,asc',
+            startDateTime: `${effectiveStart}T00:00:00Z`,
         })
-        if (startDate) params.append('startDateTime', `${startDate}T00:00:00Z`)
         if (endDate) params.append('endDateTime', `${endDate}T23:59:59Z`)
+        if (isTurkish) params.append('countryCode', 'TR')
+
         // Ticketmaster supports classificationName for format
         if (format) {
             const tmFormat = {
@@ -230,8 +261,8 @@ export async function GET(request) {
             if (etkinlik.events.length > 0) sources.push('etkinlik.io')
             if (etkinlik.error) errors.push({ source: 'etkinlik.io', error: etkinlik.error })
 
-            // Supplement with Ticketmaster
-            const tm = await fetchTicketmasterEvents(city, format, startDate, endDate)
+            // Supplement with Ticketmaster (also for Turkish cities)
+            const tm = await fetchTicketmasterEvents(city, format, startDate, endDate, true)
             if (tm.events.length > 0) {
                 const existingNames = new Set(allEvents.map(e => normalize(e.name)))
                 const newTm = tm.events.filter(e => !existingNames.has(normalize(e.name)))

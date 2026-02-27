@@ -17,22 +17,28 @@ export default function CapsulesPage() {
     const [form, setForm] = useState({ title: '', message: '', revealDate: '' })
     const [creating, setCreating] = useState(false)
     const [revealingId, setRevealingId] = useState(null)
-    const { space } = useSpace()
+    const { space, loading: spaceLoading } = useSpace()
     const { user } = useAuth()
     const { t } = useLanguage()
     const { toast } = useToast()
     const supabase = createClient()
 
     useEffect(() => {
-        loadCapsules()
-    }, [space, user])
+        if (spaceLoading) return // Wait for space to load (auto-create happens here)
+        if (space || user) loadCapsules()
+        else setLoading(false)
+    }, [space, user, spaceLoading])
 
     const loadCapsules = async () => {
+        setLoading(true)
         let query = supabase.from('memory_capsules').select('*')
         if (space) query = query.eq('space_id', space.id)
         else if (user) query = query.eq('created_by', user.id)
         else { setLoading(false); return }
-        const { data } = await query.order('reveal_date', { ascending: true })
+        const { data, error } = await query.order('reveal_date', { ascending: true })
+        if (error) {
+            console.warn('Capsules load error:', error.message)
+        }
         if (data) setCapsules(data)
         setLoading(false)
     }

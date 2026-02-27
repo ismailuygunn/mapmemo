@@ -15,6 +15,7 @@ export function SpaceProvider({ children }) {
     const [dbError, setDbError] = useState(null)
     const retryCountRef = useRef(0)
     const retryTimerRef = useRef(null)
+    const loadingTimeoutRef = useRef(null)
     const supabase = createClient()
 
     useEffect(() => {
@@ -28,11 +29,20 @@ export function SpaceProvider({ children }) {
             return
         }
         loadSpace()
-        return () => { if (retryTimerRef.current) clearTimeout(retryTimerRef.current) }
+        return () => {
+            if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+            if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
+        }
     }, [user])
 
     const loadSpace = useCallback(async () => {
         setLoading(true)
+        // CRITICAL: Hard timeout — never let loading stay stuck more than 5 seconds
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
+        loadingTimeoutRef.current = setTimeout(() => {
+            console.warn('SpaceContext: Hard timeout reached, forcing loading=false')
+            setLoading(false)
+        }, 5000)
         try {
             // Step 1: Get user's space membership — no timeout, let Supabase handle it
             const { data: membership, error } = await supabase
@@ -47,10 +57,10 @@ export function SpaceProvider({ children }) {
 
                 // If it's a recursion error, retry silently up to 3 times
                 if (error.message?.includes('infinite recursion') || error.code === '42P17') {
-                    if (retryCountRef.current < 3) {
+                    if (retryCountRef.current < 2) {
                         retryCountRef.current++
-                        console.log(`Retrying space load (attempt ${retryCountRef.current}/3)...`)
-                        retryTimerRef.current = setTimeout(() => loadSpace(), 2000)
+                        console.log(`Retrying space load (attempt ${retryCountRef.current}/2)...`)
+                        retryTimerRef.current = setTimeout(() => loadSpace(), 1000)
                         return
                     }
                     // After 3 retries, still set dbError but don't block the app
@@ -85,11 +95,46 @@ export function SpaceProvider({ children }) {
                     .order('joined_at', { ascending: true })
                     .then(({ data }) => setMembers(data || []))
                     .catch(() => setMembers([]))
+            } else {
+                // No membership found — auto-create a personal space
+                // This ensures pins, trips, and cities all work (RLS requires space_id)
+                console.log('No space found, auto-creating personal space...')
+                try {
+                    const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                        .map(b => b.toString(16).padStart(2, '0')).join('')
+
+                    const { data: newSpace, error: createErr } = await supabase
+                        .from('spaces')
+                        .insert({ name: 'Benim Haritam', created_by: user.id, invite_token: inviteToken })
+                        .select()
+                        .single()
+
+                    if (createErr) {
+                        console.error('Auto-create space error:', createErr.message)
+                    } else {
+                        const { error: memberErr } = await supabase
+                            .from('space_members')
+                            .insert({ space_id: newSpace.id, user_id: user.id, role: 'owner' })
+
+                        if (memberErr) {
+                            console.error('Auto-create membership error:', memberErr.message)
+                            await supabase.from('spaces').delete().eq('id', newSpace.id)
+                        } else {
+                            setSpace(newSpace)
+                            setUserRole('owner')
+                            setMembers([{ user_id: user.id, role: 'owner', joined_at: new Date().toISOString() }])
+                            setDbError(null)
+                        }
+                    }
+                } catch (autoErr) {
+                    console.error('Auto-create space failed:', autoErr)
+                }
             }
         } catch (err) {
             console.error('Error loading space:', err)
             // Don't set dbError for generic errors — just continue
         }
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
         setLoading(false)
     }, [user, supabase])
 

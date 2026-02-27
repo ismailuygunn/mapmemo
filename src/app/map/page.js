@@ -336,14 +336,8 @@ export default function MapPage() {
         )
     }
 
-    // If there's a db error but no space, redirect to onboarding quietly
-    // Don't block the entire app with a full-screen error
-    if (dbError && !space && !spaceLoading) {
-        // Auto-retry once more before giving up
-        if (dbError === 'RLS_RECURSION') {
-            reloadSpace()
-        }
-    }
+    // If there's a db error but no space, just proceed — don't block the map
+    // The space will still be null but the app should work in limited mode
 
     return (
         <>
@@ -549,6 +543,7 @@ export default function MapPage() {
                         locationData={newPinLocation}
                         editPin={selectedPin}
                         spaceId={space?.id}
+                        userId={user?.id}
                         onClose={() => { setShowPinForm(false); setNewPinCoords(null); setNewPinLocation(null) }}
                         onCreated={handlePinCreated}
                         onUpdated={handlePinUpdated}

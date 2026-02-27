@@ -10,7 +10,8 @@ import Sidebar from '@/components/layout/Sidebar'
 import {
     Users, Plus, Loader2, UserPlus, Copy, Check, Crown, Shield,
     ArrowLeft, Plane, Calendar, Settings, Trash2, LogOut, Edit3,
-    MapPin, Link2, RefreshCw, ChevronRight, Star, Eye, Pencil
+    MapPin, Link2, RefreshCw, ChevronRight, Star, Eye, Pencil, X,
+    Heart, Share2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -27,6 +28,13 @@ const GRADIENT_PALETTES = [
     ['#F59E0B', '#EF4444'], ['#8B5CF6', '#EC4899'], ['#10B981', '#3B82F6'],
 ]
 
+const GROUP_TYPES = [
+    { key: 'couple', emoji: '💑', label: { tr: 'Sevgili', en: 'Couple' }, desc: { tr: 'Birlikte keşfedin', en: 'Explore together' }, gradient: ['#EC4899', '#F43F5E'] },
+    { key: 'friends', emoji: '👫', label: { tr: 'Arkadaşlar', en: 'Friends' }, desc: { tr: 'Arkadaşlarla macera', en: 'Adventure with friends' }, gradient: ['#4F46E5', '#7C3AED'] },
+    { key: 'family', emoji: '👨‍👩‍👧‍👦', label: { tr: 'Aile', en: 'Family' }, desc: { tr: 'Aile gezileri', en: 'Family trips' }, gradient: ['#10B981', '#06B6D4'] },
+    { key: 'solo', emoji: '🧳', label: { tr: 'Solo', en: 'Solo' }, desc: { tr: 'Kişisel haritam', en: 'My personal map' }, gradient: ['#F59E0B', '#EF4444'] },
+]
+
 export default function SpacesPage() {
     // ── State ──
     const [spaces, setSpaces] = useState([])
@@ -39,7 +47,9 @@ export default function SpacesPage() {
     const [membersLoading, setMembersLoading] = useState(false)
     const [showCreate, setShowCreate] = useState(false)
     const [newName, setNewName] = useState('')
+    const [newGroupType, setNewGroupType] = useState(null)
     const [joinToken, setJoinToken] = useState('')
+    const [createMode, setCreateMode] = useState('type') // 'type' | 'name' | 'join'
     const [creating, setCreating] = useState(false)
     const [joining, setJoining] = useState(false)
     const [editingName, setEditingName] = useState(false)
@@ -157,10 +167,14 @@ export default function SpacesPage() {
     const handleCreateSpace = async () => {
         if (!newName.trim()) return
         setCreating(true)
+        const typeInfo = newGroupType ? GROUP_TYPES.find(g => g.key === newGroupType) : null
+        const finalName = typeInfo ? `${typeInfo.emoji} ${newName.trim()}` : newName.trim()
         try {
-            await createSpace(newName.trim())
+            await createSpace(finalName)
             setNewName('')
+            setNewGroupType(null)
             setShowCreate(false)
+            setCreateMode('type')
             toast.success(t('Grup oluşturuldu!', 'Group created!'))
             loadSpaces()
         } catch (err) { toast.error(err.message) }
@@ -498,6 +512,20 @@ export default function SpacesPage() {
                                                             {copied ? t('Kopyalandı!', 'Copied!') : t('Kopyala', 'Copy')}
                                                         </button>
                                                     </div>
+                                                    {/* Share via native share API */}
+                                                    {typeof navigator !== 'undefined' && navigator.share && (
+                                                        <button className="btn btn-secondary" style={{ marginTop: 10, width: '100%' }}
+                                                            onClick={() => {
+                                                                const link = `${window.location.origin}/invite/${selectedSpace.invite_token}`
+                                                                navigator.share({
+                                                                    title: `${selectedSpace.name} - MapMemo`,
+                                                                    text: t('Bu gruba katıl!', 'Join this group!'),
+                                                                    url: link,
+                                                                }).catch(() => { })
+                                                            }}>
+                                                            <Share2 size={14} /> {t('Paylaş', 'Share')}
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -592,11 +620,16 @@ export default function SpacesPage() {
                                 <div className="gh-header">
                                     <div>
                                         <h1 className="gh-title">👥 {t('Gruplar', 'Groups')}</h1>
-                                        <p className="gh-subtitle">{t('Seyahat arkadaşlarınla ortak plan yap ve seyahatlerini yönet', 'Plan together and manage trips with your travel buddies')}</p>
+                                        <p className="gh-subtitle">{t('Sevgilin, arkadaşların veya ailen ile seyahat planla', 'Plan trips with your partner, friends or family')}</p>
                                     </div>
-                                    <button className="btn btn-primary" onClick={() => setShowCreate(!showCreate)}>
-                                        <Plus size={16} /> {t('Yeni Grup', 'New Group')}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="btn btn-secondary" onClick={() => { setShowCreate(true); setCreateMode('join') }}>
+                                            <Link2 size={14} /> {t('Katıl', 'Join')}
+                                        </button>
+                                        <button className="btn btn-primary" onClick={() => { setShowCreate(true); setCreateMode('type') }}>
+                                            <Plus size={16} /> {t('Yeni Grup', 'New Group')}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Create/Join Panel */}
@@ -605,31 +638,85 @@ export default function SpacesPage() {
                                         <motion.div className="gh-create-panel"
                                             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                                             <div className="gh-create-inner">
-                                                <div className="gh-create-col">
-                                                    <h3>✨ {t('Yeni Grup Oluştur', 'Create New Group')}</h3>
-                                                    <div style={{ display: 'flex', gap: 8 }}>
-                                                        <input className="input" placeholder={t('Grup adı...', 'Group name...')}
-                                                            value={newName} onChange={e => setNewName(e.target.value)}
-                                                            onKeyDown={e => e.key === 'Enter' && handleCreateSpace()}
-                                                            style={{ flex: 1 }} />
-                                                        <button className="btn btn-primary" onClick={handleCreateSpace} disabled={creating}>
-                                                            {creating ? <Loader2 size={14} className="spin" /> : <Check size={14} />}
-                                                        </button>
+                                                {createMode === 'type' && (
+                                                    <div style={{ width: '100%' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                            <h3 style={{ margin: 0 }}>✨ {t('Ne tür bir grup?', 'What type of group?')}</h3>
+                                                            <button className="btn btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setShowCreate(false)}>
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                                                            {GROUP_TYPES.map(gt => (
+                                                                <motion.button key={gt.key}
+                                                                    className={`gh-type-card ${newGroupType === gt.key ? 'gh-type-card-active' : ''}`}
+                                                                    onClick={() => { setNewGroupType(gt.key); setCreateMode('name') }}
+                                                                    whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
+                                                                    style={{ background: newGroupType === gt.key ? `linear-gradient(135deg, ${gt.gradient[0]}20, ${gt.gradient[1]}20)` : 'var(--bg-tertiary)' }}
+                                                                >
+                                                                    <span style={{ fontSize: '1.8rem' }}>{gt.emoji}</span>
+                                                                    <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{gt.label[locale]}</span>
+                                                                    <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>{gt.desc[locale]}</span>
+                                                                </motion.button>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="gh-create-divider" />
-                                                <div className="gh-create-col">
-                                                    <h3>🔗 {t('Davet ile Katıl', 'Join with Invite')}</h3>
-                                                    <div style={{ display: 'flex', gap: 8 }}>
-                                                        <input className="input" placeholder={t('Davet token...', 'Invite token...')}
-                                                            value={joinToken} onChange={e => setJoinToken(e.target.value)}
-                                                            onKeyDown={e => e.key === 'Enter' && handleJoinSpace()}
-                                                            style={{ flex: 1 }} />
-                                                        <button className="btn btn-secondary" onClick={handleJoinSpace} disabled={joining}>
-                                                            {joining ? <Loader2 size={14} className="spin" /> : <UserPlus size={14} />}
-                                                        </button>
+                                                )}
+
+                                                {createMode === 'name' && (
+                                                    <div style={{ width: '100%' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                            <button className="btn btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setCreateMode('type')}>
+                                                                <ArrowLeft size={14} /> {t('Geri', 'Back')}
+                                                            </button>
+                                                            <span style={{ fontSize: '1.2rem' }}>{GROUP_TYPES.find(g => g.key === newGroupType)?.emoji}</span>
+                                                        </div>
+                                                        <h3 style={{ margin: '0 0 12px' }}>
+                                                            {t('Grubuna bir isim ver', 'Name your group')}
+                                                        </h3>
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <input className="input" placeholder={t(
+                                                                newGroupType === 'couple' ? 'örn: Roma Tatilimiz' :
+                                                                    newGroupType === 'friends' ? 'örn: Yolculuk Ekibi' :
+                                                                        newGroupType === 'family' ? 'örn: Aile Gezisi' : 'örn: Benim Haritam',
+                                                                newGroupType === 'couple' ? 'e.g. Our Rome Trip' :
+                                                                    newGroupType === 'friends' ? 'e.g. Road Trip Crew' :
+                                                                        newGroupType === 'family' ? 'e.g. Family Vacation' : 'e.g. My Map'
+                                                            )}
+                                                                value={newName} onChange={e => setNewName(e.target.value)}
+                                                                onKeyDown={e => e.key === 'Enter' && handleCreateSpace()}
+                                                                style={{ flex: 1 }} autoFocus />
+                                                            <button className="btn btn-primary" onClick={handleCreateSpace} disabled={creating || !newName.trim()}>
+                                                                {creating ? <Loader2 size={14} className="spin" /> : <Check size={14} />}
+                                                                {t('Oluştur', 'Create')}
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
+
+                                                {createMode === 'join' && (
+                                                    <div style={{ width: '100%' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                            <h3 style={{ margin: 0 }}>🔗 {t('Davet ile Katıl', 'Join with Invite')}</h3>
+                                                            <button className="btn btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setShowCreate(false)}>
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
+                                                            {t('Arkadaşından aldığın davet linkini veya tokenını yapıştır', 'Paste the invite link or token from your friend')}
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <input className="input" placeholder={t('Davet linki veya token...', 'Invite link or token...')}
+                                                                value={joinToken} onChange={e => setJoinToken(e.target.value)}
+                                                                onKeyDown={e => e.key === 'Enter' && handleJoinSpace()}
+                                                                style={{ flex: 1 }} autoFocus />
+                                                            <button className="btn btn-primary" onClick={handleJoinSpace} disabled={joining || !joinToken.trim()}>
+                                                                {joining ? <Loader2 size={14} className="spin" /> : <UserPlus size={14} />}
+                                                                {t('Katıl', 'Join')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </motion.div>
                                     )}
@@ -642,9 +729,17 @@ export default function SpacesPage() {
                                     <div className="gh-empty">
                                         <div style={{ fontSize: 52, marginBottom: 12, opacity: 0.3 }}>👥</div>
                                         <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('Henüz grubun yok', 'No groups yet')}</p>
-                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 280, margin: '4px auto 0' }}>
-                                            {t('Yeni bir grup oluştur ve seyahat arkadaşlarını davet et', 'Create a group and invite your travel buddies')}
+                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 320, margin: '4px auto 16px' }}>
+                                            {t('Sevgilinle, arkadaşlarınla veya ailenle seyahat planla', 'Plan trips with your partner, friends or family')}
                                         </p>
+                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                            <button className="btn btn-primary" onClick={() => { setShowCreate(true); setCreateMode('type') }}>
+                                                <Plus size={14} /> {t('Grup Oluştur', 'Create Group')}
+                                            </button>
+                                            <button className="btn btn-secondary" onClick={() => { setShowCreate(true); setCreateMode('join') }}>
+                                                <Link2 size={14} /> {t('Gruba Katıl', 'Join Group')}
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="gh-grid">

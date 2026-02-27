@@ -260,10 +260,15 @@ export default function AirbnbPage() {
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
                             <div style={{ flex: '2 1 200px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>📍 Nerede</label>
-                                <input type="text" placeholder="Şehir veya bölge yazın..." value={location}
+                                <input type="text" list="city-options" placeholder="Şehir seçin veya yazın..." value={location}
                                     onChange={e => setLocation(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && searchListings()}
                                     style={inputStyle} />
+                                <datalist id="city-options">
+                                    {POPULAR_CITIES.map(c => (
+                                        <option key={c.name} value={c.name}>{c.emoji} {c.name}</option>
+                                    ))}
+                                </datalist>
                             </div>
                             <div style={{ flex: '1 1 130px' }}>
                                 <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>📅 Giriş</label>
