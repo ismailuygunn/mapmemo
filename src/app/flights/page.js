@@ -279,22 +279,14 @@ export default function FlightsPage() {
         try {
             const params = new URLSearchParams({
                 origin: origin || 'IST',
-                max: '12',
                 duration, month, pattern,
+                visa: visaFilter,
             })
             if (destCode) params.set('dest', destCode)
+            if (maxBudget && !isNaN(parseInt(maxBudget))) params.set('budget', maxBudget)
             const res = await fetch(`/api/flight-deals?${params}`)
             const data = await res.json()
-            let filtered = data.deals || []
-            if (maxBudget && !isNaN(parseInt(maxBudget))) {
-                filtered = filtered.filter(d => d.price <= parseInt(maxBudget))
-            }
-            if (visaFilter === 'visa_free') {
-                filtered = filtered.filter(d => ['visa_free', 'domestic'].includes(d.visa?.type))
-            } else if (visaFilter === 'visa_on_arrival') {
-                filtered = filtered.filter(d => ['visa_free', 'visa_on_arrival', 'domestic'].includes(d.visa?.type))
-            }
-            setDeals(filtered)
+            setDeals(data.deals || [])
         } catch { setDeals([]) }
         setLoading(false)
         setSearchDone(true)
@@ -354,7 +346,7 @@ export default function FlightsPage() {
                                 ✈️ Uçuş Fırsatları
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', margin: '6px 0 0', maxWidth: 500 }}>
-                                En uygun fiyatlı uçuşları bul, karşılaştır ve hemen satın al
+                                Skyscanner, Google Flights, Enuygun ve Turna'dan güncel fiyatları karşılaştır
                             </p>
                         </div>
                     </motion.div>
@@ -484,19 +476,22 @@ export default function FlightsPage() {
                         {searchDone && (
                             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                                 style={sectionStyle}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                                     <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
                                         <Zap size={16} style={{ color: '#F59E0B', marginRight: 6 }} />
-                                        {deals.length} fırsat bulundu
+                                        {deals.length} destinasyon bulundu
                                     </h2>
                                 </div>
+                                <p style={{ margin: '0 0 16px', fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                                    💡 Fiyatlar tahmini aralıktır. Güncel fiyat için platformlara tıklayın — bilet orada, gösterilen fiyataen alınır.
+                                </p>
 
                                 {deals.length > 0 ? (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
                                         {deals.map((deal, i) => {
-                                            const links = buildDeeplinks(origin, deal.destination, deal.departDate, deal.returnDate)
+                                            const visaColor = VISA_COLORS[deal.visa?.type] || '#6366F1'
                                             return (
-                                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                                                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                                                     whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.12)' }}
                                                     style={{ background: 'var(--bg-primary)', borderRadius: 18, overflow: 'hidden', border: '1px solid var(--border)', transition: 'all 200ms' }}>
                                                     {/* Header */}
@@ -506,47 +501,57 @@ export default function FlightsPage() {
                                                     }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                             <div>
-                                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{deal.city}</h3>
+                                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>{deal.emoji} {deal.city}</h3>
                                                                 <p style={{ fontSize: '0.72rem', opacity: 0.8, margin: '2px 0 0' }}>{deal.country}</p>
                                                             </div>
-                                                            <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '6px 12px' }}>
-                                                                <span style={{ fontSize: '1.1rem', fontWeight: 800 }}>₺{formatPrice(deal.price)}</span>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '6px 12px' }}>
+                                                                    <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>₺{formatPrice(deal.priceMin)}</span>
+                                                                    <span style={{ fontSize: '0.68rem', opacity: 0.7 }}> - ₺{formatPrice(deal.priceMax)}</span>
+                                                                </div>
+                                                                <span style={{ fontSize: '0.58rem', opacity: 0.6 }}>gidiş-dönüş tahmini</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     {/* Body */}
                                                     <div style={{ padding: '14px 20px 18px' }}>
-                                                        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                                                        <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                                                             <span style={{
                                                                 fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6,
-                                                                background: (VISA_COLORS[deal.visa?.type] || '#6366F1') + '18',
-                                                                color: VISA_COLORS[deal.visa?.type] || '#6366F1',
+                                                                background: visaColor + '18', color: visaColor,
                                                             }}>{deal.visa?.label?.tr || deal.visa?.type}</span>
+                                                            <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(129,140,248,0.1)', color: '#818CF8' }}>
+                                                                ✈️ ~{deal.flightHours} saat
+                                                            </span>
                                                         </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 10 }}>
                                                             <Calendar size={13} />
                                                             {new Date(deal.departDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deal.returnDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                            <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>({deal.tripLabel})</span>
                                                         </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 12 }}>
-                                                            <Plane size={12} /> {deal.airlines?.join(', ')}
+
+                                                        {/* 4 Booking Platform Buttons */}
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+                                                            <a href={deal.links.skyscanner} target="_blank" rel="noopener noreferrer"
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#0770e3', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                🔍 Skyscanner <ExternalLink size={10} />
+                                                            </a>
+                                                            <a href={deal.links.googleFlights} target="_blank" rel="noopener noreferrer"
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#4285F4', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                ✈️ Google <ExternalLink size={10} />
+                                                            </a>
+                                                            <a href={deal.links.enuygun} target="_blank" rel="noopener noreferrer"
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#FF3366', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                🎫 Enuygun <ExternalLink size={10} />
+                                                            </a>
+                                                            <a href={deal.links.turna} target="_blank" rel="noopener noreferrer"
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '10px 8px', borderRadius: 10, background: '#FF6B00', color: 'white', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 700 }}>
+                                                                🛫 Turna <ExternalLink size={10} />
+                                                            </a>
                                                         </div>
-                                                        {/* Booking Links */}
-                                                        <a href={links.googleFlights} target="_blank" rel="noopener noreferrer"
-                                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', borderRadius: 10, background: '#10B981', color: 'white', textDecoration: 'none', fontSize: '0.82rem', fontWeight: 700, marginBottom: 6 }}>
-                                                            🎫 Satın Al — Google Flights <ExternalLink size={11} />
-                                                        </a>
-                                                        <div style={{ display: 'flex', gap: 4 }}>
-                                                            {[
-                                                                { name: 'Skyscanner', url: links.skyscanner, bg: '#0770e3' },
-                                                                { name: 'Turna', url: links.turna, bg: '#FF6B00' },
-                                                                { name: 'Enuygun', url: links.enuygun, bg: '#FF3366' },
-                                                            ].map(s => (
-                                                                <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer"
-                                                                    style={{ flex: 1, padding: '6px', borderRadius: 8, textDecoration: 'none', background: s.bg, color: 'white', fontSize: '0.62rem', fontWeight: 700, textAlign: 'center' }}>
-                                                                    {s.name}
-                                                                </a>
-                                                            ))}
-                                                        </div>
+                                                        <p style={{ margin: 0, fontSize: '0.6rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                                                            Güncel fiyat için platforma tıklayın
+                                                        </p>
                                                     </div>
                                                 </motion.div>
                                             )
@@ -555,7 +560,7 @@ export default function FlightsPage() {
                                 ) : (
                                     <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-tertiary)' }}>
                                         <Plane size={40} style={{ opacity: 0.3, marginBottom: 10 }} />
-                                        <p style={{ fontSize: '0.9rem' }}>Kriterlere uygun fırsat bulunamadı. Filtreleri değiştirip tekrar deneyin.</p>
+                                        <p style={{ fontSize: '0.9rem' }}>Kriterlere uygun destinasyon bulunamadı. Filtreleri değiştirip tekrar deneyin.</p>
                                     </div>
                                 )}
                             </motion.div>
