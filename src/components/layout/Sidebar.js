@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3 } from 'lucide-react'
+import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function Sidebar() {
     const pathname = usePathname()
     const router = useRouter()
-    const { signOut } = useAuth()
+    const { signOut, profile } = useAuth()
     const { t } = useLanguage()
     const [collapsed, setCollapsed] = useState(false)
 
@@ -36,6 +36,7 @@ export default function Sidebar() {
         { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
         { icon: Gift, label: t('nav.capsules') || 'Kapsüller', href: '/capsules' },
         { icon: Settings, label: t('nav.settings') || 'Ayarlar', href: '/settings' },
+        ...(profile?.role === 'admin' ? [{ icon: Shield, label: 'Admin', href: '/admin' }] : []),
     ]
 
     const handleLogout = async () => {

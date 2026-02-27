@@ -49,6 +49,7 @@ export default function DashboardPage() {
     // Flight deals
     const [flightDeals, setFlightDeals] = useState([])
     const [dealsLoading, setDealsLoading] = useState(false)
+    const [dealsLoaded, setDealsLoaded] = useState(false) // prevent re-fetching
 
     const { user, profile } = useAuth()
     const { space } = useSpace()
@@ -61,7 +62,8 @@ export default function DashboardPage() {
         if (space) loadDashboard()
         if (user?.id) {
             loadUserSpaces()
-            loadFlightDeals()
+            // Only load deals ONCE — use cache after
+            if (!dealsLoaded) loadFlightDeals(false)
         }
     }, [space, user?.id])
 
@@ -111,15 +113,53 @@ export default function DashboardPage() {
         } catch { }
     }
 
-    // ─── Flight Deals (auto-load on login) ───
-    const loadFlightDeals = async () => {
+    // ─── Flight Deals (cached + origin from profile) ───
+    const getOriginCity = () => {
+        const homeCity = profile?.home_city || ''
+        const CITY_IATA = {
+            'istanbul': 'IST', 'İstanbul': 'IST', 'ankara': 'ESB', 'izmir': 'ADB',
+            'antalya': 'AYT', 'bursa': 'YEI', 'adana': 'ADA', 'trabzon': 'TZX',
+            'gaziantep': 'GZT', 'konya': 'KYA', 'kayseri': 'ASR', 'samsun': 'SZF',
+            'diyarbakır': 'DIY', 'erzurum': 'ERZ', 'van': 'VAN', 'malatya': 'MLX',
+        }
+        const lower = homeCity.toLowerCase().trim()
+        return CITY_IATA[lower] || 'IST'
+    }
+
+    const loadFlightDeals = async (forceRefresh = false) => {
+        // Check sessionStorage cache first
+        if (!forceRefresh) {
+            try {
+                const cached = sessionStorage.getItem('naviso-flight-deals')
+                if (cached) {
+                    const { deals, ts } = JSON.parse(cached)
+                    // Cache valid for 30 minutes
+                    if (Date.now() - ts < 30 * 60 * 1000 && deals?.length > 0) {
+                        setFlightDeals(deals)
+                        setDealsLoaded(true)
+                        return
+                    }
+                }
+            } catch { }
+        }
+
         setDealsLoading(true)
         try {
-            const res = await fetch('/api/flight-deals?origin=IST&max=6')
+            const origin = getOriginCity()
+            const res = await fetch(`/api/flight-deals?origin=${origin}&max=8`)
             const data = await res.json()
-            if (data.deals) setFlightDeals(data.deals)
+            if (data.deals?.length > 0) {
+                setFlightDeals(data.deals)
+                // Cache in sessionStorage
+                try {
+                    sessionStorage.setItem('naviso-flight-deals', JSON.stringify({
+                        deals: data.deals, ts: Date.now()
+                    }))
+                } catch { }
+            }
         } catch { }
         setDealsLoading(false)
+        setDealsLoaded(true)
     }
 
     // ─── Quick Tips (weather-aware) ───
@@ -244,10 +284,10 @@ export default function DashboardPage() {
                             <h2 className="dash-section-title" style={{ margin: 0 }}>
                                 <Zap size={18} style={{ color: '#F59E0B' }} /> {t('Uçuş Fırsatları', 'Flight Deals')}
                                 <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 8, fontWeight: 400 }}>
-                                    {t('İstanbul\'dan', 'From Istanbul')}
+                                    {profile?.home_city || 'Istanbul'}{t('\'\'dan', ' →')}
                                 </span>
                             </h2>
-                            <button className="btn btn-ghost" onClick={loadFlightDeals} disabled={dealsLoading} style={{ fontSize: '0.72rem', padding: '4px 10px' }}>
+                            <button className="btn btn-ghost" onClick={() => loadFlightDeals(true)} disabled={dealsLoading} style={{ fontSize: '0.72rem', padding: '4px 10px' }}>
                                 {dealsLoading ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />}
                                 {t('Yenile', 'Refresh')}
                             </button>

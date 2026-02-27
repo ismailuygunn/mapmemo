@@ -167,15 +167,17 @@ export default function PlannerPage() {
     }
 
     const addCity = () => {
-        if (formData.cityInput.trim()) {
+        if (formData.cityInput.trim() && formData.selectedFromList) {
             update('cities', [...formData.cities, formData.cityInput.trim()])
             update('cityInput', '')
+            update('selectedFromList', false)
             setCitySuggestions([])
         }
     }
     const selectCitySuggestion = (name) => {
         update('cities', [...formData.cities, name])
         update('cityInput', '')
+        update('selectedFromList', false)
         setCitySuggestions([])
     }
     const selectDepartureSuggestion = (name) => {
@@ -186,7 +188,7 @@ export default function PlannerPage() {
         update('cities', formData.cities.filter((_, i) => i !== index))
     }
     const handleCityKeyDown = (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); addCity() }
+        if (e.key === 'Enter') { e.preventDefault() }
     }
 
     // IATA code mapping for common cities
@@ -228,13 +230,10 @@ export default function PlannerPage() {
     const generatePlan = async (e) => {
         e.preventDefault()
         setError('')
-        if (formData.cities.length === 0 && !formData.cityInput.trim()) {
-            setError(t('planner.city') + ' required'); return
+        if (formData.cities.length === 0) {
+            setError(locale === 'tr' ? 'Lütfen listeden bir şehir seçin' : 'Please select a city from the list'); return
         }
-        // If user typed but didn't press Enter, use the input as single city
-        const cities = formData.cities.length > 0
-            ? formData.cities
-            : [formData.cityInput.trim()]
+        const cities = formData.cities
 
         setLoading(true)
         setLoadingProgress(0)
@@ -476,11 +475,11 @@ export default function PlannerPage() {
         )
     }
 
-    // Step validation
+    // Step validation — cities MUST be from list (not free text)
     const canProceedStep = (step) => {
-        if (step === 0) return formData.cities.length > 0 || formData.cityInput.trim().length > 0
-        if (step === 1) return formData.startDate && formData.endDate // dates required!
-        if (step === 2) return true // style has defaults
+        if (step === 0) return formData.cities.length > 0
+        if (step === 1) return formData.startDate && formData.endDate
+        if (step === 2) return true
         return true
     }
 
@@ -1135,6 +1134,61 @@ export default function PlannerPage() {
                     {/* ═══════════════════ RESULT ═══════════════════ */}
                     {view === 'result' && itinerary && (
                         <motion.div className="itinerary" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+
+                            {/* ═══ COVER PHOTO HERO ═══ */}
+                            {itinerary.coverPhoto ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                                    style={{
+                                        position: 'relative', borderRadius: 20, overflow: 'hidden',
+                                        marginBottom: 20, aspectRatio: '16/7',
+                                    }}
+                                >
+                                    <img src={itinerary.coverPhoto} alt="Trip Cover"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <div style={{
+                                        position: 'absolute', inset: 0,
+                                        background: 'linear-gradient(transparent 30%, rgba(0,0,0,0.7))',
+                                        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                                        padding: '24px 28px',
+                                    }}>
+                                        <h2 style={{ color: 'white', fontSize: '1.6rem', fontWeight: 800, margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                                            {formData.cities.join(' → ')}
+                                        </h2>
+                                        {formData.startDate && formData.endDate && (
+                                            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.82rem', margin: '4px 0 0', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                                                📅 {formData.startDate} → {formData.endDate}
+                                            </p>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(244,114,182,0.08))',
+                                        border: '2px dashed rgba(129,140,248,0.3)',
+                                        borderRadius: 16, padding: '20px 24px', marginBottom: 16,
+                                        display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
+                                    }}
+                                    onClick={() => {
+                                        // Scroll to CoverGenerator
+                                        const el = document.querySelector('.planner-section')
+                                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                                    }}
+                                >
+                                    <span style={{ fontSize: '2rem' }}>🎨</span>
+                                    <div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>
+                                            {locale === 'tr' ? 'Kapak Fotoğrafı Ekle' : 'Add Cover Photo'}
+                                        </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                            {locale === 'tr' ? 'AI ile şehrinize özel kapak oluşturun — referans fotoğrafınızı da ekleyebilirsiniz!' : 'Generate a city-specific cover with AI — you can add your own reference photo too!'}
+                                        </div>
+                                    </div>
+                                    <span style={{ marginLeft: 'auto', fontSize: '1.2rem' }}>→</span>
+                                </motion.div>
+                            )}
 
                             {/* Overview */}
                             <div className="result-overview">

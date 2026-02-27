@@ -81,18 +81,19 @@ const VISA_LABELS = {
     visa_required: { tr: '📋 Vize Gerekli', en: '📋 Visa Required', color: '#EF4444' },
 }
 
-// Popular destinations to scan from IST
+// Popular destinations to scan — wide mix of visa types and regions
 const SCAN_DESTINATIONS = [
     // Vizesiz
     'SJJ', 'TBS', 'GYD', 'SKP', 'PRN', 'TGD', 'BEG', 'SOF', 'TIA', 'KIV', 'CMN', 'TUN',
+    'AMM', 'DOH', 'MNL', 'KUL', 'BKK', 'ICN', 'NRT', 'GRU', 'EZE', 'JNB',
     // Kapıda Vize
-    'DXB', 'DPS', 'MLE', 'AUH',
+    'DXB', 'DPS', 'MLE', 'AUH', 'SSH', 'CMB', 'NBO',
     // Ucuz Avrupa (vizeli ama popüler)
-    'BUD', 'PRG', 'ATH', 'BCN', 'FCO', 'CDG', 'AMS', 'BER',
-    // Uzak vizesiz
-    'BKK', 'KUL', 'ICN', 'NRT',
-    // Yurtiçi
-    'AYT', 'ADB', 'TZX', 'DLM', 'BJV', 'GZT',
+    'BUD', 'PRG', 'ATH', 'BCN', 'FCO', 'CDG', 'AMS', 'BER', 'LIS', 'VIE', 'WAW', 'MUC', 'MXP',
+    // Yurtiçi (en ucuzlar)
+    'AYT', 'ADB', 'TZX', 'DLM', 'BJV', 'GZT', 'ASR', 'ESB',
+    // İngiltere + ABD
+    'LHR', 'JFK', 'LAX',
 ]
 
 let amadeusToken = null
@@ -124,10 +125,10 @@ export async function GET(request) {
 
         const token = await getAmadeusToken()
 
-        // Generate date ranges: weekends and random dates for next 2 months
+        // Generate date ranges: weekends, midweek, and long trips for next 3 months
         const now = new Date()
         const dateRanges = []
-        for (let week = 1; week <= 8; week++) {
+        for (let week = 1; week <= 12; week++) {
             const fri = new Date(now)
             fri.setDate(fri.getDate() + (week * 7) - now.getDay() + 5)
             const sun = new Date(fri)
@@ -136,20 +137,20 @@ export async function GET(request) {
             midWeek.setDate(midWeek.getDate() + (week * 7) + 2)
             const midReturn = new Date(midWeek)
             midReturn.setDate(midReturn.getDate() + 4)
-            dateRanges.push({
-                depart: fri.toISOString().split('T')[0],
-                ret: sun.toISOString().split('T')[0],
-                type: 'weekend',
-            })
-            dateRanges.push({
-                depart: midWeek.toISOString().split('T')[0],
-                ret: midReturn.toISOString().split('T')[0],
-                type: 'midweek',
-            })
+            // Long trip (7 days)
+            const longStart = new Date(now)
+            longStart.setDate(longStart.getDate() + (week * 7))
+            const longReturn = new Date(longStart)
+            longReturn.setDate(longReturn.getDate() + 7)
+            dateRanges.push(
+                { depart: fri.toISOString().split('T')[0], ret: sun.toISOString().split('T')[0], type: 'weekend' },
+                { depart: midWeek.toISOString().split('T')[0], ret: midReturn.toISOString().split('T')[0], type: 'midweek' },
+                { depart: longStart.toISOString().split('T')[0], ret: longReturn.toISOString().split('T')[0], type: 'longtrip' },
+            )
         }
 
-        // Pick 6 random destinations + 2 random date ranges each
-        const shuffled = [...SCAN_DESTINATIONS].sort(() => Math.random() - 0.5).slice(0, 6)
+        // Pick 10 random destinations + random date ranges
+        const shuffled = [...SCAN_DESTINATIONS].sort(() => Math.random() - 0.5).slice(0, 10)
         const deals = []
 
         for (const dest of shuffled) {
