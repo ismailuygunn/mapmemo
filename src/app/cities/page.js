@@ -10,25 +10,28 @@ import { MapPin, ImageIcon, Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { groupPinsByCity, getCitySlug } from '@/lib/utils'
 
+import { useAuth } from '@/context/AuthContext'
+
 export default function CitiesPage() {
     const [cities, setCities] = useState([])
     const [loading, setLoading] = useState(true)
     const { space } = useSpace()
+    const { user } = useAuth()
     const { t } = useLanguage()
     const supabase = createClient()
     const router = useRouter()
 
     useEffect(() => {
-        if (!space) return
-        loadCities()
-    }, [space])
+        if (space || user) loadCities()
+    }, [space, user])
 
     const loadCities = async () => {
-        const { data: pins } = await supabase
-            .from('pins')
-            .select('*, pin_media(*)')
-            .eq('space_id', space.id)
+        let query = supabase.from('pins').select('*, pin_media(*)')
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('user_id', user.id)
+        else { setLoading(false); return }
 
+        const { data: pins } = await query
         if (pins) {
             setCities(groupPinsByCity(pins))
         }

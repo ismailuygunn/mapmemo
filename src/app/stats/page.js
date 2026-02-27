@@ -29,16 +29,26 @@ export default function StatsPage() {
     const { t, locale } = useLanguage()
     const supabase = createClient()
 
-    useEffect(() => { if (space) loadStats() }, [space])
+    useEffect(() => { if (space || user) loadStats() }, [space, user])
 
     const loadStats = async () => {
         setLoading(true)
         try {
+            const tripsQuery = space
+                ? supabase.from('trips').select('id, city, start_date, end_date, created_at').eq('space_id', space.id)
+                : supabase.from('trips').select('id, city, start_date, end_date, created_at').eq('created_by', user.id)
+            const pinsQuery = space
+                ? supabase.from('pins').select('id, type, city, created_at').eq('space_id', space.id)
+                : supabase.from('pins').select('id, type, city, created_at').eq('user_id', user.id)
+            const membersQuery = space
+                ? supabase.from('space_members').select('id').eq('space_id', space.id)
+                : Promise.resolve({ data: [] })
+            const photosQuery = space
+                ? supabase.from('trip_photos').select('id').eq('space_id', space.id)
+                : supabase.from('trip_photos').select('id').eq('user_id', user.id)
+
             const [tripsRes, pinsRes, membersRes, photosRes] = await Promise.all([
-                supabase.from('trips').select('id, city, start_date, end_date, created_at').eq('space_id', space.id),
-                supabase.from('pins').select('id, type, city, created_at').eq('space_id', space.id),
-                supabase.from('space_members').select('id').eq('space_id', space.id),
-                supabase.from('trip_photos').select('id').eq('space_id', space.id),
+                tripsQuery, pinsQuery, membersQuery, photosQuery,
             ])
 
             const trips = tripsRes.data || []
