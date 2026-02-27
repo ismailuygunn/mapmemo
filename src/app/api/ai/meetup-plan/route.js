@@ -242,50 +242,75 @@ KRİTİK:
 - SADECE geçerli JSON döndür, markdown veya yorum EKLEME`
 
         // ── Call Gemini ──
-        const models = ['gemini-2.5-flash', 'gemini-2.0-flash']
-        for (const model of models) {
-            try {
-                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
-                const response = await fetch(endpoint, {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
+        const geminiBody = {
+            systemInstruction: {
+                parts: [{ text: scenarioConfig.persona + ' Her zaman geçerli JSON ile yanıt ver. SADECE gerçek, var olan mekanları öner. Türkçe yaz.' }]
+            },
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.85,
+                maxOutputTokens: 8192,
+                responseMimeType: 'application/json',
+            },
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiBody),
+        })
+
+        if (!response.ok) {
+            const errText = await response.text()
+            console.error('SOS Plan Gemini 2.5 error:', response.status, errText.substring(0, 300))
+
+            // Fallback to gemini-2.0-flash without systemInstruction
+            const fallbackRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+                {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        systemInstruction: {
-                            parts: [{ text: scenarioConfig.persona + ' Her zaman geçerli JSON ile yanıt ver. SADECE gerçek, var olan mekanları öner. Türkçe yaz.' }]
-                        },
                         contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: {
-                            temperature: 0.85,
-                            maxOutputTokens: 16384,
-                            responseMimeType: 'application/json',
-                        },
+                        generationConfig: { temperature: 0.85, maxOutputTokens: 8192, responseMimeType: 'application/json' },
                     }),
-                })
-
-                if (!response.ok) {
-                    console.error(`Gemini ${model} error:`, response.status)
-                    continue
                 }
-
-                const data = await response.json()
-                const content = data.candidates?.[0]?.content?.parts?.[0]?.text
-                if (!content) continue
-
-                const result = JSON.parse(content)
-                // Attach scenario metadata
+            )
+            if (!fallbackRes.ok) {
+                const fallbackErr = await fallbackRes.text()
+                console.error('SOS Plan Gemini 2.0 fallback error:', fallbackRes.status, fallbackErr.substring(0, 300))
+                return NextResponse.json({ error: 'AI servisi yanıt vermedi. Lütfen tekrar deneyin.' }, { status: 500 })
+            }
+            const fallbackData = await fallbackRes.json()
+            const fallbackContent = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text
+            if (fallbackContent) {
+                const result = JSON.parse(fallbackContent)
                 result._scenario = scenario
                 result._city = city
                 result._generatedAt = new Date().toISOString()
                 return NextResponse.json(result)
-            } catch (err) {
-                console.error(`Gemini ${model} error:`, err.message)
-                continue
             }
+            return NextResponse.json({ error: 'AI boş yanıt döndü. Tekrar deneyin.' }, { status: 500 })
         }
 
-        return NextResponse.json({ error: 'AI servisi şu anda meşgul. Tekrar deneyin.' }, { status: 500 })
+        const data = await response.json()
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text
+
+        if (!content) {
+            console.error('SOS Plan: Empty Gemini response', JSON.stringify(data).substring(0, 300))
+            return NextResponse.json({ error: 'AI boş yanıt döndü. Tekrar deneyin.' }, { status: 500 })
+        }
+
+        const result = JSON.parse(content)
+        result._scenario = scenario
+        result._city = city
+        result._generatedAt = new Date().toISOString()
+        return NextResponse.json(result)
+
     } catch (err) {
         console.error('SOS Plan API error:', err)
-        return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+        return NextResponse.json({ error: 'Sunucu hatası: ' + err.message }, { status: 500 })
     }
 }
+
