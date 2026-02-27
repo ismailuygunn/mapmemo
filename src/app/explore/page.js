@@ -7,9 +7,9 @@ import Sidebar from '@/components/layout/Sidebar'
 import {
     Compass, Plane, Home, Ticket, MapPin, TrendingUp,
     ArrowRight, Star, Sparkles, Globe, Calendar, Heart,
-    Sun, Mountain, Waves, Building, TreePine, Filter, Shield, Clock, ChevronDown, ChevronUp,
+    Sun, Mountain, Waves, Building, TreePine, Filter, Shield, Clock, ChevronDown, ChevronUp, X,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const HERO_DESTINATIONS = [
     {
@@ -211,6 +211,19 @@ const INFO_CATEGORIES = [
     { key: 'amerika', label: 'Amerika', emoji: '🗽' },
 ]
 
+// ═══ DESTINATION COVER IMAGES ═══
+const DEST_IMAGES = {
+    'Paris': '/destinations/paris.png',
+    'Roma': '/destinations/roma.png',
+    'İstanbul': '/destinations/istanbul.png',
+    'Tokyo': '/destinations/tokyo.png',
+    'Dubai': '/destinations/dubai.png',
+    'Kapadokya': '/destinations/kapadokya.png',
+    'Barselona': '/destinations/barselona.png',
+    'Santorini': '/destinations/santorini.png',
+    'Antalya': '/destinations/antalya.png',
+}
+
 const VISA_TAB_CONFIG = [
     { key: 'visa_free', label: 'Vizesiz', emoji: '✅', color: '#22C55E', count: VISA_COUNTRIES.visa_free.length },
     { key: 'visa_on_arrival', label: 'Kapıda Vize', emoji: '🛬', color: '#F59E0B', count: VISA_COUNTRIES.visa_on_arrival.length },
@@ -225,6 +238,7 @@ export default function ExplorePage() {
     const [visaTab, setVisaTab] = useState('visa_free')
     const [showAllVisa, setShowAllVisa] = useState(false)
     const [infoCat, setInfoCat] = useState('all')
+    const [selectedDest, setSelectedDest] = useState(null)
 
     useEffect(() => {
         const interval = setInterval(() => setHeroIdx(i => (i + 1) % HERO_DESTINATIONS.length), 5000)
@@ -405,47 +419,192 @@ export default function ExplorePage() {
                         </div>
 
                         {/* Info Cards Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
                             {DESTINATION_INFO_CARDS
                                 .filter(c => infoCat === 'all' || c.cat === infoCat)
-                                .map((card, i) => (
-                                    <motion.div key={card.city}
-                                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.02 }}
-                                        whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
-                                        style={{
-                                            background: card.gradient, borderRadius: 18, padding: '18px 20px',
-                                            color: 'white', cursor: 'pointer', transition: 'all 200ms',
-                                            minHeight: 160, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                                        }}
-                                        onClick={() => router.push('/flights')}>
-                                        <div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: 0 }}>{card.emoji} {card.city}</h3>
-                                                <span style={{
-                                                    fontSize: '0.58rem', padding: '3px 8px', borderRadius: 6,
-                                                    background: 'rgba(255,255,255,0.15)', fontWeight: 600,
-                                                }}>{card.country}</span>
-                                            </div>
-                                            <p style={{
-                                                fontSize: '0.78rem', lineHeight: 1.5, opacity: 0.92, margin: 0,
-                                                fontStyle: 'italic',
+                                .map((card, i) => {
+                                    const hasImage = DEST_IMAGES[card.city]
+                                    return (
+                                        <motion.div key={card.city}
+                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.02 }}
+                                            whileHover={{ y: -6, boxShadow: '0 16px 40px rgba(0,0,0,0.2)' }}
+                                            onClick={() => setSelectedDest(card)}
+                                            style={{
+                                                borderRadius: 20, overflow: 'hidden',
+                                                cursor: 'pointer', transition: 'all 250ms',
+                                                position: 'relative',
+                                                height: hasImage ? 220 : 180,
+                                                backgroundImage: hasImage ? `url(${hasImage})` : undefined,
+                                                backgroundSize: 'cover', backgroundPosition: 'center',
+                                                background: hasImage ? undefined : card.gradient,
                                             }}>
-                                                💡 {card.fact}
-                                            </p>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 4, marginTop: 12, flexWrap: 'wrap' }}>
-                                            {card.highlights.map((h, hi) => (
-                                                <span key={hi} style={{
-                                                    fontSize: '0.58rem', padding: '2px 7px', borderRadius: 5,
-                                                    background: 'rgba(255,255,255,0.12)', fontWeight: 600,
-                                                }}>📍 {h}</span>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                            {/* Gradient overlay for readability */}
+                                            <div style={{
+                                                position: 'absolute', inset: 0,
+                                                background: hasImage
+                                                    ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 40%, transparent 70%)'
+                                                    : 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                                            }} />
+                                            {/* Tag */}
+                                            <div style={{
+                                                position: 'absolute', top: 12, right: 12,
+                                                padding: '4px 10px', borderRadius: 8,
+                                                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+                                                fontSize: '0.62rem', fontWeight: 700, color: 'white',
+                                            }}>{card.country}</div>
+                                            {/* Content */}
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                                padding: '16px 18px', color: 'white',
+                                            }}>
+                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                                                    {card.emoji} {card.city}
+                                                </h3>
+                                                <p style={{
+                                                    fontSize: '0.72rem', lineHeight: 1.45, margin: '0 0 8px',
+                                                    opacity: 0.9, textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                                                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                                }}>
+                                                    💡 {card.fact}
+                                                </p>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                    {card.highlights.map((h, hi) => (
+                                                        <span key={hi} style={{
+                                                            fontSize: '0.58rem', padding: '3px 8px', borderRadius: 6,
+                                                            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)',
+                                                            fontWeight: 600, color: 'white',
+                                                        }}>📍 {h}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )
+                                })}
                         </div>
                     </motion.div>
+
+                    {/* ═══ DESTINATION DETAIL MODAL ═══ */}
+                    <AnimatePresence>
+                        {selectedDest && (
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                style={{
+                                    position: 'fixed', inset: 0, zIndex: 9999,
+                                    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: 20,
+                                }}
+                                onClick={() => setSelectedDest(null)}>
+                                <motion.div
+                                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 40, scale: 0.95 }}
+                                    transition={{ type: 'spring', damping: 25 }}
+                                    onClick={e => e.stopPropagation()}
+                                    style={{
+                                        width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto',
+                                        background: 'var(--bg-primary)', borderRadius: 28,
+                                        boxShadow: '0 25px 80px rgba(0,0,0,0.3)',
+                                        border: '1px solid var(--border)',
+                                    }}>
+                                    {/* Hero image */}
+                                    <div style={{
+                                        height: 240, position: 'relative',
+                                        backgroundImage: DEST_IMAGES[selectedDest.city] ? `url(${DEST_IMAGES[selectedDest.city]})` : undefined,
+                                        backgroundSize: 'cover', backgroundPosition: 'center',
+                                        background: DEST_IMAGES[selectedDest.city] ? undefined : selectedDest.gradient,
+                                    }}>
+                                        <div style={{
+                                            position: 'absolute', inset: 0,
+                                            background: 'linear-gradient(to top, var(--bg-primary) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)',
+                                        }} />
+                                        {/* Close button */}
+                                        <button onClick={() => setSelectedDest(null)} style={{
+                                            position: 'absolute', top: 16, right: 16,
+                                            width: 36, height: 36, borderRadius: 12,
+                                            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+                                            border: 'none', color: 'white', cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}><X size={18} /></button>
+                                        {/* Title overlay */}
+                                        <div style={{ position: 'absolute', bottom: 20, left: 24, right: 24 }}>
+                                            <span style={{
+                                                fontSize: '0.65rem', padding: '4px 10px', borderRadius: 8,
+                                                background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+                                                color: 'white', fontWeight: 700,
+                                            }}>{selectedDest.country}</span>
+                                            <h2 style={{ color: 'white', margin: '8px 0 0', fontSize: '1.6rem', fontWeight: 900, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
+                                                {selectedDest.emoji} {selectedDest.city}
+                                            </h2>
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div style={{ padding: '20px 24px 28px' }}>
+                                        {/* Fun fact */}
+                                        <div style={{
+                                            padding: '14px 18px', borderRadius: 16,
+                                            background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05))',
+                                            border: '1px solid rgba(245,158,11,0.15)', marginBottom: 20,
+                                        }}>
+                                            <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#F59E0B', marginBottom: 4 }}>💡 Biliyor muydun?</div>
+                                            <p style={{ fontSize: '0.82rem', lineHeight: 1.6, margin: 0, color: 'var(--text-primary)' }}>{selectedDest.fact}</p>
+                                        </div>
+
+                                        {/* Highlights */}
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 10px' }}>📍 Mutlaka Görülmeli</h4>
+                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+                                            {selectedDest.highlights.map((h, i) => (
+                                                <span key={i} style={{
+                                                    padding: '8px 14px', borderRadius: 12,
+                                                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                    fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)',
+                                                }}>{h}</span>
+                                            ))}
+                                        </div>
+
+                                        {/* Why visit */}
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 800, margin: '0 0 10px' }}>✨ Neden Gitmelisin?</h4>
+                                        <div style={{
+                                            padding: '14px 18px', borderRadius: 16,
+                                            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                            marginBottom: 20,
+                                        }}>
+                                            <p style={{ fontSize: '0.78rem', lineHeight: 1.6, margin: 0, color: 'var(--text-secondary)' }}>
+                                                {selectedDest.city}, keşfedilmeyi bekleyen eşsiz bir destinasyon.
+                                                {selectedDest.highlights[0] && ` ${selectedDest.highlights[0]} başta olmak üzere`}
+                                                {selectedDest.highlights[1] && `, ${selectedDest.highlights[1]}`}
+                                                {selectedDest.highlights[2] && ` ve ${selectedDest.highlights[2]}`}
+                                                {' gibi noktaları ile hafızanızda yer edecek bir seyahat deneyimi sunuyor. '}
+                                                {selectedDest.country} mutfağının tadına bakın, yerel kültürü keşfedin ve unutulmaz anılar biriktirin.
+                                            </p>
+                                        </div>
+
+                                        {/* Action buttons */}
+                                        <div style={{ display: 'flex', gap: 10 }}>
+                                            <motion.button whileTap={{ scale: 0.95 }}
+                                                onClick={() => { setSelectedDest(null); router.push('/flights') }}
+                                                style={{
+                                                    flex: 1, padding: '14px 20px', borderRadius: 14, border: 'none',
+                                                    background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                    color: 'white', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                }}>✈️ Uçuş Ara</motion.button>
+                                            <motion.button whileTap={{ scale: 0.95 }}
+                                                onClick={() => { setSelectedDest(null); router.push('/planner') }}
+                                                style={{
+                                                    flex: 1, padding: '14px 20px', borderRadius: 14, border: 'none',
+                                                    background: 'linear-gradient(135deg, #0D9488, #10B981)',
+                                                    color: 'white', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                }}>📅 Plan Yap</motion.button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* ═══ VISA-FREE COUNTRIES ═══ */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
