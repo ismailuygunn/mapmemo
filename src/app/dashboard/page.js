@@ -224,8 +224,50 @@ export default function DashboardPage() {
                         ))}
                     </motion.div>
 
-
-
+                    {/* ═══ CITY CARDS ═══ */}
+                    <motion.section className="dash-section" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                            <h2 className="dash-section-title" style={{ margin: 0 }}>
+                                <Globe size={18} style={{ color: '#818CF8' }} /> {t('Popüler Şehirler', 'Popular Cities')}
+                            </h2>
+                            <button className="btn btn-ghost" onClick={() => router.push('/explore')} style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
+                                <Sparkles size={12} /> {t('Keşfet', 'Explore')}
+                            </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: 12 }}>
+                            {[
+                                { city: 'İstanbul', emoji: '🌉', tag: 'Kültür', gradient: 'linear-gradient(135deg, #1E1B4B, #312E81)', highlights: ['Boğaz', 'Tarihi Yarımada'] },
+                                { city: 'Antalya', emoji: '🏖️', tag: 'Deniz', gradient: 'linear-gradient(135deg, #164E63, #0E7490)', highlights: ['Kaleiçi', 'Konyaaltı'] },
+                                { city: 'Paris', emoji: '🇫🇷', tag: 'Romantik', gradient: 'linear-gradient(135deg, #4C1D95, #6D28D9)', highlights: ['Eyfel', 'Louvre'] },
+                                { city: 'Roma', emoji: '🇮🇹', tag: 'Tarih', gradient: 'linear-gradient(135deg, #78350F, #92400E)', highlights: ['Kolezyum', 'Vatikan'] },
+                                { city: 'Tiflis', emoji: '🇬🇪', tag: 'Vizesiz', gradient: 'linear-gradient(135deg, #14532D, #166534)', highlights: ['Eski Şehir', 'Mutfak'] },
+                                { city: 'Dubai', emoji: '🇦🇪', tag: 'Lüks', gradient: 'linear-gradient(135deg, #1C1917, #44403C)', highlights: ['Burj Khalifa', 'Mall'] },
+                            ].map((dest, i) => (
+                                <motion.div key={i}
+                                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.15 + i * 0.04 }}
+                                    whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
+                                    onClick={() => router.push('/flights')}
+                                    style={{
+                                        background: dest.gradient, borderRadius: 16, padding: '16px 14px',
+                                        cursor: 'pointer', color: 'white', transition: 'all 200ms', minHeight: 95,
+                                    }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <h3 style={{ fontSize: '1rem', fontWeight: 900, margin: 0 }}>{dest.emoji} {dest.city}</h3>
+                                        <span style={{ fontSize: '0.55rem', padding: '2px 6px', borderRadius: 5, background: 'rgba(255,255,255,0.15)', fontWeight: 600 }}>{dest.tag}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 4, marginTop: 10, flexWrap: 'wrap' }}>
+                                        {dest.highlights.map((h, hi) => (
+                                            <span key={hi} style={{ fontSize: '0.56rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.1)', fontWeight: 600 }}>📍 {h}</span>
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 8, fontSize: '0.62rem', opacity: 0.7 }}>
+                                        Uçuşlara Bak <ArrowRight size={10} />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </motion.section>
 
                     {/* ══ AI QUICK TIPS ══ */}
                     {/* ═══════════════════════════════════════ */}

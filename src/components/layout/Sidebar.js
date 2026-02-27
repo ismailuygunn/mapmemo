@@ -28,6 +28,7 @@ export default function Sidebar() {
 
     const navItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard') || 'Panel', href: '/dashboard' },
+        { icon: Compass, label: 'Keşfet', href: '/explore' },
         { icon: Map, label: t('nav.map') || 'Harita', href: '/map' },
         { icon: Compass, label: t('nav.cities') || 'Şehirler', href: '/cities' },
         { icon: Calendar, label: t('nav.planner') || 'Planla', href: '/planner' },
