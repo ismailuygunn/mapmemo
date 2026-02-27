@@ -634,11 +634,26 @@ UPDATE public.profiles SET
     avatar_url = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' || COALESCE(username, id::text) || '&backgroundColor=b6e3f4,c0aede,d1d4f9'
 WHERE avatar_url IS NULL;
 
+-- ══════════════════════════════════
+-- STEP 10: Add media URLs to stories
+-- ══════════════════════════════════
+UPDATE public.stories SET media_url =
+    CASE (floor(random()*10)::int)
+        WHEN 0 THEN '/social/istanbul_galata.png'
+        WHEN 1 THEN '/social/cappadocia_balloons.png'
+        WHEN 2 THEN '/social/istanbul_mosque.png'
+        WHEN 3 THEN '/social/paris_eiffel.png'
+        WHEN 4 THEN '/social/bosphorus_ferry.png'
+        WHEN 5 THEN '/social/bazaar_spices.png'
+        ELSE 'https://picsum.photos/seed/' || encode(id::text::bytea, 'hex') || '/600/900'
+    END
+WHERE media_url IS NULL;
+
 -- ═══════════════════════════════════════════════════════════════
 -- DONE! Massive seed data loaded:
 -- 50 test users with DiceBear avatars
 -- 100+ check-ins across Turkey & Europe with lat/lng and photos
 -- Rich follow graph (real user follows all test users)
 -- Random likes on check-ins
--- 15 active stories
+-- 15 active stories with media images
 -- ═══════════════════════════════════════════════════════════════

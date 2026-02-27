@@ -276,11 +276,21 @@ export default function FeedPage() {
                                         style={{
                                             width: '90%', maxWidth: 420, height: '80vh', maxHeight: 680,
                                             borderRadius: 24, overflow: 'hidden', position: 'relative',
-                                            background: story.bgColor || '#4F46E5',
+                                            background: story.mediaUrl
+                                                ? `url(${story.mediaUrl}) center/cover no-repeat`
+                                                : (story.bgColor || '#4F46E5'),
                                             color: '#fff', display: 'flex', flexDirection: 'column',
                                         }}>
+                                        {/* Dark overlay for readability when image is background */}
+                                        {story.mediaUrl && (
+                                            <div style={{
+                                                position: 'absolute', inset: 0,
+                                                background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.6) 100%)',
+                                                zIndex: 0,
+                                            }} />
+                                        )}
                                         {/* Progress bars */}
-                                        <div style={{ display: 'flex', gap: 3, padding: '12px 16px 6px' }}>
+                                        <div style={{ display: 'flex', gap: 3, padding: '12px 16px 6px', position: 'relative', zIndex: 1 }}>
                                             {group.stories.map((_, si) => (
                                                 <div key={si} style={{
                                                     flex: 1, height: 3, borderRadius: 2,
@@ -298,7 +308,7 @@ export default function FeedPage() {
                                         </div>
 
                                         {/* Story header with avatar */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px 6px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px 6px', position: 'relative', zIndex: 1 }}>
                                             <div style={{
                                                 width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
                                                 background: group.user?.avatar_url ? `url(${group.user.avatar_url}) center/cover` : 'rgba(255,255,255,0.2)',
@@ -323,7 +333,7 @@ export default function FeedPage() {
                                         </div>
 
                                         {/* Tap zones (left/right) */}
-                                        <div style={{ flex: 1, display: 'flex', position: 'relative' }}>
+                                        <div style={{ flex: 1, display: 'flex', position: 'relative', zIndex: 1 }}>
                                             <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '30%', cursor: 'pointer', zIndex: 2 }}
                                                 onClick={prevStory} />
                                             <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '70%', cursor: 'pointer', zIndex: 2 }}
@@ -362,7 +372,7 @@ export default function FeedPage() {
                                         </div>
 
                                         {/* Emoji reactions */}
-                                        <div style={{ padding: '12px 20px 20px', display: 'flex', justifyContent: 'center', gap: 12 }}>
+                                        <div style={{ padding: '12px 20px 20px', display: 'flex', justifyContent: 'center', gap: 12, position: 'relative', zIndex: 1 }}>
                                             {STORY_REACTIONS.map(emoji => (
                                                 <motion.button key={emoji}
                                                     whileHover={{ scale: 1.3 }} whileTap={{ scale: 0.8 }}
@@ -445,7 +455,9 @@ export default function FeedPage() {
                                     {/* Card header */}
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px 8px' }}>
                                         <div
-                                            onClick={() => item.user?.username && router.push(`/u/${item.user.username}`)}
+                                            onClick={() => {
+                                                if (item.user?.username) router.push(`/u/${item.user.username}`)
+                                            }}
                                             style={{
                                                 width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
                                                 background: item.user?.avatar_url ? `url(${item.user.avatar_url}) center/cover` : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
