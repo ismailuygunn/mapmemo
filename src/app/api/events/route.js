@@ -79,21 +79,15 @@ async function fetchEtkinlikEvents(city, format) {
     if (!token) return { events: [], error: 'no_token' }
 
     try {
-        // Fetch many pages to get ALL events
-        const allItems = []
-        for (let page = 1; page <= 10; page++) {
-            const res = await fetch(`${ETKINLIK_BASE}/events?page=${page}`, {
-                headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
-                next: { revalidate: 300 },
-            })
-            if (!res.ok) break
-            const raw = await res.json()
-            const items = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
-            if (items.length === 0) break
-            allItems.push(...items)
-            // If page returned fewer than expected (less than ~20), we've hit the last page
-            if (items.length < 15) break
-        }
+        // etkinlik.io pagination is broken — all pages return same data
+        // Single fetch gets all available events
+        const res = await fetch(`${ETKINLIK_BASE}/events`, {
+            headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
+            next: { revalidate: 300 },
+        })
+        if (!res.ok) return { events: [], error: 'api_error' }
+        const raw = await res.json()
+        const allItems = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
 
         // Map to our format
         let events = allItems.map(event => ({

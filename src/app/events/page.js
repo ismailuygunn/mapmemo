@@ -58,12 +58,12 @@ const FORMATS = [
 ]
 
 const DATE_FILTERS = [
-    { key: 'all', label: 'Tümü' },
-    { key: 'today', label: 'Bugün' },
-    { key: 'tomorrow', label: 'Yarın' },
-    { key: 'this_week', label: 'Bu Hafta' },
-    { key: 'this_month', label: 'Bu Ay' },
-    { key: 'weekend', label: 'Hafta Sonu' },
+    { key: 'all', label: 'Tümü', emoji: '📅' },
+    { key: 'today', label: 'Bugün', emoji: '☀️' },
+    { key: 'tomorrow', label: 'Yarın', emoji: '🌅' },
+    { key: 'this_week', label: 'Bu Hafta', emoji: '📆' },
+    { key: 'weekend', label: 'Hafta Sonu', emoji: '🎉' },
+    { key: 'this_month', label: 'Bu Ay', emoji: '🗓️' },
 ]
 
 function formatDate(dateStr) {
@@ -287,16 +287,27 @@ export default function EventsPage() {
                         <div style={{ marginBottom: 16 }}>
                             <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>📅 Tarih</label>
                             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                {DATE_FILTERS.map(df => (
-                                    <button key={df.key} onClick={() => setDateFilter(df.key)}
-                                        style={{
-                                            padding: '7px 12px', borderRadius: 10, border: 'none',
-                                            fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-                                            background: dateFilter === df.key ? '#818CF8' : 'var(--bg-tertiary)',
-                                            color: dateFilter === df.key ? 'white' : 'var(--text-secondary)',
-                                            transition: 'all 150ms',
-                                        }}>{df.label}</button>
-                                ))}
+                                {DATE_FILTERS.map(df => {
+                                    const count = events.filter(e => isInDateRange(e.start, df.key)).length
+                                    return (
+                                        <button key={df.key} onClick={() => setDateFilter(df.key)}
+                                            style={{
+                                                padding: '7px 12px', borderRadius: 10, border: 'none',
+                                                fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                                                background: dateFilter === df.key ? '#818CF8' : 'var(--bg-tertiary)',
+                                                color: dateFilter === df.key ? 'white' : count > 0 ? 'var(--text-secondary)' : 'var(--text-tertiary)',
+                                                transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 4,
+                                                opacity: count === 0 && df.key !== 'all' ? 0.5 : 1,
+                                            }}>
+                                            {df.emoji} {df.label}
+                                            {searched && <span style={{
+                                                fontSize: '0.62rem', padding: '1px 5px', borderRadius: 6,
+                                                background: dateFilter === df.key ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)',
+                                                fontWeight: 700
+                                            }}>{count}</span>}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 
