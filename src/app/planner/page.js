@@ -164,12 +164,17 @@ export default function PlannerPage() {
     }, [formData.startDate, formData.endDate, formData.departureCity, formData.cities.length])
 
     const loadTrips = async () => {
-        let query = supabase.from('trips').select('*')
-        if (space) query = query.eq('space_id', space.id)
-        else if (user) query = query.eq('created_by', user.id)
-        else return
-        const { data } = await query.order('created_at', { ascending: false })
-        if (data) setSavedTrips(data)
+        try {
+            let query = supabase.from('trips').select('*')
+            if (space) query = query.eq('space_id', space.id)
+            else if (user) query = query.eq('created_by', user.id)
+            else return
+            const { data, error } = await query.order('created_at', { ascending: false })
+            if (error) { console.warn('Trips table may not exist:', error.message); return }
+            if (data) setSavedTrips(data)
+        } catch (e) {
+            console.warn('Could not load trips:', e.message)
+        }
     }
 
     const update = (key, value) => setFormData(prev => ({ ...prev, [key]: value }))
@@ -1564,31 +1569,57 @@ export default function PlannerPage() {
                                         <button className="btn btn-primary" onClick={() => setView('form')}>{t('planner.createPlan')}</button>
                                     </div>
                                 ) : (
-                                    <div className="pin-grid">
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                                         {savedTrips.map((trip, i) => (
-                                            <motion.div key={trip.id} className="pin-card card-hover"
+                                            <motion.div key={trip.id}
                                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.05 }}
+                                                whileHover={{ y: -4, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
                                                 onClick={() => {
                                                     setItinerary(trip.itinerary_data)
                                                     setFormData(prev => ({ ...prev, cities: trip.city.split(' → ') }))
                                                     setView('result'); setExpandedDay(0)
                                                 }}
-                                                style={{ cursor: 'pointer' }}>
-                                                <div className="pin-card-body">
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                                        <Plane size={18} style={{ color: 'var(--primary-1)' }} />
-                                                        <h4 className="pin-card-title" style={{ margin: 0 }}>{trip.city}</h4>
+                                                style={{
+                                                    cursor: 'pointer', borderRadius: 20, overflow: 'hidden',
+                                                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                    transition: 'all 200ms',
+                                                }}>
+                                                {/* Cover image */}
+                                                {trip.cover_photo_url && (
+                                                    <div style={{
+                                                        height: 120, backgroundImage: `url(${trip.cover_photo_url})`,
+                                                        backgroundSize: 'cover', backgroundPosition: 'center',
+                                                    }} />
+                                                )}
+                                                {!trip.cover_photo_url && (
+                                                    <div style={{
+                                                        height: 80,
+                                                        background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'][i % 6]}, ${['#7C3AED', '#EC4899', '#F43F5E', '#EF4444', '#06B6D4', '#8B5CF6'][i % 6]})`,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    }}>
+                                                        <Plane size={28} style={{ color: 'rgba(255,255,255,0.5)' }} />
+                                                    </div>
+                                                )}
+                                                <div style={{ padding: '16px 18px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                                                        <MapPin size={14} style={{ color: 'var(--primary-1)' }} />
+                                                        <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800 }}>{trip.city}</h4>
                                                     </div>
                                                     {trip.start_date && (
-                                                        <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                                                            {new Date(trip.start_date).toLocaleDateString()} — {trip.end_date ? new Date(trip.end_date).toLocaleDateString() : ''}
+                                                        <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', margin: '0 0 8px' }}>
+                                                            📅 {new Date(trip.start_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                            {trip.end_date ? ` → ${new Date(trip.end_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}` : ''}
                                                         </p>
                                                     )}
-                                                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                                                        <span className="badge badge-primary">{trip.tempo}</span>
-                                                        <span className="badge badge-gold">{trip.budget}</span>
+                                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                                        {trip.tempo && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 700 }}>{trip.tempo}</span>}
+                                                        {trip.budget && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 700 }}>{trip.budget}</span>}
+                                                        {trip.itinerary_data?.days && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 700 }}>{trip.itinerary_data.days.length} gün</span>}
                                                     </div>
+                                                    <p style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', margin: '8px 0 0', opacity: 0.7 }}>
+                                                        {new Date(trip.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} tarihinde oluşturuldu
+                                                    </p>
                                                 </div>
                                             </motion.div>
                                         ))}
