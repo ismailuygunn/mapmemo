@@ -254,14 +254,19 @@ export default function FlightsPage() {
 
                                     {deals.length > 0 && (
                                         <>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
                                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
                                                     <Zap size={16} style={{ color: '#F59E0B', marginRight: 6 }} />
-                                                    {deals.length} destinasyon · Gerçek fiyatlar
+                                                    {deals.length} destinasyon · 3 kaynak tarandı
                                                 </h2>
-                                                <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>
-                                                    📅 {new Date(deals[0].departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deals[0].returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
-                                                </span>
+                                                <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 600 }}>Amadeus</span>
+                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(7,112,227,0.1)', color: '#0770E3', fontWeight: 600 }}>Skyscanner</span>
+                                                    <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>Duffel</span>
+                                                    <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
+                                                        📅 {new Date(deals[0].departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deals[0].returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    </span>
+                                                </div>
                                             </div>
 
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
@@ -287,11 +292,26 @@ export default function FlightsPage() {
                                                                 </div>
                                                                 <div style={{ textAlign: 'right' }}>
                                                                     <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 12, padding: '8px 16px', backdropFilter: 'blur(8px)' }}>
+                                                                        {i === 0 && <div style={{ fontSize: '0.52rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, opacity: 0.9 }}>🏆 En Ucuz</div>}
                                                                         <div style={{ fontSize: '1.4rem', fontWeight: 900, lineHeight: 1 }}>₺{deal.priceFormatted}</div>
-                                                                        <div style={{ fontSize: '0.58rem', opacity: 0.7, marginTop: 2 }}>kişi başı</div>
+                                                                        <div style={{ fontSize: '0.52rem', opacity: 0.7, marginTop: 2 }}>{deal.source} · kişi başı</div>
                                                                     </div>
                                                                 </div>
                                                             </div>
+                                                            {/* Multi-source price comparison */}
+                                                            {deal.allPrices && deal.allPrices.length > 1 && (
+                                                                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                                                                    {deal.allPrices.map((p, pi) => (
+                                                                        <span key={pi} style={{
+                                                                            fontSize: '0.58rem', padding: '2px 8px', borderRadius: 6,
+                                                                            background: pi === 0 ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+                                                                            fontWeight: pi === 0 ? 700 : 500,
+                                                                        }}>
+                                                                            {p.source}: ₺{p.formatted}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Body */}
@@ -352,7 +372,7 @@ export default function FlightsPage() {
                                                             </div>
 
                                                             <p style={{ margin: '8px 0 0', fontSize: '0.58rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-                                                                ₺{deal.priceFormatted} · Amadeus API güncel fiyat · Platformlara tıklayıp biletinizi alabilirsiniz
+                                                                ₺{deal.priceFormatted} · {deal.sourcesFound || 1} kaynaktan en ucuz fiyat · Platformlara tıklayıp biletinizi alabilirsiniz
                                                             </p>
                                                         </div>
                                                     </motion.div>
