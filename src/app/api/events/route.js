@@ -79,9 +79,9 @@ async function fetchEtkinlikEvents(city, format) {
     if (!token) return { events: [], error: 'no_token' }
 
     try {
-        // Fetch multiple pages for more results
+        // Fetch many pages to get ALL events
         const allItems = []
-        for (let page = 1; page <= 3; page++) {
+        for (let page = 1; page <= 10; page++) {
             const res = await fetch(`${ETKINLIK_BASE}/events?page=${page}`, {
                 headers: { 'X-Etkinlik-Token': token, 'Accept': 'application/json' },
                 next: { revalidate: 300 },
@@ -91,6 +91,8 @@ async function fetchEtkinlikEvents(city, format) {
             const items = raw.items || raw.data || (Array.isArray(raw) ? raw : [])
             if (items.length === 0) break
             allItems.push(...items)
+            // If page returned fewer than expected (less than ~20), we've hit the last page
+            if (items.length < 15) break
         }
 
         // Map to our format

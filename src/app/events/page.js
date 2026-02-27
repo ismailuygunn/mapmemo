@@ -323,14 +323,25 @@ export default function EventsPage() {
                                     <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
                                         <Ticket size={16} style={{ color: '#EC4899', marginRight: 6 }} />
                                         {filteredEvents.length} etkinlik
-                                        {dateFilter !== 'all' && <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500 }}> ({DATE_FILTERS.find(d => d.key === dateFilter)?.label})</span>}
-                                        {' — '}{[...CITIES_TR, ...CITIES_INT].find(c => c.slug === city)?.name || customCity || city}
+                                        {' — '}{customCity || city}
                                     </h2>
-                                    {filteredEvents.length !== events.length && (
-                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                                            Toplam {events.length} etkinlikten {filteredEvents.length} tanesi gösteriliyor
-                                        </span>
-                                    )}
+                                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                                        {format && (
+                                            <span style={{ fontSize: '0.68rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>
+                                                {FORMATS.find(f => f.key === format)?.emoji} {FORMATS.find(f => f.key === format)?.label}
+                                            </span>
+                                        )}
+                                        {dateFilter !== 'all' && (
+                                            <span style={{ fontSize: '0.68rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(129,140,248,0.1)', color: '#818CF8', fontWeight: 600 }}>
+                                                📅 {DATE_FILTERS.find(d => d.key === dateFilter)?.label}
+                                            </span>
+                                        )}
+                                        {filteredEvents.length !== events.length && (
+                                            <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>
+                                                ({events.length} toplam)
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {filteredEvents.length > 0 ? (
