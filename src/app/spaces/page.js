@@ -14,7 +14,7 @@ import {
     Heart, Share2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
+import { useToast } from '@/context/ToastContext'
 
 const ROLE_COLORS = {
     owner: { bg: '#FBBF24', text: '#92400E', label: { tr: 'Yönetici', en: 'Owner' } },
@@ -60,6 +60,7 @@ export default function SpacesPage() {
     const { user } = useAuth()
     const { space: activeSpace, createSpace, joinSpace: ctxJoinSpace, loadSpace: ctxLoadSpace, setSpace: setActiveSpace, setUserRole: setActiveUserRole } = useSpace()
     const { locale } = useLanguage()
+    const { toast } = useToast()
     const supabase = createClient()
     const router = useRouter()
     const t = (tr, en) => locale === 'tr' ? tr : en

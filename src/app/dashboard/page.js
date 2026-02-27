@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useToast } from '@/context/ToastContext'
 
 const CATEGORY_ICONS = {
     transport: Bus, food: Utensils, activity: Ticket, accommodation: Bed, hack: Lightbulb,
@@ -53,6 +53,7 @@ export default function DashboardPage() {
     const { user, profile } = useAuth()
     const { space } = useSpace()
     const { locale } = useLanguage()
+    const { toast } = useToast()
     const router = useRouter()
     const supabase = createClient()
     const t = (tr, en) => locale === 'tr' ? tr : en

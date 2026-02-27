@@ -18,7 +18,7 @@ import {
     Shield, AlertTriangle, Shirt, RefreshCw, Utensils, Map as MapIcon, Bus
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
+import { useToast } from '@/context/ToastContext'
 import { Badge, InfoTooltip } from '@/components/ui'
 import { openAlbumForPrint } from '@/lib/albumGenerator'
 import TripGallery from '@/components/planner/TripGallery'
@@ -83,6 +83,7 @@ export default function PlannerPage() {
     const { space, createSpace } = useSpace()
     const { user } = useAuth()
     const { t, locale } = useLanguage()
+    const { toast } = useToast()
     const supabase = createClient()
     const FORM_STEPS = [
         { key: 'destination', icon: '📍', label: locale === 'tr' ? 'Nereye' : 'Where' },
@@ -360,7 +361,7 @@ export default function PlannerPage() {
             toast.success(locale === 'tr' ? '✈️ Planınız hazır!' : '✈️ Your plan is ready!')
         } catch (err) {
             setError(err.message)
-            toast.error(locale === 'tr' ? 'Plan oluşturulamadı' : 'Failed to generate plan', { description: err.message })
+            toast.error(err.message || (locale === 'tr' ? 'Plan oluşturulamadı' : 'Failed to generate plan'))
         }
         setLoading(false)
         setLoadingProgress(0)
@@ -458,12 +459,10 @@ export default function PlannerPage() {
             setSavedTrips(prev => [trip, ...prev])
             setSavedTripId(trip.id)
             const spaceName = userSpaces.find(s => s.id === targetSpaceId)?.name || ''
-            toast.success(locale === 'tr' ? '💾 Plan kaydedildi!' : '💾 Plan saved!', {
-                description: spaceName ? `${spaceName} ${locale === 'tr' ? 'grubuna eklendi' : 'group'}` : ''
-            })
+            toast.success(locale === 'tr' ? '💾 Plan kaydedildi!' : '💾 Plan saved!')
         } catch (err) {
             setError(err.message)
-            toast.error(locale === 'tr' ? 'Kayıt başarısız' : 'Save failed', { description: err.message })
+            toast.error(err.message || (locale === 'tr' ? 'Kayıt başarısız' : 'Save failed'))
         }
         setSaving(false)
     }

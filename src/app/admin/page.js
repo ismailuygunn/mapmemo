@@ -12,7 +12,7 @@ import {
     Download, Upload, Zap
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
+import { useToast } from '@/context/ToastContext'
 import { useRouter } from 'next/navigation'
 
 const ADMIN_EMAIL = 'admin@naviso.app' // Change to your admin email
@@ -32,6 +32,7 @@ export default function AdminPage() {
 
     const { user, profile } = useAuth()
     const { locale } = useLanguage()
+    const { toast } = useToast()
     const supabase = createClient()
     const router = useRouter()
     const t = (tr, en) => locale === 'tr' ? tr : en

@@ -4,7 +4,6 @@ import { SpaceProvider } from '@/context/SpaceContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { ToastProvider } from '@/context/ToastContext'
-import { Toaster } from 'sonner'
 
 export const metadata = {
   title: 'NAVISO — Travel Together',
@@ -34,21 +33,6 @@ export default function RootLayout({ children }) {
               <AuthProvider>
                 <SpaceProvider>
                   {children}
-                  <Toaster
-                    theme="dark"
-                    position="top-center"
-                    richColors
-                    toastOptions={{
-                      style: {
-                        background: 'var(--bg-secondary)',
-                        border: '1px solid var(--border-primary)',
-                        color: 'var(--text-primary)',
-                        fontSize: '0.875rem',
-                        borderRadius: '12px',
-                        backdropFilter: 'blur(12px)',
-                      }
-                    }}
-                  />
                 </SpaceProvider>
               </AuthProvider>
             </ToastProvider>

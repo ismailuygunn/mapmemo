@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { User, MapPin, Sparkles, ArrowRight, Loader2, Plane } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { toast } from 'sonner'
+import { useToast } from '@/context/ToastContext'
 
 export default function OnboardingPage() {
     const [fullName, setFullName] = useState('')
@@ -18,6 +18,7 @@ export default function OnboardingPage() {
 
     const { user } = useAuth()
     const { locale } = useLanguage()
+    const { toast } = useToast()
     const router = useRouter()
     const supabase = createClient()
     const t = (tr, en) => locale === 'tr' ? tr : en
