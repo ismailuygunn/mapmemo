@@ -213,6 +213,7 @@ const INFO_CATEGORIES = [
 
 // ═══ DESTINATION COVER IMAGES ═══
 const DEST_IMAGES = {
+    // Existing
     'Paris': '/destinations/paris.png',
     'Roma': '/destinations/roma.png',
     'İstanbul': '/destinations/istanbul.png',
@@ -232,6 +233,39 @@ const DEST_IMAGES = {
     'Bangkok': '/destinations/bangkok.png',
     'Venedik': '/destinations/venedik.png',
     'Rio de Janeiro': '/destinations/rio.png',
+    // Europe
+    'Viyana': '/destinations/viyana.png',
+    'Belgrad': '/destinations/belgrad.png',
+    'Saraybosna': '/destinations/saraybosna.png',
+    'Dubrovnik': '/destinations/dubrovnik.png',
+    'Kotor': '/destinations/kotor.png',
+    'Tiflis': '/destinations/tiflis.png',
+    // Asia
+    'Seul': '/destinations/seul.png',
+    'Singapur': '/destinations/singapur.png',
+    'Kuala Lumpur': '/destinations/kualalumpur.png',
+    'Hanoi': '/destinations/hanoi.png',
+    'Katmandu': '/destinations/katmandu.png',
+    'Kolombo': '/destinations/kolombo.png',
+    // Middle East
+    'Petra': '/destinations/petra.png',
+    'Kahire': '/destinations/kahire.png',
+    'Doha': '/destinations/doha.png',
+    'Bakü': '/destinations/baku.png',
+    // Africa
+    'Zanzibar': '/destinations/zanzibar.png',
+    'Cape Town': '/destinations/capetown.png',
+    'Nairobi': '/destinations/nairobi.png',
+    // Americas
+    'Buenos Aires': '/destinations/buenosaires.png',
+    'Küba (Havana)': '/destinations/havana.png',
+    'Meksiko City': '/destinations/meksikocity.png',
+    // Turkey
+    'Efes': '/destinations/efes.png',
+    'Pamukkale': '/destinations/pamukkale.png',
+    'Trabzon': '/destinations/trabzon.png',
+    'Mardin': '/destinations/mardin.png',
+    'Şanlıurfa': '/destinations/sanliurfa.png',
 }
 
 const VISA_TAB_CONFIG = [
