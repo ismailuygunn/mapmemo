@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
+import { useSpace } from '@/context/SpaceContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { useToast } from '@/context/ToastContext'
 import Sidebar from '@/components/layout/Sidebar'
@@ -10,7 +12,7 @@ import {
     Star, Navigation, Lightbulb, Gift, MessageCircle, CloudRain,
     Music, Shirt, Heart, Cake, Flame, Frown, Rainbow, ArrowLeft,
     Copy, Check, ChevronDown, ChevronUp, Sparkles, AlertTriangle,
-    Target, Trophy, Printer, Share2, Download
+    Target, Trophy, Printer, Share2, Download, Save, Trash2, CalendarDays
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
@@ -98,8 +100,10 @@ const PEOPLE_OPTIONS = [2, 3, 4, 6, 8]
 
 export default function SOSPlanPage() {
     const { user } = useAuth()
+    const { space, createSpace } = useSpace()
     const { locale } = useLanguage()
     const { toast } = useToast()
+    const supabase = createClient()
     const printRef = useRef(null)
 
     const [selectedScenario, setSelectedScenario] = useState(null)
@@ -114,6 +118,95 @@ export default function SOSPlanPage() {
     const [expandedStep, setExpandedStep] = useState(null)
     const [copiedMsg, setCopiedMsg] = useState(null)
     const [showExtras, setShowExtras] = useState({})
+    const [saving, setSaving] = useState(false)
+    const [savedPlanId, setSavedPlanId] = useState(null)
+    const [savedPlans, setSavedPlans] = useState([])
+    const [loadingSaved, setLoadingSaved] = useState(true)
+
+    // Load previously saved SOS plans
+    useEffect(() => {
+        if (!user || !space) { setLoadingSaved(false); return }
+        const loadSaved = async () => {
+            const { data } = await supabase
+                .from('trips')
+                .select('id, city, tempo, budget, itinerary_data, created_at')
+                .eq('space_id', space.id)
+                .not('tempo', 'is', null)
+                .in('tempo', ['anniversary', 'birthday', 'friends', 'apology', 'mood'])
+                .order('created_at', { ascending: false })
+                .limit(10)
+            setSavedPlans(data || [])
+            setLoadingSaved(false)
+        }
+        loadSaved()
+    }, [user, space])
+
+    // Save SOS plan to database
+    const savePlan = async () => {
+        if (!plan || !selectedScenario) return
+        setSaving(true)
+        try {
+            let targetSpaceId = space?.id
+            if (!targetSpaceId) {
+                const newSpace = await createSpace('Seyahat Planlarım')
+                targetSpaceId = newSpace.id
+            }
+            const finalCity = city || customCity
+            const { data: trip, error } = await supabase
+                .from('trips')
+                .insert({
+                    space_id: targetSpaceId,
+                    city: finalCity,
+                    tempo: selectedScenario.key,
+                    budget: budget,
+                    itinerary_data: {
+                        ...plan,
+                        _sosMetadata: {
+                            scenario: selectedScenario.key,
+                            city: finalCity,
+                            peopleCount,
+                            budget,
+                            extraNotes,
+                            savedAt: new Date().toISOString(),
+                        }
+                    },
+                })
+                .select().single()
+            if (error) throw error
+            setSavedPlanId(trip.id)
+            setSavedPlans(prev => [trip, ...prev])
+            toast.success('💾 SOS Plan kaydedildi!')
+        } catch (err) {
+            toast.error(err.message || 'Kayıt başarısız')
+        }
+        setSaving(false)
+    }
+
+    // Delete a saved plan
+    const deleteSavedPlan = async (id) => {
+        const { error } = await supabase.from('trips').delete().eq('id', id)
+        if (!error) {
+            setSavedPlans(prev => prev.filter(p => p.id !== id))
+            toast.success('Plan silindi')
+        }
+    }
+
+    // Load a saved plan
+    const loadSavedPlan = (saved) => {
+        const data = saved.itinerary_data
+        const meta = data?._sosMetadata
+        const sc = SCENARIOS.find(s => s.key === (meta?.scenario || saved.tempo))
+        if (!sc) return
+        setSelectedScenario(sc)
+        setCity(meta?.city || saved.city || '')
+        setCustomCity('')
+        setPeopleCount(meta?.peopleCount || 2)
+        setBudget(meta?.budget || saved.budget || 'mid')
+        setExtraNotes(meta?.extraNotes || '')
+        setPlan(data)
+        setSavedPlanId(saved.id)
+        toast.success('Plan yüklendi!')
+    }
 
     const loadingMessages = {
         anniversary: ['💕 Romantik mekanlar aranıyor...', '🌹 Sürpriz fikirleri hazırlanıyor...', '🕯️ Mükemmel akşam planlanıyor...'],
@@ -674,17 +767,77 @@ export default function SOSPlanPage() {
                                 </div>
 
                                 {/* ── ACTION BUTTONS ── */}
-                                <div style={{ display: 'flex', gap: 10 }}>
+                                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                    <button onClick={savePlan} disabled={saving || !!savedPlanId}
+                                        style={{
+                                            flex: '1 1 140px', padding: '14px', borderRadius: 14,
+                                            background: savedPlanId ? '#10B981' : scenario.gradient,
+                                            border: 'none', cursor: savedPlanId ? 'default' : 'pointer',
+                                            fontWeight: 600, fontSize: '0.92rem', color: 'white',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                            boxShadow: `0 4px 15px ${savedPlanId ? '#10B981' : scenario.color}30`,
+                                            opacity: saving ? 0.6 : 1,
+                                        }}>
+                                        {saving ? <><Loader2 size={18} className="spin" /> Kaydediliyor...</> :
+                                            savedPlanId ? <><Check size={18} /> Kaydedildi</> :
+                                                <><Save size={18} /> Kaydet</>}
+                                    </button>
                                     <button onClick={handlePrint}
-                                        style={{ flex: 1, padding: '14px', borderRadius: 14, background: scenario.gradient, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: `0 4px 15px ${scenario.color}30` }}>
-                                        <Printer size={18} /> Çıktı Al / Yazdır
+                                        style={{ flex: '1 1 140px', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                        <Printer size={18} /> Çıktı Al
                                     </button>
                                     <button onClick={resetAll}
-                                        style={{ flex: 1, padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                        <Zap size={18} /> Yeni SOS Plan
+                                        style={{ flex: '1 1 140px', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                        <Zap size={18} /> Yeni Plan
                                     </button>
                                 </div>
                             </motion.div>
+                        )}
+
+                        {/* ═══ SAVED PLANS ═══ */}
+                        {savedPlans.length > 0 && (
+                            <div style={{ marginTop: 40 }}>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <CalendarDays size={18} /> Kaydedilen SOS Planlarım
+                                </h3>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {savedPlans.map(sp => {
+                                        const sc = SCENARIOS.find(s => s.key === (sp.itinerary_data?._sosMetadata?.scenario || sp.tempo))
+                                        if (!sc) return null
+                                        return (
+                                            <div key={sp.id} style={{
+                                                display: 'flex', alignItems: 'center', gap: 12,
+                                                padding: '14px 16px', borderRadius: 14,
+                                                background: 'var(--bg-primary)', border: '1px solid var(--border)',
+                                                cursor: 'pointer', transition: 'border-color 0.15s',
+                                            }}
+                                                onClick={() => loadSavedPlan(sp)}
+                                                onMouseEnter={e => e.currentTarget.style.borderColor = sc.color}
+                                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                            >
+                                                <div style={{
+                                                    width: 44, height: 44, borderRadius: 12,
+                                                    background: sc.gradient,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '1.3rem', flexShrink: 0,
+                                                }}>{sc.emoji}</div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>
+                                                        {sp.itinerary_data?.planTitle || sc.title}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>
+                                                        📍 {sp.city} · {new Date(sp.created_at).toLocaleDateString('tr-TR')}
+                                                    </div>
+                                                </div>
+                                                <button onClick={(e) => { e.stopPropagation(); deleteSavedPlan(sp.id) }}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 4 }}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
