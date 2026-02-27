@@ -79,183 +79,10 @@ const PREF_TAGS = [
 
 const WIZARD_STEPS = ['city', 'group', 'count', 'age', 'energy', 'time', 'budget', 'prefs', 'extra']
 
-// Legacy data removed — plans are now AI-generated
-const _LEGACY = {
-    istanbul: {
-        couples: [
-            {
-                title: '💕 Romantik Boğaz Akşamı',
-                subtitle: 'Kız arkadaşınla unutulmaz bir akşam — A\'dan Z\'ye',
-                duration: '~5 saat', budget: '₺800–1.500', emoji: '🌹',
-                steps: [
-                    { time: '17:00', emoji: '🌹', action: 'Çiçek Al', detail: 'Nişantaşı Çiçekçi veya Bloom & Fresh — kırmızı güller + küçük buket', tip: 'Online sipariş ver, yolda al' },
-                    { time: '17:30', emoji: '👗', action: 'Hazırlan', detail: 'Smart casual giyinin. Blazer + parfüm = +10 puan', tip: 'Ayakkabılar rahat olsun, yürüyüş var' },
-                    { time: '18:00', emoji: '🚕', action: 'Buluşma', detail: 'Bebek Parkı girişinde buluşun', tip: 'Uber/Bitaksi ile gidin, park derdi olmaz' },
-                    { time: '18:15', emoji: '🚶', action: 'Bebek→Rumelihisarı', detail: '2 km sahil yürüyüşü — Boğaz\'ın en güzel kesimi. Güneş batarken fotoğraf durakları', tip: 'Sol taraftaki bankta oturup çay için' },
-                    { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Rumelihisarı İskele Restaurant — Boğaz manzaralı balık. Veya daha butik: Mangerie Bebek', tip: 'Cum-Ct 2 gün önce rezervasyon şart!' },
-                    { time: '20:30', emoji: '🍷', action: 'After-dinner', detail: 'Kuruçeşme sahil barları veya Bebek Hotel bar', tip: 'Kokteyl + Boğaz ışıkları = büyü' },
-                    { time: '22:00', emoji: '🌃', action: 'Gece Finali', detail: 'Ortaköy Meydanı + Köprü ışıkları altında son yürüyüş', tip: 'Kumpir yiyebilirsiniz (klasik!)' },
-                ],
-            },
-            {
-                title: '☕ Balat & Karaköy Keşif Günü',
-                subtitle: 'Sanatsal ve vintage bir gün',
-                duration: '~6 saat', budget: '₺400–800', emoji: '🎨',
-                steps: [
-                    { time: '11:00', emoji: '☕', action: 'Brunch', detail: 'Karaköy Lokantası veya Kronotrop — specialty kahve + peynirli börek', tip: 'Haftasonları kuyruğa hazır olun' },
-                    { time: '12:00', emoji: '🎨', action: 'Sanat Galerisi', detail: 'SALT Galata veya İstanbul Modern — sergi gezisi + müze shop', tip: 'İstanbul Kart ile indirim' },
-                    { time: '13:30', emoji: '🚶', action: 'Balat Yürüyüşü', detail: 'Merdivenli Yokuş → Renkli evler → Iron Church', tip: 'Her köşe Instagram değerinde' },
-                    { time: '15:00', emoji: '🍰', action: 'Kahve Molası', detail: 'Forno Balat (İtalyan fırın) — brownie + latte', tip: 'Bahçeli mekanları tercih edin' },
-                    { time: '16:00', emoji: '🛍️', action: 'Vintage Shopping', detail: 'Balat antikacıları + plak dükkanları + el yapımı takılar', tip: 'Hediye alabilirsiniz!' },
-                    { time: '17:30', emoji: '🌅', action: 'Günbatımı', detail: 'Pierre Loti Tepesi — teleferikle çıkın, Türk kahvesi', tip: 'Teleferik 18:00\'de kapanır' },
-                ],
-            },
-        ],
-        friends: [
-            {
-                title: '🍺 4 Kanka: İstanbul Eğlence Günü',
-                subtitle: 'Sabahtan geceye erkek günü — A\'dan Z\'ye',
-                duration: 'Tam gün', budget: '₺500–1.000/kişi', emoji: '🎯',
-                steps: [
-                    { time: '10:00', emoji: '🏋️', action: 'Spor/Aktivite', detail: 'Levent CrossFit veya Maçka Parkı outdoor workout', tip: 'Yedek tişört getirin' },
-                    { time: '11:30', emoji: '🍳', action: 'Brunch', detail: 'House Café Ortaköy — kocaman serpme kahvaltı', tip: '4 kişilik sipariş edin' },
-                    { time: '13:00', emoji: '🎮', action: 'Escape Room', detail: 'Kadıköy Enigma veya Tuzla Paintball — takım olarak savaşın', tip: '2 saat blok ayırın, rez şart' },
-                    { time: '15:30', emoji: '🎱', action: 'Bilardo', detail: 'Funloft Beşiktaş — bilardo + bowling + arcade', tip: 'Turnuva: kaybeden akşamı ısmarlasın!' },
-                    { time: '17:30', emoji: '⚽', action: 'Halısaha', detail: 'Levent Halısaha — 2v2 mini maç', tip: 'Krampon+forma getirin' },
-                    { time: '19:30', emoji: '🍖', action: 'Akşam Yemeği', detail: 'Nusr-Et Etiler veya Çiya Sofrası Kadıköy', tip: 'Aç karnına en güzel yenir' },
-                    { time: '21:30', emoji: '🍺', action: 'Bar Crawl', detail: 'Kadıköy: Arkaoda → Karga → Viktor Levi → Bira Fabrikası', tip: '4 mekan minimum, yürüyerek gezilebilir' },
-                    { time: '00:00', emoji: '🌙', action: 'Gece Finali', detail: 'Ortaköy ıslak hamburger + Galata Köprüsü', tip: 'Son vapur 00:30!' },
-                ],
-            },
-            {
-                title: '🏖️ Adalar Günübirlik',
-                subtitle: 'Deniz, bisiklet, balık — tam gün',
-                duration: 'Tam gün', budget: '₺300–600/kişi', emoji: '🚢',
-                steps: [
-                    { time: '09:00', emoji: '⛴️', action: 'Vapur', detail: 'Kabataş→Büyükada vapuru — simit + çay al', tip: 'İstanbulkart ile ucuz, 1.5 saat' },
-                    { time: '10:30', emoji: '🚲', action: 'Bisiklet', detail: 'Ada girişinden bisiklet kirala — tandem de var', tip: 'Kask iste' },
-                    { time: '11:00', emoji: '🗺️', action: 'Ada Turu', detail: 'Yörükali → Aya Yorgi tepesi → Dilburnu', tip: 'Aya Yorgi çıkışı 30 dk ama manzara efsane' },
-                    { time: '13:00', emoji: '🐟', action: 'Balık Öğle', detail: 'Yörükali — deniz kenarında taze balık + rakı', tip: 'Levrek ızgara + deniz börülcesi' },
-                    { time: '15:00', emoji: '🏊', action: 'Deniz', detail: 'Yörükali plajında denize girin', tip: 'Havlu + mayo getirin' },
-                    { time: '17:00', emoji: '🍦', action: 'Dondurma', detail: 'Ada meydanında Maraş dondurmacısı', tip: 'Sakızlı + fıstıklı' },
-                    { time: '18:30', emoji: '⛴️', action: 'Dönüş', detail: 'Rıhtımda günbatımı → son vapur', tip: 'Vapur üstü çay = mükemmel kapanış' },
-                ],
-            },
-        ],
-    },
-    ankara: {
-        couples: [{
-            title: '🌃 Başkent Romantik Akşam', subtitle: 'Ankara\'da zarif bir gece', duration: '~4 saat', budget: '₺600–1.200', emoji: '💐',
-            steps: [
-                { time: '18:00', emoji: '💐', action: 'Çiçek', detail: 'Tunalı Hilmi çiçekçiler', tip: 'Ciceksepeti ile eve teslim de olur' },
-                { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Trilye (Kavakdere) veya JW Marriott terası', tip: 'Smart casual, rez şart' },
-                { time: '21:00', emoji: '🎵', action: 'Canlı Müzik', detail: 'IF Performance Hall — caz geceleri', tip: 'Agenda\'yı kontrol edin' },
-                { time: '22:30', emoji: '🌙', action: 'Gece Yürüyüşü', detail: 'Kale\'den şehir manzarası', tip: 'Anıtkabir aydınlatması görülebilir' },
-            ],
-        }],
-        friends: [{
-            title: '🎯 Ankara Erkekler Günü', subtitle: 'Başkent eğlence maratonu', duration: 'Tam gün', budget: '₺400–800/kişi', emoji: '🎮',
-            steps: [
-                { time: '10:00', emoji: '🏋️', action: 'Spor', detail: 'ODTÜ ormanında koşu veya halısaha', tip: 'Sabah = boş saha' },
-                { time: '12:00', emoji: '🍖', action: 'Öğle', detail: 'Uludağ Kebapçısı — efsane İskender', tip: 'İskender + ayran combo' },
-                { time: '14:00', emoji: '🎮', action: 'VR/Oyun', detail: 'GameHouse Kızılay — sanal gerçeklik', tip: 'Grup indirimi sorun' },
-                { time: '16:00', emoji: '📸', action: 'Anıtkabir', detail: 'Ziyaret + müze (17:00\'ye kadar)', tip: 'Güvenlik sıkı, erken gidin' },
-                { time: '18:00', emoji: '🍕', action: 'Tunalı', detail: 'Cadde gezintisi + pizza/burger', tip: 'Outdoor kafeler güzel' },
-                { time: '21:00', emoji: '🍺', action: 'Kızılay Barlar', detail: 'Sakarya Caddesi — canlı, enerjik', tip: 'Cumartesi en iyi gece' },
-            ],
-        }],
-    },
-    izmir: {
-        couples: [{
-            title: '🌅 Kordon Romantik', subtitle: 'Ege\'nin incisi', duration: '~5 saat', budget: '₺500–1.000', emoji: '🌊',
-            steps: [
-                { time: '16:00', emoji: '🌹', action: 'Çiçek', detail: 'Alsancak çiçekçileri — lavanta + güller', tip: 'Her köşede var' },
-                { time: '17:00', emoji: '🚶', action: 'Kordon Yürüyüşü', detail: 'Konak→Alsancak sahil boyu 3 km', tip: 'Günbatımına denk getirin' },
-                { time: '18:30', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Sakız (Alsancak) — Ege mutfağı', tip: 'Enginar + levrek' },
-                { time: '20:30', emoji: '🎵', action: 'Alsancak Barları', detail: '1453 Sokak — akustik müzik', tip: 'Yazın sokak, kışın iç mekan' },
-                { time: '22:00', emoji: '🌙', action: 'Asansör', detail: 'Tarihi Asansör\'den gece manzarası + çay', tip: 'Çok romantik!' },
-            ],
-        }],
-        friends: [{
-            title: '🏄 Ege Macerası', subtitle: 'Alaçatı + Çeşme tam gün', duration: 'Tam gün', budget: '₺400–800/kişi', emoji: '☀️',
-            steps: [
-                { time: '09:00', emoji: '🚗', action: 'Yola Çık', detail: 'Alaçatı\'ya 1 saat', tip: 'Müzik açın, E87 kullanın' },
-                { time: '10:30', emoji: '🏄', action: 'Windsurf', detail: 'Alaçatı Port\'ta windsurf dersi', tip: '2 saat başlangıç ~₺500' },
-                { time: '13:00', emoji: '🍽️', action: 'Brunch', detail: 'Agrilia — serpme kahvaltı', tip: 'Otlar + peynirler + gözleme' },
-                { time: '15:00', emoji: '🛍️', action: 'Alaçatı Sokakları', detail: 'Taş sokaklar + butik + dondurma', tip: 'Çarşamba pazarı en iyisi' },
-                { time: '17:00', emoji: '🏊', action: 'Ilıca Plajı', detail: 'Sıcak su kaynağı var!', tip: 'Deniz ayakkabısı getirin' },
-                { time: '19:00', emoji: '🍺', action: 'Sunset', detail: 'Çeşme Marina — Aperol Spritz', tip: 'Klasik' },
-            ],
-        }],
-    },
-    antalya: {
-        couples: [{
-            title: '🌊 Kaleiçi Romantik', subtitle: 'Akdeniz akşamı', duration: '~4 saat', budget: '₺600–1.200', emoji: '🏖️',
-            steps: [
-                { time: '17:00', emoji: '🌹', action: 'Çiçek', detail: 'Kaleiçi girişi çiçekçi', tip: '' },
-                { time: '17:30', emoji: '🚶', action: 'Kaleiçi', detail: 'Dar sokaklar + tarihi evler + Hadrian Kapısı', tip: 'Fotojenik' },
-                { time: '19:00', emoji: '🍽️', action: 'Akşam Yemeği', detail: 'Club Arma — marina manzarası', tip: 'Karides güveç!' },
-                { time: '21:00', emoji: '🌙', action: 'Marina', detail: 'Yat limanında yürüyüş + dondurma', tip: 'Gece aydınlatma muhteşem' },
-            ],
-        }],
-        friends: [{
-            title: '🏖️ Beach Day', subtitle: 'Deniz + eğlence', duration: 'Tam gün', budget: '₺500–900/kişi', emoji: '☀️',
-            steps: [
-                { time: '09:00', emoji: '🏖️', action: 'Plaj', detail: 'Konyaaltı — şezlong + deniz', tip: 'Güneş kremi!' },
-                { time: '12:00', emoji: '🍔', action: 'Beach Club', detail: 'Lara Beach Club — havuz + müzik', tip: 'Giriş ücreti yemekten düşüyor' },
-                { time: '15:00', emoji: '🚤', action: 'Tekne Turu', detail: 'Düden Şelalesi turu — 2 saat', tip: 'Marina\'dan uygun turlar' },
-                { time: '18:00', emoji: '🍽️', action: 'Balık', detail: 'Kaleiçi balık restoranı', tip: 'Çipura + rakı' },
-                { time: '21:00', emoji: '🍺', action: 'Bar Crawl', detail: 'Club Ally, Kale Bar', tip: 'Her barda farklı müzik' },
-            ],
-        }],
-    },
-    bursa: {
-        couples: [{
-            title: '❄️ Uludağ Romantik', subtitle: 'Dağ\'da çift keyfi', duration: '~5 saat', budget: '₺600–1.200', emoji: '🏔️',
-            steps: [
-                { time: '10:00', emoji: '🚡', action: 'Teleferik', detail: 'Teferrüç→Uludağ — muhteşem manzara', tip: 'Hafta içi daha sakin' },
-                { time: '11:30', emoji: '☕', action: 'Sıcak Çikolata', detail: 'Dağ evi kafesinde — sıcak çikolata + kestane', tip: 'Kışın bot giyin' },
-                { time: '13:00', emoji: '🍖', action: 'İskender', detail: 'Kebapçı İskender (Ulu Cami yanı)', tip: 'Orijinal!' },
-                { time: '15:00', emoji: '♨️', action: 'Kaplıca', detail: 'Çekirge kaplıcaları — çift havuz', tip: 'Havlu getirin' },
-                { time: '17:00', emoji: '🌅', action: 'Günbatımı', detail: 'Tophane\'den ova manzarası', tip: 'Çay ile izleyin' },
-            ],
-        }],
-        friends: [{
-            title: '🎿 Uludağ Macera', subtitle: 'Dağ erkekler günü', duration: 'Tam gün', budget: '₺500–900/kişi', emoji: '⛷️',
-            steps: [
-                { time: '08:00', emoji: '🚗', action: 'Yol', detail: 'İstanbul→Bursa 2.5 saat', tip: 'Osmangazi köprüsü' },
-                { time: '10:30', emoji: '⛷️', action: 'Kayak', detail: 'Uludağ pistleri — kiralama var', tip: 'Kışın kayak, yazın trekking' },
-                { time: '13:00', emoji: '🍖', action: 'Dağ Öğle', detail: 'Dağ evlerinde kebap + çorba', tip: 'Sıcak çorba şart!' },
-                { time: '15:00', emoji: '🏔️', action: 'ATV', detail: 'Uludağ ATV off-road', tip: 'Kask takın' },
-                { time: '18:00', emoji: '🍖', action: 'İskender', detail: 'Kebapçı İskender (1867)', tip: 'Sıcak tereyağlı = efsane' },
-            ],
-        }],
-    },
-    kapadokya: {
-        couples: [{
-            title: '🎈 Aşk Rotası', subtitle: 'Peri bacalarında romantik gün', duration: 'Tam gün', budget: '₺1.500–3.000', emoji: '🌅',
-            steps: [
-                { time: '05:00', emoji: '🎈', action: 'Balon', detail: 'Gün doğumunda sıcak hava balonu — 1 saat', tip: 'Royal Balloon, Butterfly Balloons' },
-                { time: '08:00', emoji: '☕', action: 'Kahvaltı', detail: 'Koza Cave Hotel terası — serpme', tip: 'Manzaralı masa isteyin' },
-                { time: '10:00', emoji: '🐴', action: 'At Turu', detail: 'Vadilerde at binme — 2 saat', tip: 'Rahat pantolon' },
-                { time: '13:00', emoji: '🍽️', action: 'Öğle', detail: 'Dibek Restaurant — testi kebabı + şarap', tip: 'Testi kırma ritüeli eğlenceli' },
-                { time: '15:00', emoji: '🏛️', action: 'Yeraltı Şehri', detail: 'Derinkuyu veya Kaymaklı', tip: 'Kapalı alan, yorucu olabilir' },
-                { time: '18:00', emoji: '🌅', action: 'Sunset', detail: 'Kızılçukur Vadisi — şarap + günbatımı', tip: 'En güzel gün batımı noktası' },
-            ],
-        }],
-        friends: [{
-            title: '🏎️ Macera Günü', subtitle: 'Adrenalin + keşif', duration: 'Tam gün', budget: '₺800–1.500/kişi', emoji: '⚡',
-            steps: [
-                { time: '06:00', emoji: '🎈', action: 'Balon İzle', detail: 'Sunrise point\'ten ücretsiz izleyin', tip: 'Sıcak kahve getirin' },
-                { time: '08:00', emoji: '🍳', action: 'Kahvaltı', detail: 'Topdeck Cave — manzaralı', tip: 'Seçmeler bol' },
-                { time: '10:00', emoji: '🏎️', action: 'ATV Safari', detail: 'Peri bacaları ATV — 2 saat off-road', tip: 'Eski kıyafet giyin' },
-                { time: '13:00', emoji: '🍖', action: 'Öğle', detail: 'Testi kebabı', tip: 'Grupça yenir' },
-                { time: '15:00', emoji: '🥾', action: 'Ihlara Vadisi', detail: '14 km kanyon (kısa rota 4 km)', tip: 'Su + snack alın' },
-                { time: '18:00', emoji: '🍷', action: 'Şarap Tadımı', detail: 'Turasan veya Kocabağ', tip: '4-5 çeşit tadım' },
-            ],
-        }],
-    },
-}
+// Legacy static plans removed — all plans are now AI-generated
+// (removed ~175 lines of static CITY_PLANS data)
+
+
 
 const GUEST_PRESETS = [
     { count: 2, label: 'İkimiz', emoji: '👫' },
@@ -348,18 +175,36 @@ export default function MeetupsPage() {
     }))
 
     const generateAIPlan = async () => {
-        setAiLoading(true); setAiPlan(null); setExpandedStep(null)
+        setAiLoading(true); setAiPlan(null); setExpandedStep(null); setShowWizard(false)
         try {
             const res = await fetch('/api/ai/meetup-plan', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(wizardData),
             })
-            if (!res.ok) throw new Error('API error')
             const data = await res.json()
+            if (data.error || !data.steps) {
+                throw new Error(data.error || 'Plan formatı hatalı')
+            }
+            // Normalize steps — ensure each step has safe properties
+            data.steps = (Array.isArray(data.steps) ? data.steps : []).map(s => ({
+                ...s,
+                time: s.time || '',
+                emoji: s.emoji || '📍',
+                action: s.action || s.placeName || 'Adım',
+                placeName: s.placeName || '',
+                detail: s.detail || '',
+                proTip: s.proTip || '',
+                estimatedCost: s.estimatedCost || '',
+                transportNote: s.transportNote || '',
+                placeRating: typeof s.placeRating === 'number' ? s.placeRating : null,
+                placeReviews: typeof s.placeReviews === 'number' ? s.placeReviews : null,
+                alternative: (s.alternative && typeof s.alternative === 'object') ? s.alternative : null,
+                googleMapsUrl: s.googleMapsUrl || '',
+            }))
             setAiPlan(data)
-            setShowWizard(false)
         } catch (err) {
-            toast?.({ title: 'Plan oluşturulamadı', description: 'Tekrar deneyin', type: 'error' })
+            console.error('AI plan error:', err)
+            toast?.({ title: 'Plan oluşturulamadı', description: err.message || 'Tekrar deneyin', type: 'error' })
         }
         setAiLoading(false)
     }

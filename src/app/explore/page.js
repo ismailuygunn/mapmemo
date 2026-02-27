@@ -222,6 +222,16 @@ const DEST_IMAGES = {
     'Barselona': '/destinations/barselona.png',
     'Santorini': '/destinations/santorini.png',
     'Antalya': '/destinations/antalya.png',
+    'Amsterdam': '/destinations/amsterdam.png',
+    'Londra': '/destinations/londra.png',
+    'New York': '/destinations/newyork.png',
+    'Bali': '/destinations/bali.png',
+    'Marakeş': '/destinations/marakes.png',
+    'Prag': '/destinations/prag.png',
+    'Budapeşte': '/destinations/budapeste.png',
+    'Bangkok': '/destinations/bangkok.png',
+    'Venedik': '/destinations/venedik.png',
+    'Rio de Janeiro': '/destinations/rio.png',
 }
 
 const VISA_TAB_CONFIG = [
@@ -428,52 +438,56 @@ export default function ExplorePage() {
                                         <motion.div key={card.city}
                                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.02 }}
-                                            whileHover={{ y: -6, boxShadow: '0 16px 40px rgba(0,0,0,0.2)' }}
+                                            whileHover={{ y: -6, boxShadow: '0 16px 40px rgba(0,0,0,0.25)' }}
                                             onClick={() => setSelectedDest(card)}
                                             style={{
                                                 borderRadius: 20, overflow: 'hidden',
                                                 cursor: 'pointer', transition: 'all 250ms',
                                                 position: 'relative',
-                                                height: hasImage ? 220 : 180,
+                                                height: 220,
                                                 backgroundImage: hasImage ? `url(${hasImage})` : undefined,
                                                 backgroundSize: 'cover', backgroundPosition: 'center',
                                                 background: hasImage ? undefined : card.gradient,
+                                                border: '1px solid rgba(255,255,255,0.08)',
                                             }}>
-                                            {/* Gradient overlay for readability */}
+                                            {/* Gradient overlay */}
                                             <div style={{
                                                 position: 'absolute', inset: 0,
                                                 background: hasImage
-                                                    ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 40%, transparent 70%)'
-                                                    : 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                                                    ? 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0.1) 75%)'
+                                                    : 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 60%)',
                                             }} />
-                                            {/* Tag */}
+                                            {/* Country tag */}
                                             <div style={{
                                                 position: 'absolute', top: 12, right: 12,
-                                                padding: '4px 10px', borderRadius: 8,
-                                                background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
-                                                fontSize: '0.62rem', fontWeight: 700, color: 'white',
-                                            }}>{card.country}</div>
+                                                padding: '5px 12px', borderRadius: 10,
+                                                background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)',
+                                                fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,255,255,0.95)',
+                                                letterSpacing: '0.02em', border: '1px solid rgba(255,255,255,0.1)',
+                                            }}>{card.emoji} {card.country}</div>
                                             {/* Content */}
                                             <div style={{
                                                 position: 'absolute', bottom: 0, left: 0, right: 0,
-                                                padding: '16px 18px', color: 'white',
+                                                padding: '18px 20px', color: 'white',
                                             }}>
-                                                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, margin: '0 0 4px', textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
-                                                    {card.emoji} {card.city}
+                                                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, margin: '0 0 6px', textShadow: '0 2px 10px rgba(0,0,0,0.7)', letterSpacing: '-0.01em' }}>
+                                                    {card.city}
                                                 </h3>
                                                 <p style={{
-                                                    fontSize: '0.72rem', lineHeight: 1.45, margin: '0 0 8px',
-                                                    opacity: 0.9, textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                                                    fontSize: '0.73rem', lineHeight: 1.5, margin: '0 0 10px',
+                                                    color: 'rgba(255,255,255,0.88)', textShadow: '0 1px 6px rgba(0,0,0,0.8)',
                                                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                                    fontWeight: 400,
                                                 }}>
-                                                    💡 {card.fact}
+                                                    {card.fact}
                                                 </p>
-                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                                                     {card.highlights.map((h, hi) => (
                                                         <span key={hi} style={{
-                                                            fontSize: '0.58rem', padding: '3px 8px', borderRadius: 6,
-                                                            background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)',
-                                                            fontWeight: 600, color: 'white',
+                                                            fontSize: '0.62rem', padding: '4px 10px', borderRadius: 8,
+                                                            background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(6px)',
+                                                            fontWeight: 600, color: 'rgba(255,255,255,0.95)',
+                                                            border: '1px solid rgba(255,255,255,0.12)',
                                                         }}>📍 {h}</span>
                                                     ))}
                                                 </div>
