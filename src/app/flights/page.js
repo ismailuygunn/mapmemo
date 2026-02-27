@@ -763,49 +763,81 @@ export default function FlightsPage() {
                                         const outbound = flight.segments?.[0]
                                         const returnSeg = flight.segments?.[1]
                                         const priceTRY = parseFloat(flight.price || 0)
+                                        const fromCode = flight.fromCode || searchFrom
+                                        const toCode = flight.toCode || searchTo
+                                        const depDate = searchDepart
+
+                                        // Build deeplinks for this search result
+                                        const fmtSky = (d) => d?.replace(/-/g, '').slice(2)
+                                        const fmtGoogle = (d) => d?.replace(/-/g, '')
+                                        const platforms = [
+                                            { name: 'Skyscanner', emoji: '🔵', url: `https://www.skyscanner.com.tr/transport/flights/${fromCode.toLowerCase()}/${toCode.toLowerCase()}/${fmtSky(depDate)}/` },
+                                            { name: 'Google Flights', emoji: '🟢', url: `https://www.google.com/travel/flights?q=Flights%20to%20${toCode}%20from%20${fromCode}%20on%20${fmtGoogle(depDate)}` },
+                                            { name: 'Enuygun', emoji: '🟡', url: `https://www.enuygun.com/ucak-bileti/arama/${fromCode.toLowerCase()}-${toCode.toLowerCase()}/?gidis=${depDate}` },
+                                            { name: 'Turna', emoji: '🟣', url: `https://www.turna.com/ucak-bileti/${fromCode.toLowerCase()}-${toCode.toLowerCase()}?departure=${depDate}` },
+                                        ]
+
                                         return (
                                             <motion.div key={flight.id || i}
                                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.03 }}
                                                 style={{
-                                                    ...sectionStyle, display: 'flex', alignItems: 'center', gap: 16,
-                                                    flexWrap: 'wrap', marginBottom: 8,
+                                                    ...sectionStyle, marginBottom: 8,
                                                 }}>
-                                                <div style={{ flex: '1 1 300px' }}>
-                                                    {/* Outbound */}
-                                                    {outbound && (
-                                                        <div style={{ marginBottom: returnSeg ? 8 : 0 }}>
-                                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>🛫 Gidiş</div>
-                                                            {outbound.segments?.map((seg, si) => (
-                                                                <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.82rem', padding: '4px 0' }}>
-                                                                    <span style={{ fontWeight: 700 }}>{seg.flightNumber}</span>
-                                                                    <span>{seg.departure} {seg.departureTime?.slice(11, 16)}</span>
-                                                                    <span style={{ color: 'var(--text-tertiary)' }}>→</span>
-                                                                    <span>{seg.arrival} {seg.arrivalTime?.slice(11, 16)}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                    {/* Return */}
-                                                    {returnSeg && (
-                                                        <div>
-                                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>🛬 Dönüş</div>
-                                                            {returnSeg.segments?.map((seg, si) => (
-                                                                <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.82rem', padding: '4px 0' }}>
-                                                                    <span style={{ fontWeight: 700 }}>{seg.flightNumber}</span>
-                                                                    <span>{seg.departure} {seg.departureTime?.slice(11, 16)}</span>
-                                                                    <span style={{ color: 'var(--text-tertiary)' }}>→</span>
-                                                                    <span>{seg.arrival} {seg.arrivalTime?.slice(11, 16)}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                                                    <div style={{ flex: '1 1 300px' }}>
+                                                        {/* Outbound */}
+                                                        {outbound && (
+                                                            <div style={{ marginBottom: returnSeg ? 8 : 0 }}>
+                                                                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>🛫 Gidiş</div>
+                                                                {outbound.segments?.map((seg, si) => (
+                                                                    <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.82rem', padding: '4px 0' }}>
+                                                                        <span style={{ fontWeight: 700 }}>{seg.flightNumber}</span>
+                                                                        <span>{seg.departure} {seg.departureTime?.slice(11, 16)}</span>
+                                                                        <span style={{ color: 'var(--text-tertiary)' }}>→</span>
+                                                                        <span>{seg.arrival} {seg.arrivalTime?.slice(11, 16)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {/* Return */}
+                                                        {returnSeg && (
+                                                            <div>
+                                                                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 2 }}>🛬 Dönüş</div>
+                                                                {returnSeg.segments?.map((seg, si) => (
+                                                                    <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.82rem', padding: '4px 0' }}>
+                                                                        <span style={{ fontWeight: 700 }}>{seg.flightNumber}</span>
+                                                                        <span>{seg.departure} {seg.departureTime?.slice(11, 16)}</span>
+                                                                        <span style={{ color: 'var(--text-tertiary)' }}>→</span>
+                                                                        <span>{seg.arrival} {seg.arrivalTime?.slice(11, 16)}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 2 }}>{flight.bookingClass}</div>
+                                                        <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#22C55E' }}>₺{formatPrice(Math.round(priceTRY))}</div>
+                                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-tertiary)' }}>vergiler dahil</div>
+                                                    </div>
                                                 </div>
-                                                <div style={{ textAlign: 'center' }}>
-                                                    <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 2 }}>{flight.bookingClass}</div>
-                                                    <div style={{ fontSize: '1.3rem', fontWeight: 900, color: '#22C55E' }}>₺{formatPrice(Math.round(priceTRY))}</div>
-                                                    <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)' }}>vergiler dahil</div>
-                                                    <div style={{ fontSize: '0.62rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{flight.fromCode} → {flight.toCode}</div>
+
+                                                {/* Booking deeplinks */}
+                                                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                                                    {platforms.map(p => (
+                                                        <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer"
+                                                            style={{
+                                                                display: 'flex', alignItems: 'center', gap: 5,
+                                                                padding: '6px 12px', borderRadius: 10,
+                                                                background: 'var(--bg-tertiary)', border: '1px solid var(--border)',
+                                                                color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600,
+                                                                textDecoration: 'none', transition: 'all 150ms',
+                                                            }}
+                                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(79,70,229,0.1)'; e.currentTarget.style.borderColor = '#4F46E5' }}
+                                                            onMouseOut={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
+                                                            {p.emoji} {p.name} <ExternalLink size={10} />
+                                                        </a>
+                                                    ))}
                                                 </div>
                                             </motion.div>
                                         )
