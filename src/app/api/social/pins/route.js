@@ -30,7 +30,7 @@ export async function GET(request) {
             feedUserIds = [userId, ...(follows || []).map(f => f.following_id)]
         }
 
-        // Fetch check-ins with profiles
+        // Fetch check-ins with profiles (FK join)
         let query = supabase
             .from('check_ins')
             .select('id, user_id, place_name, city, country, lat, lng, emoji, category, photo_url, note, rating, created_at, profiles(id, display_name, username, avatar_url)')
@@ -47,27 +47,46 @@ export async function GET(request) {
         const { data, error } = await query
         if (error) throw error
 
+        // Check if profiles came through FK join
+        const needsManualProfiles = (data || []).some(c => !c.profiles && c.user_id)
+
+        let profileMap = {}
+        if (needsManualProfiles) {
+            // Fallback: Manually fetch profiles
+            const userIds = [...new Set((data || []).map(c => c.user_id).filter(Boolean))]
+            if (userIds.length > 0) {
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, display_name, username, avatar_url')
+                    .in('id', userIds)
+                    ; (profiles || []).forEach(p => { profileMap[p.id] = p })
+            }
+        }
+
         // Format for map markers
-        const markers = (data || []).map(c => ({
-            id: c.id,
-            lat: c.lat,
-            lng: c.lng,
-            placeName: c.place_name,
-            city: c.city,
-            country: c.country,
-            emoji: c.emoji || '📍',
-            category: c.category,
-            photoUrl: c.photo_url,
-            note: c.note,
-            rating: c.rating,
-            createdAt: c.created_at,
-            user: c.profiles ? {
-                id: c.profiles.id,
-                displayName: c.profiles.display_name,
-                username: c.profiles.username,
-                avatarUrl: c.profiles.avatar_url,
-            } : null,
-        }))
+        const markers = (data || []).map(c => {
+            const profile = c.profiles || profileMap[c.user_id] || null
+            return {
+                id: c.id,
+                lat: c.lat,
+                lng: c.lng,
+                placeName: c.place_name,
+                city: c.city,
+                country: c.country,
+                emoji: c.emoji || '📍',
+                category: c.category,
+                photoUrl: c.photo_url,
+                note: c.note,
+                rating: c.rating,
+                createdAt: c.created_at,
+                user: profile ? {
+                    id: profile.id,
+                    displayName: profile.display_name,
+                    username: profile.username,
+                    avatarUrl: profile.avatar_url,
+                } : null,
+            }
+        })
 
         return NextResponse.json({ markers, total: markers.length })
     } catch (err) {
