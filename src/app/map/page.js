@@ -360,17 +360,8 @@ export default function MapPage() {
         setSelectedPin(null)
     }
 
-    if (spaceLoading) {
-        return (
-            <div className="auth-bg">
-                <div style={{ color: 'white', textAlign: 'center' }}>
-                    <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                    <p>{t('map.loadingSpace')}</p>
-                </div>
-                <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-        )
-    }
+    // Don't block the UI for space loading — map should render immediately
+    // Pins will load once space data becomes available
 
     // If there's a db error but no space, just proceed — don't block the map
     // The space will still be null but the app should work in limited mode

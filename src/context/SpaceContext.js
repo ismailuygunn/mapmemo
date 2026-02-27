@@ -37,12 +37,12 @@ export function SpaceProvider({ children }) {
 
     const loadSpace = useCallback(async () => {
         setLoading(true)
-        // CRITICAL: Hard timeout — never let loading stay stuck more than 5 seconds
+        // CRITICAL: Hard timeout — never let loading stay stuck more than 2 seconds
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
         loadingTimeoutRef.current = setTimeout(() => {
             console.warn('SpaceContext: Hard timeout reached, forcing loading=false')
             setLoading(false)
-        }, 5000)
+        }, 2000)
         try {
             // Step 1: Get user's space membership — no timeout, let Supabase handle it
             const { data: membership, error } = await supabase
