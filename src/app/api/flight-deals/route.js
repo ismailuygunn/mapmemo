@@ -1,7 +1,7 @@
-// NAVISO — Multi-Source Flight Price Scanner v7
-// Scans Amadeus + Skyscanner (RapidAPI) + Duffel in parallel
-// Shows cheapest real price per destination across ALL sources
+// NAVISO — Multi-Source Flight Price Scanner v8
+// Smart date search + comprehensive airports + verified deeplinks
 import { NextResponse } from 'next/server'
+import { DESTINATIONS_DEALS, resolveAirportCodes, AIRPORTS } from '@/lib/airports'
 
 // ═══════════════════════════════════════
 // AMADEUS AUTH (production → test fallback)
@@ -33,42 +33,8 @@ async function getAmadeusToken() {
     return null
 }
 
-// ═══════════════════════════════════════
-// DESTINATION DATABASE
-// ═══════════════════════════════════════
-const DESTINATIONS = [
-    { code: 'AYT', city: 'Antalya', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
-    { code: 'ADB', city: 'İzmir', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
-    { code: 'TZX', city: 'Trabzon', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1.5 },
-    { code: 'DLM', city: 'Dalaman', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
-    { code: 'BJV', city: 'Bodrum', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
-    { code: 'GZT', city: 'Gaziantep', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1.5 },
-    { code: 'ESB', city: 'Ankara', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
-    { code: 'SJJ', city: 'Saraybosna', country: 'Bosna', visa: 'visa_free', emoji: '🇧🇦', flightH: 1.5 },
-    { code: 'TBS', city: 'Tiflis', country: 'Gürcistan', visa: 'visa_free', emoji: '🇬🇪', flightH: 2 },
-    { code: 'GYD', city: 'Bakü', country: 'Azerbaycan', visa: 'visa_free', emoji: '🇦🇿', flightH: 3 },
-    { code: 'SKP', city: 'Üsküp', country: 'K. Makedonya', visa: 'visa_free', emoji: '🇲🇰', flightH: 1.5 },
-    { code: 'PRN', city: 'Priştine', country: 'Kosova', visa: 'visa_free', emoji: '🇽🇰', flightH: 1.5 },
-    { code: 'BEG', city: 'Belgrad', country: 'Sırbistan', visa: 'visa_free', emoji: '🇷🇸', flightH: 1.5 },
-    { code: 'SOF', city: 'Sofya', country: 'Bulgaristan', visa: 'visa_free', emoji: '🇧🇬', flightH: 1 },
-    { code: 'OTP', city: 'Bükreş', country: 'Romanya', visa: 'visa_free', emoji: '🇷🇴', flightH: 1.5 },
-    { code: 'DOH', city: 'Doha', country: 'Katar', visa: 'visa_free', emoji: '🇶🇦', flightH: 4.5 },
-    { code: 'AMM', city: 'Amman', country: 'Ürdün', visa: 'visa_free', emoji: '🇯🇴', flightH: 2 },
-    { code: 'BKK', city: 'Bangkok', country: 'Tayland', visa: 'visa_free', emoji: '🇹🇭', flightH: 9.5 },
-    { code: 'DXB', city: 'Dubai', country: 'BAE', visa: 'visa_on_arrival', emoji: '🇦🇪', flightH: 4 },
-    { code: 'SSH', city: 'Sharm El-Sheikh', country: 'Mısır', visa: 'visa_on_arrival', emoji: '🇪🇬', flightH: 2 },
-    { code: 'CDG', city: 'Paris', country: 'Fransa', visa: 'visa_required', emoji: '🇫🇷', flightH: 3.5 },
-    { code: 'FCO', city: 'Roma', country: 'İtalya', visa: 'visa_required', emoji: '🇮🇹', flightH: 2.5 },
-    { code: 'BCN', city: 'Barselona', country: 'İspanya', visa: 'visa_required', emoji: '🇪🇸', flightH: 3.5 },
-    { code: 'AMS', city: 'Amsterdam', country: 'Hollanda', visa: 'visa_required', emoji: '🇳🇱', flightH: 3.5 },
-    { code: 'BER', city: 'Berlin', country: 'Almanya', visa: 'visa_required', emoji: '🇩🇪', flightH: 3 },
-    { code: 'VIE', city: 'Viyana', country: 'Avusturya', visa: 'visa_required', emoji: '🇦🇹', flightH: 2.5 },
-    { code: 'PRG', city: 'Prag', country: 'Çekya', visa: 'visa_required', emoji: '🇨🇿', flightH: 2.5 },
-    { code: 'BUD', city: 'Budapeşte', country: 'Macaristan', visa: 'visa_required', emoji: '🇭🇺', flightH: 2 },
-    { code: 'ATH', city: 'Atina', country: 'Yunanistan', visa: 'visa_required', emoji: '🇬🇷', flightH: 1.5 },
-    { code: 'LHR', city: 'Londra', country: 'İngiltere', visa: 'visa_required', emoji: '🇬🇧', flightH: 4 },
-    { code: 'MXP', city: 'Milano', country: 'İtalya', visa: 'visa_required', emoji: '🇮🇹', flightH: 2.5 },
-]
+// Use imported DESTINATIONS_DEALS from airports DB
+const DESTINATIONS = DESTINATIONS_DEALS
 
 const VISA_LABELS = {
     domestic: '🏠 Yurtiçi', visa_free: '✅ Vizesiz',
@@ -80,40 +46,42 @@ const VISA_COLORS = {
 }
 
 // ═══════════════════════════════════════
-// DEEPLINKS (verified working formats)
+// DEEPLINKS (verified working URL formats — Feb 2026)
 // ═══════════════════════════════════════
 function buildDeeplinks(origin, dest, departDate, returnDate) {
+    // Skyscanner: /YYMMDD/ format
     const skDep = departDate.replace(/-/g, '').slice(2)
     const skRet = returnDate ? returnDate.replace(/-/g, '').slice(2) : ''
-    const gfDep = departDate.replace(/-/g, '')
-    const gfRet = returnDate ? returnDate.replace(/-/g, '') : ''
-    const enReturn = returnDate ? `&donus=${returnDate}` : ''
-    const tReturn = returnDate ? `&donus=${returnDate}` : ''
+    // Google: YYYY-MM-DD format
+    const gfDep = departDate
+    const gfRet = returnDate || ''
+    // Enuygun/Turna: YYYY-MM-DD
     return [
         {
             name: 'Skyscanner', icon: '🔍', color: '#0770E3',
-            url: `https://www.skyscanner.com/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${skDep}/${skRet ? skRet + '/' : ''}?adults=1&currency=TRY`
+            url: `https://www.skyscanner.com.tr/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${skDep}/${skRet ? skRet + '/' : ''}?adultsv2=1&cabinclass=economy&currency=TRY&locale=tr-TR&market=TR`
         },
         {
             name: 'Google Flights', icon: '🌐', color: '#4285F4',
-            url: `https://www.google.com/travel/flights?q=Flights+to+${dest}+from+${origin}+on+${gfDep}${gfRet ? '+returning+' + gfRet : ''}&curr=TRY`
+            url: `https://www.google.com/travel/flights/search?tfs=CBwQAhooEgoyMDI2LTAzLTAxagwIAhIIL20vMDljMTdyDAgCEggvbS8wNjBjNA&hl=tr&gl=tr&curr=TRY`.replace(/search.*/, `search?tfs=&hl=tr&gl=tr&curr=TRY#flt=${origin}.${dest}.${gfDep}${gfRet ? '*' + dest + '.' + origin + '.' + gfRet : ''};c:TRY;e:1;sc:e;sd:1;t:f`)
         },
         {
             name: 'Enuygun', icon: '🎫', color: '#FF3366',
-            url: `https://www.enuygun.com/ucak-bileti/?gidis=${departDate}${enReturn}&kpiata=${origin}&vpiata=${dest}&yetiskin=1`
+            url: `https://www.enuygun.com/ucak-bileti/arama/${origin.toLowerCase()}-${dest.toLowerCase()}?gidis=${departDate}${returnDate ? '&donus=' + returnDate : ''}&yetiskin=1&sinif=ekonomi`
         },
         {
             name: 'Turna', icon: '🛫', color: '#FF6B00',
-            url: `https://www.turna.com/ucak-bileti?kpiata=${origin}&vpiata=${dest}&gidis=${departDate}${tReturn}&yetiskin=1&sinif=ekonomi`
+            url: `https://www.turna.com/ucak-bileti/${origin.toLowerCase()}-${dest.toLowerCase()}?gidis=${departDate}${returnDate ? '&donus=' + returnDate : ''}&yetiskin=1&sinif=ekonomi`
         },
     ]
 }
 
 // ═══════════════════════════════════════
-// DATE HELPERS
+// DATE HELPERS — Multiple date windows for smart pricing
 // ═══════════════════════════════════════
 function fmt(d) { return d.toISOString().split('T')[0] }
 
+// Generate MANY date pairs across the month so we can find the cheapest window
 function generateDates(month, duration, pattern) {
     const now = new Date(), dayMs = 86400000
     let startSearch, endSearch
@@ -136,7 +104,7 @@ function generateDates(month, duration, pattern) {
     if (pc) {
         const [day, nights, label] = pc
         let d = new Date(startSearch)
-        while (d <= endSearch && dates.length < 4) {
+        while (d <= endSearch && dates.length < 8) {
             if (d.getDay() === day) {
                 const ret = new Date(d.getTime() + nights * dayMs)
                 dates.push({ depart: fmt(d), ret: fmt(ret), label })
@@ -144,11 +112,15 @@ function generateDates(month, duration, pattern) {
             d = new Date(d.getTime() + dayMs)
         }
     } else {
-        const step = Math.max(7, Math.floor((endSearch - startSearch) / dayMs / 4))
+        // Generate 8 different date windows spread across the range
+        const rangeMs = endSearch - startSearch
+        const step = Math.max(3, Math.floor(rangeMs / dayMs / 8))
         let d = new Date(startSearch)
-        while (d <= endSearch && dates.length < 4) {
+        while (d <= endSearch && dates.length < 8) {
             const ret = new Date(d.getTime() + dur * dayMs)
-            if (ret <= endSearch) dates.push({ depart: fmt(d), ret: fmt(ret), label: `${dur} gün` })
+            if (ret <= new Date(endSearch.getTime() + 7 * dayMs)) {
+                dates.push({ depart: fmt(d), ret: fmt(ret), label: `${dur} gün` })
+            }
             d = new Date(d.getTime() + step * dayMs)
         }
     }
@@ -399,79 +371,92 @@ async function scanAllSources(origin, dest, departDate, returnDate) {
 }
 
 // ═══════════════════════════════════════
-// MAIN HANDLER
+// MAIN HANDLER — Smart multi-date scanning
 // ═══════════════════════════════════════
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
-        const origin = searchParams.get('origin') || 'IST'
+        const originInput = searchParams.get('origin') || 'IST'
         const duration = searchParams.get('duration') || '4'
         const month = searchParams.get('month') || 'any'
         const pattern = searchParams.get('pattern') || 'any'
         const visaFilter = searchParams.get('visa') || 'all'
         const maxBudget = parseInt(searchParams.get('budget') || '0')
 
+        // Resolve origin: may be a city with multiple airports
+        const origins = resolveAirportCodes(originInput)
+        const origin = origins[0] || 'IST'
+
         const dateRanges = generateDates(month, duration, pattern)
         if (dateRanges.length === 0) {
             return NextResponse.json({ deals: [], error: 'Uygun tarih bulunamadı' })
         }
-        const dateRange = dateRanges[0]
 
-        let dests = [...DESTINATIONS].filter(d => d.code !== origin)
+        // Pick up to 3 date ranges to scan (spread across the month)
+        const samplesToScan = dateRanges.length <= 3 ? dateRanges :
+            [dateRanges[0], dateRanges[Math.floor(dateRanges.length / 2)], dateRanges[dateRanges.length - 1]]
+
+        let dests = [...DESTINATIONS].filter(d => !origins.includes(d.code))
         if (visaFilter === 'visa_free') dests = dests.filter(d => ['visa_free', 'domestic'].includes(d.visa))
         else if (visaFilter === 'visa_on_arrival') dests = dests.filter(d => ['visa_free', 'visa_on_arrival', 'domestic'].includes(d.visa))
 
-        // Scan all destinations (batched for performance)
+        // Scan all destinations across multiple date windows — keep cheapest per destination
         const batchSize = 6
-        const allDeals = []
+        const bestByDest = new Map() // destCode -> best deal
 
-        for (let i = 0; i < dests.length; i += batchSize) {
-            const batch = dests.slice(i, i + batchSize)
-            const results = await Promise.allSettled(
-                batch.map(dest =>
-                    scanAllSources(origin, dest.code, dateRange.depart, dateRange.ret)
-                        .then(priceData => ({ dest, priceData }))
+        // For each date range sample
+        for (const dateRange of samplesToScan) {
+            for (let i = 0; i < dests.length; i += batchSize) {
+                const batch = dests.slice(i, i + batchSize)
+                const results = await Promise.allSettled(
+                    batch.map(dest =>
+                        scanAllSources(origin, dest.code, dateRange.depart, dateRange.ret)
+                            .then(priceData => ({ dest, priceData, dateRange }))
+                    )
                 )
-            )
-            for (const result of results) {
-                if (result.status === 'fulfilled' && result.value.priceData) {
-                    const { dest, priceData } = result.value
-                    if (maxBudget > 0 && priceData.price > maxBudget) continue
-                    allDeals.push({
-                        destination: dest.code,
-                        city: dest.city,
-                        country: dest.country,
-                        emoji: dest.emoji,
-                        flightHours: dest.flightH,
-                        visa: { type: dest.visa, label: VISA_LABELS[dest.visa], color: VISA_COLORS[dest.visa] },
-                        price: priceData.price,
-                        priceFormatted: new Intl.NumberFormat('tr-TR').format(priceData.price),
-                        airline: priceData.airline,
-                        stops: priceData.stops,
-                        seatsLeft: priceData.seats,
-                        source: priceData.source,
-                        departTime: priceData.departTime || '',
-                        arriveTime: priceData.arriveTime || '',
-                        alternatives: priceData.alternatives || [],
-                        allPrices: priceData.allPrices,
-                        sourcesFound: priceData.sourcesFound,
-                        fallback: priceData.fallback || false,
-                        departDate: dateRange.depart,
-                        returnDate: dateRange.ret,
-                        tripLabel: dateRange.label,
-                        platforms: buildDeeplinks(origin, dest.code, dateRange.depart, dateRange.ret),
-                    })
+                for (const result of results) {
+                    if (result.status === 'fulfilled' && result.value.priceData) {
+                        const { dest, priceData, dateRange: dr } = result.value
+                        if (maxBudget > 0 && priceData.price > maxBudget) continue
+
+                        const existing = bestByDest.get(dest.code)
+                        if (!existing || priceData.price < existing.price) {
+                            bestByDest.set(dest.code, {
+                                destination: dest.code,
+                                city: dest.city,
+                                country: dest.country,
+                                emoji: dest.emoji,
+                                flightHours: dest.flightH,
+                                visa: { type: dest.visa, label: VISA_LABELS[dest.visa], color: VISA_COLORS[dest.visa] },
+                                price: priceData.price,
+                                priceFormatted: new Intl.NumberFormat('tr-TR').format(priceData.price),
+                                airline: priceData.airline,
+                                stops: priceData.stops,
+                                seatsLeft: priceData.seats,
+                                source: priceData.source,
+                                departTime: priceData.departTime || '',
+                                arriveTime: priceData.arriveTime || '',
+                                alternatives: priceData.alternatives || [],
+                                allPrices: priceData.allPrices,
+                                sourcesFound: priceData.sourcesFound,
+                                fallback: priceData.fallback || false,
+                                departDate: dr.depart,
+                                returnDate: dr.ret,
+                                tripLabel: dr.label,
+                                platforms: buildDeeplinks(origin, dest.code, dr.depart, dr.ret),
+                            })
+                        }
+                    }
                 }
             }
         }
 
-        allDeals.sort((a, b) => a.price - b.price)
+        const allDeals = Array.from(bestByDest.values()).sort((a, b) => a.price - b.price)
 
         return NextResponse.json({
             deals: allDeals,
             origin,
-            departDate: dateRange.depart,
-            returnDate: dateRange.ret,
+            searchedDates: samplesToScan.map(d => `${d.depart} → ${d.ret}`),
             total: allDeals.length,
             scannedAt: new Date().toISOString(),
             sources: ['Duffel', 'Amadeus (yedek)'],
@@ -481,3 +466,4 @@ export async function GET(request) {
         return NextResponse.json({ deals: [], error: err.message }, { status: 500 })
     }
 }
+
