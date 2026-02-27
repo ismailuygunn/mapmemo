@@ -479,9 +479,9 @@ export default function ExplorePage() {
                                                 cursor: 'pointer', transition: 'all 250ms',
                                                 position: 'relative',
                                                 height: 220,
-                                                backgroundImage: hasImage ? `url(${hasImage})` : undefined,
-                                                backgroundSize: 'cover', backgroundPosition: 'center',
-                                                background: hasImage ? undefined : card.gradient,
+                                                background: hasImage
+                                                    ? `url(${hasImage}) center/cover no-repeat`
+                                                    : card.gradient,
                                                 border: '1px solid rgba(255,255,255,0.08)',
                                             }}>
                                             {/* Gradient overlay */}
@@ -559,9 +559,9 @@ export default function ExplorePage() {
                                     {/* Hero image */}
                                     <div style={{
                                         height: 240, position: 'relative',
-                                        backgroundImage: DEST_IMAGES[selectedDest.city] ? `url(${DEST_IMAGES[selectedDest.city]})` : undefined,
-                                        backgroundSize: 'cover', backgroundPosition: 'center',
-                                        background: DEST_IMAGES[selectedDest.city] ? undefined : selectedDest.gradient,
+                                        background: DEST_IMAGES[selectedDest.city]
+                                            ? `url(${DEST_IMAGES[selectedDest.city]}) center/cover no-repeat`
+                                            : selectedDest.gradient,
                                     }}>
                                         <div style={{
                                             position: 'absolute', inset: 0,

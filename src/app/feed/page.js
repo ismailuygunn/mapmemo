@@ -622,6 +622,43 @@ export default function FeedPage() {
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
+
+                                    {/* Comment input */}
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 8,
+                                        padding: '8px 16px 12px',
+                                        borderTop: '1px solid var(--border)',
+                                    }}>
+                                        <div style={{
+                                            width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 800, fontSize: '0.6rem',
+                                        }}>
+                                            {user?.user_metadata?.display_name?.[0] || '?'}
+                                        </div>
+                                        <input
+                                            placeholder="Yorum yaz..."
+                                            style={{
+                                                flex: 1, background: 'var(--bg-tertiary)',
+                                                border: 'none', borderRadius: 20, padding: '7px 14px',
+                                                fontSize: '0.76rem', color: 'var(--text-primary)',
+                                                outline: 'none',
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && e.target.value.trim()) {
+                                                    toast.success('💬 Yorum gönderildi!')
+                                                    e.target.value = ''
+                                                }
+                                            }}
+                                        />
+                                        <button style={{
+                                            background: 'none', border: 'none', cursor: 'pointer',
+                                            color: 'var(--primary-1)', padding: 4,
+                                        }}>
+                                            <Send size={16} />
+                                        </button>
+                                    </div>
                                 </motion.div>
                             ))}
                         </div>

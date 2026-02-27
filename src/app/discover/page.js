@@ -165,71 +165,93 @@ export default function DiscoverPage() {
                         </div>
                     ) : tab === 'users' ? (
                         /* ═══ USERS GRID ═══ */
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-                            {filteredUsers.length === 0 && (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
-                                    {search ? t('Sonuç bulunamadı', 'No results found') : t('Henüz başka kullanıcı yok', 'No other users yet')}
-                                </div>
-                            )}
-                            {filteredUsers.map((u, i) => {
-                                const isFollowing = followingIds.has(u.id)
-                                return (
-                                    <motion.div key={u.id}
-                                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.04 }}
-                                        whileHover={{ y: -4 }}
-                                        style={{
-                                            background: 'var(--bg-secondary)', borderRadius: 20,
-                                            border: '1px solid var(--border)', padding: 16,
-                                            cursor: 'pointer', transition: 'all 200ms',
-                                        }}
-                                        onClick={() => u.username && router.push(`/u/${u.username}`)}>
-                                        {/* Avatar + info */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                                            <div style={{
-                                                width: 48, height: 48, borderRadius: '50%',
-                                                background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : `linear-gradient(135deg, ${['#4F46E5', '#EC4899', '#10B981', '#F59E0B', '#8B5CF6'][i % 5]}, ${['#7C3AED', '#F43F5E', '#06B6D4', '#EF4444', '#EC4899'][i % 5]})`,
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: '#fff', fontWeight: 800, fontSize: '1rem',
-                                            }}>
-                                                {!u.avatar_url && (u.display_name?.[0] || '?')}
-                                            </div>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{u.display_name || 'User'}</div>
-                                                {u.username && <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>@{u.username}</div>}
-                                                {u.home_city && (
-                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
-                                                        <MapPin size={10} /> {u.home_city}
+                        <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
+                                <Sparkles size={16} style={{ color: '#F59E0B' }} />
+                                <span style={{ fontSize: '0.88rem', fontWeight: 800 }}>
+                                    {t('Önerilen Gezginler', 'Suggested Travelers')}
+                                </span>
+                                <span style={{
+                                    fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20,
+                                    background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 700,
+                                }}>{filteredUsers.length} kişi</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+                                {filteredUsers.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
+                                        {search ? t('Sonuç bulunamadı', 'No results found') : t('Henüz başka kullanıcı yok', 'No other users yet')}
+                                    </div>
+                                )}
+                                {filteredUsers.map((u, i) => {
+                                    const isFollowing = followingIds.has(u.id)
+                                    const cardGradient = [
+                                        'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        'linear-gradient(135deg, #EC4899, #F43F5E)',
+                                        'linear-gradient(135deg, #10B981, #059669)',
+                                        'linear-gradient(135deg, #F59E0B, #D97706)',
+                                        'linear-gradient(135deg, #8B5CF6, #6D28D9)',
+                                    ][i % 5]
+                                    return (
+                                        <motion.div key={u.id}
+                                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.04 }}
+                                            whileHover={{ y: -4 }}
+                                            style={{
+                                                background: 'var(--bg-secondary)', borderRadius: 20,
+                                                border: '1px solid var(--border)', overflow: 'hidden',
+                                                cursor: 'pointer', transition: 'all 200ms',
+                                            }}
+                                            onClick={() => u.username && router.push(`/u/${u.username}`)}>
+                                            <div style={{ height: 4, background: cardGradient }} />
+                                            <div style={{ padding: 16 }}>
+                                                {/* Avatar + info */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                                                    <div style={{
+                                                        width: 48, height: 48, borderRadius: '50%',
+                                                        background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : cardGradient,
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        color: '#fff', fontWeight: 800, fontSize: '1rem',
+                                                    }}>
+                                                        {!u.avatar_url && (u.display_name?.[0] || '?')}
                                                     </div>
-                                                )}
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{u.display_name || 'User'}</div>
+                                                        {u.username && <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>@{u.username}</div>}
+                                                        {u.home_city && (
+                                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
+                                                                <MapPin size={10} /> {u.home_city}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); handleFollow(u.id) }}
+                                                        disabled={followLoading[u.id]}
+                                                        style={{
+                                                            padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                                            background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                            color: isFollowing ? 'var(--text-secondary)' : '#fff',
+                                                            fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4,
+                                                            transition: 'all 200ms',
+                                                        }}>
+                                                        {followLoading[u.id] ? <Loader2 size={12} className="spin" /> :
+                                                            isFollowing ? <><UserMinus size={12} /> {t('Takipte', 'Following')}</> : <><UserPlus size={12} /> {t('Takip Et', 'Follow')}</>
+                                                        }
+                                                    </button>
+                                                </div>
+                                                {/* Bio */}
+                                                {u.bio && <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 10px', lineHeight: 1.4 }}>{u.bio.slice(0, 80)}{u.bio.length > 80 ? '...' : ''}</p>}
+                                                {/* Stats */}
+                                                <div style={{ display: 'flex', gap: 12, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                                                    <span><strong style={{ color: 'var(--text-primary)' }}>{u.follower_count || 0}</strong> {t('takipçi', 'followers')}</span>
+                                                    <span><strong style={{ color: 'var(--text-primary)' }}>{u.following_count || 0}</strong> {t('takip', 'following')}</span>
+                                                    <span><strong style={{ color: 'var(--text-primary)' }}>{u.checkin_count || 0}</strong> check-in</span>
+                                                </div>
                                             </div>
-                                            <button
-                                                onClick={e => { e.stopPropagation(); handleFollow(u.id) }}
-                                                disabled={followLoading[u.id]}
-                                                style={{
-                                                    padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                                    background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                                                    color: isFollowing ? 'var(--text-secondary)' : '#fff',
-                                                    fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4,
-                                                    transition: 'all 200ms',
-                                                }}>
-                                                {followLoading[u.id] ? <Loader2 size={12} className="spin" /> :
-                                                    isFollowing ? <><UserMinus size={12} /> {t('Takipte', 'Following')}</> : <><UserPlus size={12} /> {t('Takip Et', 'Follow')}</>
-                                                }
-                                            </button>
-                                        </div>
-                                        {/* Bio */}
-                                        {u.bio && <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0 0 10px', lineHeight: 1.4 }}>{u.bio.slice(0, 80)}{u.bio.length > 80 ? '...' : ''}</p>}
-                                        {/* Stats */}
-                                        <div style={{ display: 'flex', gap: 12, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                                            <span><strong style={{ color: 'var(--text-primary)' }}>{u.follower_count || 0}</strong> {t('takipçi', 'followers')}</span>
-                                            <span><strong style={{ color: 'var(--text-primary)' }}>{u.following_count || 0}</strong> {t('takip', 'following')}</span>
-                                            <span><strong style={{ color: 'var(--text-primary)' }}>{u.checkin_count || 0}</strong> check-in</span>
-                                        </div>
-                                    </motion.div>
-                                )
-                            })}
-                        </div>
+                                        </motion.div>
+                                    )
+                                })}
+                            </div>
+                        </>
                     ) : (
                         /* ═══ RECENT CHECK-INS ═══ */
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
