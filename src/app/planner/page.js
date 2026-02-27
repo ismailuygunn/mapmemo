@@ -131,24 +131,58 @@ export default function PlannerPage() {
     useEffect(() => {
         const loadUserSpaces = async () => {
             try {
-                const { data: memberships } = await supabase
+                const { data: memberships, error: memErr } = await supabase
                     .from('space_members')
                     .select('space_id, role')
                     .eq('user_id', user?.id)
+
+                if (memErr) {
+                    console.warn('Planner: space_members query failed:', memErr.message)
+                    // Fallback: use SpaceContext space if available
+                    if (space) {
+                        setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+                        setSelectedSpaceId(space.id)
+                    }
+                    return
+                }
+
                 if (memberships && memberships.length > 0) {
                     const spaceIds = memberships.map(m => m.space_id)
-                    const { data: spacesData } = await supabase
+                    const { data: spacesData, error: spErr } = await supabase
                         .from('spaces')
                         .select('id, name')
                         .in('id', spaceIds)
-                    if (spacesData) {
-                        setUserSpaces(spacesData)
-                        // Default to current active space, or first space
-                        setSelectedSpaceId(space?.id || spacesData[0]?.id || null)
+
+                    if (spErr) {
+                        console.warn('Planner: spaces query failed:', spErr.message)
+                        // Fallback: use SpaceContext space
+                        if (space) {
+                            setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+                            setSelectedSpaceId(space.id)
+                        }
+                        return
                     }
+
+                    if (spacesData && spacesData.length > 0) {
+                        setUserSpaces(spacesData)
+                        setSelectedSpaceId(space?.id || spacesData[0]?.id || null)
+                    } else if (space) {
+                        // Query returned empty but context has space
+                        setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+                        setSelectedSpaceId(space.id)
+                    }
+                } else if (space) {
+                    // No memberships found but context has space
+                    setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+                    setSelectedSpaceId(space.id)
                 }
             } catch (err) {
                 console.error('Failed to load spaces:', err)
+                // Last resort fallback
+                if (space) {
+                    setUserSpaces([{ id: space.id, name: space.name || 'Seyahatlerim' }])
+                    setSelectedSpaceId(space.id)
+                }
             }
         }
         if (user?.id) loadUserSpaces()

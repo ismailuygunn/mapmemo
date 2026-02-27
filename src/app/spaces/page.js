@@ -85,7 +85,17 @@ export default function SpacesPage() {
                 } else {
                     setError(memErr.message)
                 }
-                setSpaces([])
+                // Fallback: use SpaceContext space if available
+                if (activeSpace) {
+                    setSpaces([{
+                        ...activeSpace,
+                        role: 'owner',
+                        tripCount: 0,
+                        memberCount: 1,
+                    }])
+                } else {
+                    setSpaces([])
+                }
                 setLoading(false)
                 return
             }
