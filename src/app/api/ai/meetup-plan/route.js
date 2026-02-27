@@ -242,7 +242,7 @@ KRİTİK:
 - SADECE geçerli JSON döndür, markdown veya yorum EKLEME`
 
         // ── Call Gemini ──
-        const models = ['gemini-2.0-flash', 'gemini-1.5-flash']
+        const models = ['gemini-2.5-flash', 'gemini-2.0-flash']
         for (const model of models) {
             try {
                 const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`
