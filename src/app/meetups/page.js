@@ -30,15 +30,15 @@ export default function MeetupsPage() {
     const router = useRouter()
 
     useEffect(() => {
-        if (space) loadMeetups()
-    }, [space])
+        if (space || user) loadMeetups()
+    }, [space, user])
 
     const loadMeetups = async () => {
-        const { data } = await supabase
-            .from('meetups')
-            .select('*, meetup_rsvps(status, user_id)')
-            .eq('space_id', space.id)
-            .order('start_time', { ascending: true })
+        let query = supabase.from('meetups').select('*, meetup_rsvps(status, user_id)')
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('created_by', user.id)
+        else { setLoading(false); return }
+        const { data } = await query.order('start_time', { ascending: true })
         if (data) setMeetups(data)
         setLoading(false)
     }
@@ -79,7 +79,7 @@ export default function MeetupsPage() {
             const { data, error } = await supabase
                 .from('meetups')
                 .insert({
-                    space_id: space.id,
+                    space_id: space?.id || null,
                     created_by: user.id,
                     title: form.title,
                     description: form.description || null,

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useSpace } from '@/context/SpaceContext'
+import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
@@ -20,21 +21,21 @@ export default function CityPage() {
     const [tab, setTab] = useState('pins')
     const [loading, setLoading] = useState(true)
     const { space } = useSpace()
+    const { user } = useAuth()
     const { t } = useLanguage()
     const supabase = createClient()
 
     useEffect(() => {
-        if (!space || !cityName) return
-        loadPins()
-    }, [space, cityName])
+        if (!cityName) return
+        if (space || user) loadPins()
+    }, [space, cityName, user])
 
     const loadPins = async () => {
-        const { data } = await supabase
-            .from('pins')
-            .select('*, pin_media(*)')
-            .eq('space_id', space.id)
-            .eq('city', cityName)
-            .order('date_visited', { ascending: false, nullsFirst: false })
+        let query = supabase.from('pins').select('*, pin_media(*)').eq('city', cityName)
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('user_id', user.id)
+        else { setLoading(false); return }
+        const { data } = await query.order('date_visited', { ascending: false, nullsFirst: false })
 
         if (data) {
             setPins(data)

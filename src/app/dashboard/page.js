@@ -58,7 +58,7 @@ export default function DashboardPage() {
     const t = (tr, en) => locale === 'tr' ? tr : en
 
     useEffect(() => {
-        if (space) loadDashboard()
+        if (space || user) loadDashboard()
         if (user?.id) {
             loadUserSpaces()
         }
@@ -71,10 +71,12 @@ export default function DashboardPage() {
 
     const loadDashboard = async () => {
         setLoading(true)
+        const filter = space ? { key: 'space_id', val: space.id } : { key: 'created_by', val: user?.id }
+        if (!filter.val) { setLoading(false); return }
         const [tripsRes, pinsRes, membersRes] = await Promise.all([
-            supabase.from('trips').select('*').eq('space_id', space.id).order('start_date', { ascending: true }),
-            supabase.from('pins').select('id, city, type').eq('space_id', space.id),
-            supabase.from('space_members').select('*, profiles(display_name, avatar_url)').eq('space_id', space.id),
+            supabase.from('trips').select('*').eq(filter.key, filter.val).order('start_date', { ascending: true }),
+            supabase.from('pins').select('id, city, type').eq(filter.key === 'created_by' ? 'user_id' : 'space_id', filter.val),
+            space ? supabase.from('space_members').select('*, profiles(display_name, avatar_url)').eq('space_id', space.id) : Promise.resolve({ data: [] }),
         ])
         setTrips(tripsRes.data || [])
         setPins(pinsRes.data || [])

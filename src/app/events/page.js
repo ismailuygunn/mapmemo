@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext'
 import Sidebar from '@/components/layout/Sidebar'
 import {
     Search, Loader2, Calendar, MapPin, Clock, ExternalLink,
-    Ticket, Star, Filter, ChevronDown, Music, Theater, Camera,
+    Ticket, Star, Filter, ChevronDown, Music,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -40,16 +40,65 @@ const FORMATS = [
     { key: 'soylesi', label: 'Söyleşi', emoji: '💬' },
 ]
 
+const DATE_FILTERS = [
+    { key: 'all', label: 'Tümü' },
+    { key: 'today', label: 'Bugün' },
+    { key: 'tomorrow', label: 'Yarın' },
+    { key: 'this_week', label: 'Bu Hafta' },
+    { key: 'this_month', label: 'Bu Ay' },
+    { key: 'weekend', label: 'Hafta Sonu' },
+]
+
 function formatDate(dateStr) {
     if (!dateStr) return ''
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'long' })
+    try {
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) return ''
+        return d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+    } catch { return '' }
 }
 
 function formatTime(dateStr) {
     if (!dateStr) return ''
-    const d = new Date(dateStr)
-    return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    try {
+        const d = new Date(dateStr)
+        if (isNaN(d.getTime())) return ''
+        return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+    } catch { return '' }
+}
+
+function isInDateRange(eventStart, filterKey) {
+    if (!eventStart || filterKey === 'all') return true
+    try {
+        const now = new Date()
+        const eventDate = new Date(eventStart)
+        if (isNaN(eventDate.getTime())) return true
+
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const todayEnd = new Date(todayStart.getTime() + 86400000)
+        const tomorrowEnd = new Date(todayStart.getTime() + 2 * 86400000)
+
+        switch (filterKey) {
+            case 'today':
+                return eventDate >= todayStart && eventDate < todayEnd
+            case 'tomorrow':
+                return eventDate >= todayEnd && eventDate < tomorrowEnd
+            case 'this_week': {
+                const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay()
+                const weekEnd = new Date(todayStart.getTime() + (8 - dayOfWeek) * 86400000)
+                return eventDate >= todayStart && eventDate < weekEnd
+            }
+            case 'this_month': {
+                const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+                return eventDate >= todayStart && eventDate < monthEnd
+            }
+            case 'weekend': {
+                const day = eventDate.getDay()
+                return day === 0 || day === 6
+            }
+            default: return true
+        }
+    } catch { return true }
 }
 
 export default function EventsPage() {
@@ -59,14 +108,20 @@ export default function EventsPage() {
 
     const [city, setCity] = useState('istanbul')
     const [format, setFormat] = useState('')
+    const [dateFilter, setDateFilter] = useState('all')
     const [events, setEvents] = useState([])
+    const [filteredEvents, setFilteredEvents] = useState([])
     const [loading, setLoading] = useState(false)
     const [searched, setSearched] = useState(false)
     const [total, setTotal] = useState(0)
 
+    useEffect(() => { searchEvents() }, [])
+
+    // Apply date filter whenever events or dateFilter changes
     useEffect(() => {
-        searchEvents()
-    }, [])
+        const filtered = events.filter(e => isInDateRange(e.start, dateFilter))
+        setFilteredEvents(filtered)
+    }, [events, dateFilter])
 
     const searchEvents = async () => {
         setLoading(true)
@@ -143,7 +198,7 @@ export default function EventsPage() {
                         </div>
 
                         {/* Format/Category Filter */}
-                        <div style={{ marginBottom: 16 }}>
+                        <div style={{ marginBottom: 14 }}>
                             <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🎭 Kategori</label>
                             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                                 {FORMATS.map(f => (
@@ -155,6 +210,23 @@ export default function EventsPage() {
                                             color: format === f.key ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 4,
                                         }}>{f.emoji} {f.label}</button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Date Filter */}
+                        <div style={{ marginBottom: 16 }}>
+                            <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>📅 Tarih</label>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                {DATE_FILTERS.map(df => (
+                                    <button key={df.key} onClick={() => setDateFilter(df.key)}
+                                        style={{
+                                            padding: '7px 12px', borderRadius: 10, border: 'none',
+                                            fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                                            background: dateFilter === df.key ? '#818CF8' : 'var(--bg-tertiary)',
+                                            color: dateFilter === df.key ? 'white' : 'var(--text-secondary)',
+                                            transition: 'all 150ms',
+                                        }}>{df.label}</button>
                                 ))}
                             </div>
                         </div>
@@ -178,16 +250,23 @@ export default function EventsPage() {
                     <AnimatePresence>
                         {searched && (
                             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                                     <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
                                         <Ticket size={16} style={{ color: '#EC4899', marginRight: 6 }} />
-                                        {total} etkinlik bulundu — {CITIES.find(c => c.slug === city)?.name || city}
+                                        {filteredEvents.length} etkinlik
+                                        {dateFilter !== 'all' && <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontWeight: 500 }}> ({DATE_FILTERS.find(d => d.key === dateFilter)?.label})</span>}
+                                        {' — '}{CITIES.find(c => c.slug === city)?.name || city}
                                     </h2>
+                                    {filteredEvents.length !== events.length && (
+                                        <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
+                                            Toplam {events.length} etkinlikten {filteredEvents.length} tanesi gösteriliyor
+                                        </span>
+                                    )}
                                 </div>
 
-                                {events.length > 0 ? (
+                                {filteredEvents.length > 0 ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 18 }}>
-                                        {events.map((event, i) => (
+                                        {filteredEvents.map((event, i) => (
                                             <motion.div key={event.id || i}
                                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: i * 0.03 }}
@@ -253,6 +332,12 @@ export default function EventsPage() {
                                                                 <span style={{ color: 'var(--text-tertiary)' }}>· {formatTime(event.start)}</span>
                                                             )}
                                                         </div>
+                                                        {event.end && (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>
+                                                                <Clock size={11} style={{ color: '#818CF8' }} />
+                                                                Bitiş: {formatTime(event.end)}
+                                                            </div>
+                                                        )}
                                                         {event.venue_name && (
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
                                                                 <MapPin size={12} style={{ color: '#8B5CF6' }} />
@@ -310,13 +395,27 @@ export default function EventsPage() {
                                         textAlign: 'center', padding: '40px 20px', color: 'var(--text-tertiary)',
                                     }}>
                                         <Calendar size={48} style={{ opacity: 0.3, marginBottom: 12 }} />
-                                        <p style={{ fontSize: '0.9rem' }}>Bu şehirde şu anda etkinlik bulunamadı.</p>
-                                        <p style={{ fontSize: '0.75rem' }}>Farklı bir şehir veya kategori deneyin.</p>
+                                        <p style={{ fontSize: '0.9rem' }}>
+                                            {dateFilter !== 'all'
+                                                ? `"${DATE_FILTERS.find(d => d.key === dateFilter)?.label}" tarihinde etkinlik bulunamadı.`
+                                                : 'Bu şehirde şu anda etkinlik bulunamadı.'}
+                                        </p>
+                                        <p style={{ fontSize: '0.75rem' }}>
+                                            {dateFilter !== 'all'
+                                                ? 'Farklı bir tarih filtresi veya "Tümü" deneyin.'
+                                                : 'Farklı bir şehir veya kategori deneyin.'}
+                                        </p>
+                                        {dateFilter !== 'all' && (
+                                            <button onClick={() => setDateFilter('all')}
+                                                style={{ marginTop: 8, padding: '8px 16px', borderRadius: 10, border: 'none', background: '#818CF8', color: 'white', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                                                Tüm Tarihleri Göster
+                                            </button>
+                                        )}
                                     </div>
                                 )}
 
                                 {/* Attribution */}
-                                {events.length > 0 && (
+                                {filteredEvents.length > 0 && (
                                     <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--text-tertiary)', marginTop: 16 }}>
                                         Etkinlik verileri etkinlik.io tarafından sağlanmaktadır.
                                     </p>

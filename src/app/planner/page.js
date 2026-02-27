@@ -163,9 +163,11 @@ export default function PlannerPage() {
     }, [formData.startDate, formData.endDate, formData.departureCity, formData.cities.length])
 
     const loadTrips = async () => {
-        const { data } = await supabase
-            .from('trips').select('*').eq('space_id', space.id)
-            .order('created_at', { ascending: false })
+        let query = supabase.from('trips').select('*')
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('created_by', user.id)
+        else return
+        const { data } = await query.order('created_at', { ascending: false })
         if (data) setSavedTrips(data)
     }
 

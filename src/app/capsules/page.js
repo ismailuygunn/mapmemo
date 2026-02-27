@@ -24,15 +24,15 @@ export default function CapsulesPage() {
     const supabase = createClient()
 
     useEffect(() => {
-        if (space) loadCapsules()
-    }, [space])
+        loadCapsules()
+    }, [space, user])
 
     const loadCapsules = async () => {
-        const { data } = await supabase
-            .from('memory_capsules')
-            .select('*')
-            .eq('space_id', space.id)
-            .order('reveal_date', { ascending: true })
+        let query = supabase.from('memory_capsules').select('*')
+        if (space) query = query.eq('space_id', space.id)
+        else if (user) query = query.eq('created_by', user.id)
+        else { setLoading(false); return }
+        const { data } = await query.order('reveal_date', { ascending: true })
         if (data) setCapsules(data)
         setLoading(false)
     }
@@ -44,7 +44,7 @@ export default function CapsulesPage() {
         const { data, error } = await supabase
             .from('memory_capsules')
             .insert({
-                space_id: space.id,
+                space_id: space?.id || null,
                 created_by: user.id,
                 title: form.title,
                 message: form.message,
