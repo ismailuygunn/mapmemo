@@ -1,91 +1,49 @@
-// Airbnb listings search — via RapidAPI (Airbnb13)
-// Get your key at: https://rapidapi.com/3b-data-3b-data-default/api/airbnb13
+// NAVISO — Airbnb Search API
+// Uses RapidAPI Airbnb endpoint for real listings
 import { NextResponse } from 'next/server'
 
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
-        const city = searchParams.get('city')
+        const location = searchParams.get('location') || 'Istanbul'
         const checkin = searchParams.get('checkin') || ''
         const checkout = searchParams.get('checkout') || ''
         const adults = searchParams.get('adults') || '2'
-        const page = searchParams.get('page') || '1'
-
-        if (!city) {
-            return NextResponse.json({ error: 'City is required' }, { status: 400 })
-        }
-
-        const apiKey = process.env.RAPIDAPI_KEY
-        if (!apiKey) {
-            // Fallback: return structured empty response with setup instructions
-            return NextResponse.json({
-                listings: [],
-                city,
-                total: 0,
-                setup_required: true,
-                message: 'RapidAPI key not configured. Add RAPIDAPI_KEY to .env.local',
-            })
-        }
-
-        const params = new URLSearchParams({
-            location: city,
-            checkin,
-            checkout,
-            adults,
-            page,
-            currency: 'TRY',
-        })
+        const currency = searchParams.get('currency') || 'TRY'
+        const KEY = process.env.RAPIDAPI_KEY
+        if (!KEY) return NextResponse.json({ listings: [], error: 'API key missing' }, { status: 500 })
 
         const res = await fetch(
-            `https://airbnb13.p.rapidapi.com/search-location?${params}`,
-            {
-                headers: {
-                    'X-RapidAPI-Key': apiKey,
-                    'X-RapidAPI-Host': 'airbnb13.p.rapidapi.com',
-                },
-            }
+            `https://airbnb13.p.rapidapi.com/search-location?location=${encodeURIComponent(location)}&checkin=${checkin}&checkout=${checkout}&adults=${adults}&currency=${currency}&page=1`,
+            { headers: { 'x-rapidapi-key': KEY, 'x-rapidapi-host': 'airbnb13.p.rapidapi.com' } }
         )
-
-        if (!res.ok) {
-            const errText = await res.text()
-            console.error('Airbnb API error:', errText)
-            return NextResponse.json({ listings: [], total: 0, error: 'Airbnb API error' })
-        }
+        if (!res.ok) return NextResponse.json({ listings: [], error: `API ${res.status}` }, { status: 500 })
 
         const data = await res.json()
-
-        const listings = (data.results || []).map(item => ({
-            id: item.id,
-            name: item.name,
+        const results = data?.results || []
+        const listings = results.slice(0, 20).map((item, i) => ({
+            id: item.id || `l-${i}`,
+            name: item.name || '',
             type: item.type || 'Entire home',
-            city: item.city || city,
-            lat: item.lat,
-            lng: item.lng,
-            photo_url: item.images?.[0] || '',
-            photos: (item.images || []).slice(0, 8),
-            price_per_night: item.price?.rate || item.price?.total || 0,
-            price_total: item.price?.total || 0,
-            currency: item.price?.currency || 'TRY',
+            photos: (item.images || [item.thumbnail]).filter(Boolean).slice(0, 5),
+            price: item.price?.rate || item.price?.total || 0,
+            priceDisplay: item.price?.priceItems?.[0]?.title || `${item.price?.rate || 0} ${currency}`,
+            currency,
             rating: item.rating || 0,
-            review_count: item.reviewsCount || 0,
-            bedrooms: item.bedrooms || 0,
+            reviewCount: item.reviewsCount || 0,
+            city: item.city || location,
+            neighborhood: item.address || '',
             beds: item.beds || 0,
             bathrooms: item.bathrooms || 0,
-            max_guests: item.persons || 0,
-            amenities: item.previewAmenities || [],
-            host_name: item.hostThumbnail ? 'Superhost' : 'Host',
-            host_avatar: item.hostThumbnail || '',
-            is_superhost: item.isSuperhost || false,
+            guests: item.persons || 0,
+            isSuperhost: item.isSuperhost || false,
             url: item.url || `https://www.airbnb.com/rooms/${item.id}`,
+            amenities: (item.previewAmenities || []).slice(0, 4),
         }))
 
-        return NextResponse.json({
-            listings,
-            city,
-            total: data.resultsCount || listings.length,
-        })
+        return NextResponse.json({ listings, location, total: listings.length, searchedAt: new Date().toISOString() })
     } catch (err) {
-        console.error('Airbnb search error:', err)
+        console.error('Airbnb error:', err)
         return NextResponse.json({ listings: [], error: err.message }, { status: 500 })
     }
 }

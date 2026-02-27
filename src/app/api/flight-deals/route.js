@@ -1,29 +1,21 @@
-// NAVISO — Flight Search v5 (Real Amadeus API)
-// Returns REAL flight offers with actual prices, airlines, times
+// NAVISO — Flight Deals v6
+// Destination cards with REAL Amadeus prices + booking platform deeplinks
+// Shows cheapest real price per destination, links to Skyscanner/Google/Enuygun/Turna
 import { NextResponse } from 'next/server'
 
 // ═══════════════════════════════════════
-// AMADEUS AUTH — get access token
+// AMADEUS AUTH
 // ═══════════════════════════════════════
 let cachedToken = null
 let tokenExpiry = 0
+let useTestApi = false
 
 async function getAmadeusToken() {
     if (cachedToken && Date.now() < tokenExpiry) return cachedToken
 
-    const res = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: process.env.AMADEUS_API_KEY,
-            client_secret: process.env.AMADEUS_API_SECRET,
-        }),
-    })
-
-    if (!res.ok) {
-        // Fallback to test API if production fails
-        const testRes = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    // Try production first
+    try {
+        const res = await fetch('https://api.amadeus.com/v1/security/oauth2/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
@@ -32,118 +24,17 @@ async function getAmadeusToken() {
                 client_secret: process.env.AMADEUS_API_SECRET,
             }),
         })
-        if (!testRes.ok) throw new Error('Amadeus auth failed')
-        const testData = await testRes.json()
-        cachedToken = testData.access_token
-        tokenExpiry = Date.now() + (testData.expires_in - 60) * 1000
-        return cachedToken
-    }
+        if (res.ok) {
+            const data = await res.json()
+            cachedToken = data.access_token
+            tokenExpiry = Date.now() + (data.expires_in - 60) * 1000
+            useTestApi = false
+            return cachedToken
+        }
+    } catch { }
 
-    const data = await res.json()
-    cachedToken = data.access_token
-    tokenExpiry = Date.now() + (data.expires_in - 60) * 1000
-    return cachedToken
-}
-
-// ═══════════════════════════════════════
-// AIRLINE DATABASE
-// ═══════════════════════════════════════
-const AIRLINES = {
-    TK: { name: 'Turkish Airlines', logo: '🇹🇷', color: '#C8102E' },
-    PC: { name: 'Pegasus', logo: '🟡', color: '#FFD100' },
-    AJ: { name: 'AnadoluJet', logo: '🔵', color: '#003DA5' },
-    XQ: { name: 'SunExpress', logo: '🌞', color: '#E2001A' },
-    LH: { name: 'Lufthansa', logo: '🇩🇪', color: '#05164D' },
-    BA: { name: 'British Airways', logo: '🇬🇧', color: '#075AAA' },
-    AF: { name: 'Air France', logo: '🇫🇷', color: '#002157' },
-    KL: { name: 'KLM', logo: '🇳🇱', color: '#00A1DE' },
-    EK: { name: 'Emirates', logo: '🇦🇪', color: '#D71921' },
-    QR: { name: 'Qatar Airways', logo: '🇶🇦', color: '#5C0632' },
-    EY: { name: 'Etihad', logo: '🇦🇪', color: '#9B7042' },
-    W6: { name: 'Wizz Air', logo: '🟣', color: '#C6007E' },
-    FR: { name: 'Ryanair', logo: '💛', color: '#073590' },
-    U2: { name: 'easyJet', logo: '🟠', color: '#FF6600' },
-    OS: { name: 'Austrian Airlines', logo: '🇦🇹', color: '#E10019' },
-    LX: { name: 'SWISS', logo: '🇨🇭', color: '#D50000' },
-    AZ: { name: 'ITA Airways', logo: '🇮🇹', color: '#0032A0' },
-    SK: { name: 'SAS', logo: '🇸🇪', color: '#000066' },
-    MS: { name: 'EgyptAir', logo: '🇪🇬', color: '#003262' },
-    RJ: { name: 'Royal Jordanian', logo: '🇯🇴', color: '#1B3F8B' },
-    SV: { name: 'Saudia', logo: '🇸🇦', color: '#006747' },
-    TG: { name: 'Thai Airways', logo: '🇹🇭', color: '#3B2674' },
-    SQ: { name: 'Singapore Airlines', logo: '🇸🇬', color: '#003C6C' },
-    CX: { name: 'Cathay Pacific', logo: '🇭🇰', color: '#006564' },
-    NH: { name: 'ANA', logo: '🇯🇵', color: '#003F87' },
-    JL: { name: 'Japan Airlines', logo: '🇯🇵', color: '#C8102E' },
-    KE: { name: 'Korean Air', logo: '🇰🇷', color: '#003087' },
-    OZ: { name: 'Asiana', logo: '🇰🇷', color: '#E60012' },
-    MH: { name: 'Malaysia Airlines', logo: '🇲🇾', color: '#002B5C' },
-    GA: { name: 'Garuda Indonesia', logo: '🇮🇩', color: '#009B3A' },
-    WY: { name: 'Oman Air', logo: '🇴🇲', color: '#006B3F' },
-    FZ: { name: 'flydubai', logo: '🇦🇪', color: '#F26522' },
-    PS: { name: 'Ukraine Airlines', logo: '🇺🇦', color: '#005BBB' },
-    BT: { name: 'airBaltic', logo: '🇱🇻', color: '#01A14B' },
-    LO: { name: 'LOT Polish', logo: '🇵🇱', color: '#003087' },
-    OK: { name: 'Czech Airlines', logo: '🇨🇿', color: '#004A98' },
-    RO: { name: 'TAROM', logo: '🇷🇴', color: '#003399' },
-    JU: { name: 'Air Serbia', logo: '🇷🇸', color: '#CA0813' },
-    OU: { name: 'Croatia Airlines', logo: '🇭🇷', color: '#0053A0' },
-    BJ: { name: 'Nouvelair', logo: '🇹🇳', color: '#E30613' },
-    SU: { name: 'Aeroflot', logo: '🇷🇺', color: '#0032A0' },
-    '8Q': { name: 'Onur Air', logo: '🟢', color: '#006838' },
-    '6Y': { name: 'SmartLynx', logo: '🟢', color: '#5CB85C' },
-    VY: { name: 'Vueling', logo: '🟡', color: '#FFD100' },
-    DY: { name: 'Norwegian', logo: '🇳🇴', color: '#D81939' },
-    '4O': { name: 'Interjet', logo: '🔴', color: '#CF0A2C' },
-}
-
-function getAirline(code) {
-    return AIRLINES[code] || { name: code, logo: '✈️', color: '#6366F1' }
-}
-
-// ═══════════════════════════════════════
-// SEARCH AMADEUS FLIGHT OFFERS
-// ═══════════════════════════════════════
-async function searchFlights(token, params) {
-    const { origin, destination, departDate, returnDate, adults, maxPrice, nonStop } = params
-
-    const searchParams = new URLSearchParams({
-        originLocationCode: origin,
-        destinationLocationCode: destination,
-        departureDate: departDate,
-        adults: String(adults || 1),
-        currencyCode: 'TRY',
-        max: '20',
-    })
-
-    if (returnDate) searchParams.set('returnDate', returnDate)
-    if (maxPrice) searchParams.set('maxPrice', maxPrice)
-    if (nonStop) searchParams.set('nonStop', 'true')
-
-    // Try production first, then test
-    let res = await fetch(`https://api.amadeus.com/v2/shopping/flight-offers?${searchParams}`, {
-        headers: { Authorization: `Bearer ${token}` },
-    })
-
-    if (!res.ok) {
-        // Try test endpoint
-        const testToken = await getTestToken()
-        res = await fetch(`https://test.api.amadeus.com/v2/shopping/flight-offers?${searchParams}`, {
-            headers: { Authorization: `Bearer ${testToken}` },
-        })
-    }
-
-    if (!res.ok) {
-        const errText = await res.text()
-        console.error('Amadeus search error:', res.status, errText)
-        throw new Error(`Amadeus search failed: ${res.status}`)
-    }
-
-    return res.json()
-}
-
-async function getTestToken() {
-    const res = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+    // Fallback to test
+    const testRes = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -152,123 +43,197 @@ async function getTestToken() {
             client_secret: process.env.AMADEUS_API_SECRET,
         }),
     })
-    const data = await res.json()
-    return data.access_token
+    if (!testRes.ok) throw new Error('Amadeus auth failed')
+    const data = await testRes.json()
+    cachedToken = data.access_token
+    tokenExpiry = Date.now() + (data.expires_in - 60) * 1000
+    useTestApi = true
+    return cachedToken
 }
 
 // ═══════════════════════════════════════
-// PARSE AMADEUS RESPONSE INTO CLEAN FORMAT
+// DESTINATION DATABASE
 // ═══════════════════════════════════════
-function parseFlightOffers(data) {
-    if (!data?.data) return []
+const DESTINATIONS = [
+    // DOMESTIC
+    { code: 'AYT', city: 'Antalya', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
+    { code: 'ADB', city: 'İzmir', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
+    { code: 'TZX', city: 'Trabzon', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1.5 },
+    { code: 'DLM', city: 'Dalaman', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
+    { code: 'BJV', city: 'Bodrum', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
+    { code: 'GZT', city: 'Gaziantep', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1.5 },
+    { code: 'ESB', city: 'Ankara', country: 'Türkiye', visa: 'domestic', emoji: '🇹🇷', flightH: 1 },
+    // VISA-FREE
+    { code: 'SJJ', city: 'Saraybosna', country: 'Bosna', visa: 'visa_free', emoji: '🇧🇦', flightH: 1.5 },
+    { code: 'TBS', city: 'Tiflis', country: 'Gürcistan', visa: 'visa_free', emoji: '🇬🇪', flightH: 2 },
+    { code: 'GYD', city: 'Bakü', country: 'Azerbaycan', visa: 'visa_free', emoji: '🇦🇿', flightH: 3 },
+    { code: 'SKP', city: 'Üsküp', country: 'K. Makedonya', visa: 'visa_free', emoji: '🇲🇰', flightH: 1.5 },
+    { code: 'PRN', city: 'Priştine', country: 'Kosova', visa: 'visa_free', emoji: '🇽🇰', flightH: 1.5 },
+    { code: 'BEG', city: 'Belgrad', country: 'Sırbistan', visa: 'visa_free', emoji: '🇷🇸', flightH: 1.5 },
+    { code: 'SOF', city: 'Sofya', country: 'Bulgaristan', visa: 'visa_free', emoji: '🇧🇬', flightH: 1 },
+    { code: 'OTP', city: 'Bükreş', country: 'Romanya', visa: 'visa_free', emoji: '🇷🇴', flightH: 1.5 },
+    { code: 'DOH', city: 'Doha', country: 'Katar', visa: 'visa_free', emoji: '🇶🇦', flightH: 4.5 },
+    { code: 'AMM', city: 'Amman', country: 'Ürdün', visa: 'visa_free', emoji: '🇯🇴', flightH: 2 },
+    { code: 'BKK', city: 'Bangkok', country: 'Tayland', visa: 'visa_free', emoji: '🇹🇭', flightH: 9.5 },
+    // VISA ON ARRIVAL
+    { code: 'DXB', city: 'Dubai', country: 'BAE', visa: 'visa_on_arrival', emoji: '🇦🇪', flightH: 4 },
+    { code: 'SSH', city: 'Sharm El-Sheikh', country: 'Mısır', visa: 'visa_on_arrival', emoji: '🇪🇬', flightH: 2 },
+    // SCHENGEN
+    { code: 'CDG', city: 'Paris', country: 'Fransa', visa: 'visa_required', emoji: '🇫🇷', flightH: 3.5 },
+    { code: 'FCO', city: 'Roma', country: 'İtalya', visa: 'visa_required', emoji: '🇮🇹', flightH: 2.5 },
+    { code: 'BCN', city: 'Barselona', country: 'İspanya', visa: 'visa_required', emoji: '🇪🇸', flightH: 3.5 },
+    { code: 'AMS', city: 'Amsterdam', country: 'Hollanda', visa: 'visa_required', emoji: '🇳🇱', flightH: 3.5 },
+    { code: 'BER', city: 'Berlin', country: 'Almanya', visa: 'visa_required', emoji: '🇩🇪', flightH: 3 },
+    { code: 'VIE', city: 'Viyana', country: 'Avusturya', visa: 'visa_required', emoji: '🇦🇹', flightH: 2.5 },
+    { code: 'PRG', city: 'Prag', country: 'Çekya', visa: 'visa_required', emoji: '🇨🇿', flightH: 2.5 },
+    { code: 'BUD', city: 'Budapeşte', country: 'Macaristan', visa: 'visa_required', emoji: '🇭🇺', flightH: 2 },
+    { code: 'ATH', city: 'Atina', country: 'Yunanistan', visa: 'visa_required', emoji: '🇬🇷', flightH: 1.5 },
+    { code: 'LHR', city: 'Londra', country: 'İngiltere', visa: 'visa_required', emoji: '🇬🇧', flightH: 4 },
+    { code: 'MXP', city: 'Milano', country: 'İtalya', visa: 'visa_required', emoji: '🇮🇹', flightH: 2.5 },
+]
 
-    return data.data.map((offer, idx) => {
-        const price = parseFloat(offer.price?.grandTotal || offer.price?.total || 0)
-        const currency = offer.price?.currency || 'TRY'
+const VISA_LABELS = {
+    domestic: '🏠 Yurtiçi',
+    visa_free: '✅ Vizesiz',
+    visa_on_arrival: '🛬 Kapıda Vize',
+    visa_required: '📋 Vize Gerekli',
+}
 
-        // Parse outbound itinerary
-        const outbound = offer.itineraries?.[0]
-        const inbound = offer.itineraries?.[1]
+const VISA_COLORS = {
+    domestic: '#6366F1', visa_free: '#22C55E',
+    visa_on_arrival: '#F59E0B', visa_required: '#EF4444',
+}
 
-        const outSegments = (outbound?.segments || []).map(seg => ({
-            departure: {
-                airport: seg.departure?.iataCode,
-                time: seg.departure?.at,
-                terminal: seg.departure?.terminal,
-            },
-            arrival: {
-                airport: seg.arrival?.iataCode,
-                time: seg.arrival?.at,
-                terminal: seg.arrival?.terminal,
-            },
-            airline: seg.carrierCode,
-            airlineName: getAirline(seg.carrierCode).name,
-            airlineLogo: getAirline(seg.carrierCode).logo,
-            flightNumber: `${seg.carrierCode}${seg.number}`,
-            aircraft: seg.aircraft?.code,
-            duration: seg.duration,
-            cabinClass: offer.travelerPricings?.[0]?.fareDetailsBySegment?.find(f => f.segmentId === seg.id)?.cabin || 'ECONOMY',
-        }))
+// ═══════════════════════════════════════
+// DEEPLINK BUILDERS (verified working formats)
+// ═══════════════════════════════════════
+function buildDeeplinks(origin, dest, departDate, returnDate) {
+    // Skyscanner YYMMDD format
+    const skDep = departDate.replace(/-/g, '').slice(2)
+    const skRet = returnDate ? returnDate.replace(/-/g, '').slice(2) : ''
+    const skReturn = skRet ? `/${skRet}` : ''
 
-        const inSegments = inbound ? (inbound.segments || []).map(seg => ({
-            departure: {
-                airport: seg.departure?.iataCode,
-                time: seg.departure?.at,
-                terminal: seg.departure?.terminal,
-            },
-            arrival: {
-                airport: seg.arrival?.iataCode,
-                time: seg.arrival?.at,
-                terminal: seg.arrival?.terminal,
-            },
-            airline: seg.carrierCode,
-            airlineName: getAirline(seg.carrierCode).name,
-            airlineLogo: getAirline(seg.carrierCode).logo,
-            flightNumber: `${seg.carrierCode}${seg.number}`,
-            aircraft: seg.aircraft?.code,
-            duration: seg.duration,
-            cabinClass: offer.travelerPricings?.[0]?.fareDetailsBySegment?.find(f => f.segmentId === seg.id)?.cabin || 'ECONOMY',
-        })) : []
+    // Google Flights
+    const gfReturn = returnDate ? `+return+${returnDate}` : ''
 
-        // Calculate total duration
-        const outDuration = outbound?.duration || ''
-        const inDuration = inbound?.duration || ''
+    // Enuygun
+    const enReturn = returnDate ? `&donus=${returnDate}` : ''
 
-        // Determine stops
-        const outStops = outSegments.length - 1
-        const inStops = inSegments.length - 1
+    // Turna
+    const tReturn = returnDate ? `&donus=${returnDate}` : ''
 
-        // Primary airline (first segment carrier)
-        const mainAirline = outSegments[0]?.airline || 'TK'
-        const airline = getAirline(mainAirline)
+    return [
+        {
+            name: 'Skyscanner',
+            icon: '🔍',
+            color: '#0770e3',
+            url: `https://www.skyscanner.com.tr/transport/flights/${origin.toLowerCase()}/${dest.toLowerCase()}/${skDep}${skReturn}/?adults=1&currency=TRY`,
+        },
+        {
+            name: 'Google Flights',
+            icon: '✈️',
+            color: '#4285F4',
+            url: `https://www.google.com/travel/flights?q=Flights+to+${dest}+from+${origin}+on+${departDate}${gfReturn}&curr=TRY&hl=tr`,
+        },
+        {
+            name: 'Enuygun',
+            icon: '🎫',
+            color: '#FF3366',
+            url: `https://www.enuygun.com/ucak-bileti/?gidis=${departDate}${enReturn}&kpiata=${origin}&vpiata=${dest}&yetiskin=1`,
+        },
+        {
+            name: 'Turna',
+            icon: '🛫',
+            color: '#FF6B00',
+            url: `https://www.turna.com/ucak-bileti?kpiata=${origin}&vpiata=${dest}&gidis=${departDate}${tReturn}&yetiskin=1&sinif=ekonomi`,
+        },
+    ]
+}
 
-        return {
-            id: offer.id || `flight-${idx}`,
-            price,
-            currency,
-            priceFormatted: new Intl.NumberFormat('tr-TR').format(Math.round(price)),
-            airline: {
-                code: mainAirline,
-                name: airline.name,
-                logo: airline.logo,
-                color: airline.color,
-            },
-            outbound: {
-                segments: outSegments,
-                duration: outDuration,
-                stops: outStops,
-                departTime: outSegments[0]?.departure?.time,
-                arriveTime: outSegments[outSegments.length - 1]?.arrival?.time,
-                departAirport: outSegments[0]?.departure?.airport,
-                arriveAirport: outSegments[outSegments.length - 1]?.arrival?.airport,
-            },
-            inbound: inSegments.length > 0 ? {
-                segments: inSegments,
-                duration: inDuration,
-                stops: inStops,
-                departTime: inSegments[0]?.departure?.time,
-                arriveTime: inSegments[inSegments.length - 1]?.arrival?.time,
-                departAirport: inSegments[0]?.departure?.airport,
-                arriveAirport: inSegments[inSegments.length - 1]?.arrival?.airport,
-            } : null,
-            totalStops: outStops + inStops,
-            bookable: offer.numberOfBookableSeats || 0,
-            lastTicketDate: offer.lastTicketingDate,
-            isNonStop: outStops === 0 && inStops === 0,
+// ═══════════════════════════════════════
+// DATE HELPER
+// ═══════════════════════════════════════
+function generateDates(month, duration, pattern) {
+    const now = new Date()
+    const dayMs = 86400000
+    let startSearch, endSearch
+
+    if (month && month !== 'any') {
+        const [y, m] = month.split('-').map(Number)
+        startSearch = new Date(y, m - 1, 1)
+        endSearch = new Date(y, m, 0)
+        if (startSearch < now) startSearch = new Date(now.getTime() + dayMs)
+    } else {
+        startSearch = new Date(now.getTime() + 7 * dayMs)
+        endSearch = new Date(now.getTime() + 90 * dayMs)
+    }
+
+    const dur = parseInt(duration) || 4
+    const dates = []
+
+    if (pattern === 'fri_sun') {
+        let d = new Date(startSearch)
+        while (d <= endSearch && dates.length < 4) {
+            if (d.getDay() === 5) {
+                const ret = new Date(d.getTime() + 2 * dayMs)
+                dates.push({ depart: fmt(d), ret: fmt(ret), label: 'Cuma→Pazar' })
+            }
+            d = new Date(d.getTime() + dayMs)
         }
-    })
+    } else {
+        const step = Math.max(7, Math.floor((endSearch - startSearch) / dayMs / 4))
+        let d = new Date(startSearch)
+        while (d <= endSearch && dates.length < 4) {
+            const ret = new Date(d.getTime() + dur * dayMs)
+            if (ret <= endSearch) dates.push({ depart: fmt(d), ret: fmt(ret), label: `${dur} gün` })
+            d = new Date(d.getTime() + step * dayMs)
+        }
+    }
+    return dates
 }
 
+function fmt(d) { return d.toISOString().split('T')[0] }
+
 // ═══════════════════════════════════════
-// FORMAT DURATION (PT2H30M → 2sa 30dk)
+// FETCH REAL PRICE FROM AMADEUS
 // ═══════════════════════════════════════
-function formatDuration(iso) {
-    if (!iso) return ''
-    const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/)
-    if (!match) return iso
-    const h = match[1] || '0'
-    const m = match[2] || '0'
-    return `${h}sa ${m}dk`
+async function getLowestPrice(token, origin, dest, departDate, returnDate) {
+    const baseUrl = useTestApi ? 'https://test.api.amadeus.com' : 'https://api.amadeus.com'
+
+    const params = new URLSearchParams({
+        originLocationCode: origin,
+        destinationLocationCode: dest,
+        departureDate: departDate,
+        adults: '1',
+        currencyCode: 'TRY',
+        max: '3', // Only need cheapest few
+        nonStop: 'false',
+    })
+    if (returnDate) params.set('returnDate', returnDate)
+
+    try {
+        const res = await fetch(`${baseUrl}/v2/shopping/flight-offers?${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+
+        if (!res.ok) return null
+
+        const data = await res.json()
+        if (!data.data || data.data.length === 0) return null
+
+        // Get cheapest offer
+        const cheapest = data.data[0]
+        const price = Math.round(parseFloat(cheapest.price?.grandTotal || cheapest.price?.total || 0))
+
+        // Get airline info
+        const mainCarrier = cheapest.itineraries?.[0]?.segments?.[0]?.carrierCode || 'TK'
+        const stops = (cheapest.itineraries?.[0]?.segments?.length || 1) - 1
+
+        return { price, airline: mainCarrier, stops, seats: cheapest.numberOfBookableSeats }
+    } catch (err) {
+        console.error(`Price fetch failed for ${dest}:`, err.message)
+        return null
+    }
 }
 
 // ═══════════════════════════════════════
@@ -278,49 +243,88 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
         const origin = searchParams.get('origin') || 'IST'
-        const destination = searchParams.get('destination')
-        const departDate = searchParams.get('departDate')
-        const returnDate = searchParams.get('returnDate') || ''
-        const adults = searchParams.get('adults') || '1'
-        const maxPrice = searchParams.get('maxPrice') || ''
-        const nonStop = searchParams.get('nonStop') === 'true'
+        const duration = searchParams.get('duration') || '4'
+        const month = searchParams.get('month') || 'any'
+        const pattern = searchParams.get('pattern') || 'any'
+        const visaFilter = searchParams.get('visa') || 'all'
+        const maxBudget = parseInt(searchParams.get('budget') || '0')
 
-        if (!destination || !departDate) {
-            return NextResponse.json({
-                flights: [],
-                error: 'destination and departDate are required',
-            }, { status: 400 })
+        // Generate dates
+        const dateRanges = generateDates(month, duration, pattern)
+        if (dateRanges.length === 0) {
+            return NextResponse.json({ deals: [], error: 'No valid dates' })
         }
 
-        // Get token
+        const dateRange = dateRanges[0]
+
+        // Filter destinations
+        let dests = [...DESTINATIONS].filter(d => d.code !== origin)
+        if (visaFilter === 'visa_free') dests = dests.filter(d => ['visa_free', 'domestic'].includes(d.visa))
+        else if (visaFilter === 'visa_on_arrival') dests = dests.filter(d => ['visa_free', 'visa_on_arrival', 'domestic'].includes(d.visa))
+
+        // Get Amadeus token
         const token = await getAmadeusToken()
 
-        // Search flights
-        const raw = await searchFlights(token, {
-            origin, destination, departDate, returnDate, adults, maxPrice, nonStop,
-        })
+        // Fetch real prices for all destinations (parallel, batched)
+        const batchSize = 5
+        const allDeals = []
 
-        // Parse into clean format
-        const flights = parseFlightOffers(raw)
+        for (let i = 0; i < dests.length; i += batchSize) {
+            const batch = dests.slice(i, i + batchSize)
+            const results = await Promise.allSettled(
+                batch.map(dest =>
+                    getLowestPrice(token, origin, dest.code, dateRange.depart, dateRange.ret)
+                        .then(priceData => ({ dest, priceData }))
+                )
+            )
 
-        // Sort by price ascending
-        flights.sort((a, b) => a.price - b.price)
+            for (const result of results) {
+                if (result.status === 'fulfilled' && result.value.priceData) {
+                    const { dest, priceData } = result.value
+                    if (maxBudget > 0 && priceData.price > maxBudget) continue
+
+                    allDeals.push({
+                        destination: dest.code,
+                        city: dest.city,
+                        country: dest.country,
+                        emoji: dest.emoji,
+                        flightHours: dest.flightH,
+                        visa: {
+                            type: dest.visa,
+                            label: VISA_LABELS[dest.visa],
+                            color: VISA_COLORS[dest.visa],
+                        },
+                        // REAL price from Amadeus
+                        price: priceData.price,
+                        priceFormatted: new Intl.NumberFormat('tr-TR').format(priceData.price),
+                        airline: priceData.airline,
+                        stops: priceData.stops,
+                        seatsLeft: priceData.seats,
+                        // Travel dates
+                        departDate: dateRange.depart,
+                        returnDate: dateRange.ret,
+                        tripLabel: dateRange.label,
+                        // Booking platform links
+                        platforms: buildDeeplinks(origin, dest.code, dateRange.depart, dateRange.ret),
+                    })
+                }
+            }
+        }
+
+        // Sort by price
+        allDeals.sort((a, b) => a.price - b.price)
 
         return NextResponse.json({
-            flights,
+            deals: allDeals,
             origin,
-            destination,
-            departDate,
-            returnDate,
-            total: flights.length,
-            dictionaries: raw.dictionaries || {},
-            searchedAt: new Date().toISOString(),
+            departDate: dateRange.depart,
+            returnDate: dateRange.ret,
+            total: allDeals.length,
+            scannedAt: new Date().toISOString(),
+            isTestData: useTestApi,
         })
     } catch (err) {
-        console.error('Flight search error:', err)
-        return NextResponse.json({
-            flights: [],
-            error: err.message || 'Flight search failed',
-        }, { status: 500 })
+        console.error('Flight deals error:', err)
+        return NextResponse.json({ deals: [], error: err.message }, { status: 500 })
     }
 }
