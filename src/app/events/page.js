@@ -123,7 +123,7 @@ export default function EventsPage() {
     const { user } = useAuth()
     const { t } = useLanguage()
 
-    const [city, setCity] = useState('istanbul')
+    const [city, setCity] = useState('İstanbul')
     const [customCity, setCustomCity] = useState('')
     const [format, setFormat] = useState('')
     const [dateFilter, setDateFilter] = useState('all')
@@ -132,7 +132,6 @@ export default function EventsPage() {
     const [loading, setLoading] = useState(false)
     const [searched, setSearched] = useState(false)
     const [total, setTotal] = useState(0)
-
 
     // Auto-search when city or format changes
     useEffect(() => {
@@ -162,6 +161,12 @@ export default function EventsPage() {
         }
         setLoading(false)
         setSearched(true)
+    }
+
+    const handleCustomCitySearch = () => {
+        if (customCity.trim()) {
+            searchEvents(customCity.trim())
+        }
     }
 
     const sectionStyle = {
@@ -209,12 +214,12 @@ export default function EventsPage() {
                             <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🇹🇷 Türkiye</label>
                             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                                 {CITIES_TR.map(c => (
-                                    <button key={c.slug} onClick={() => { setCity(c.slug); setCustomCity('') }}
+                                    <button key={c.slug} onClick={() => { setCity(c.name); setCustomCity('') }}
                                         style={{
-                                            padding: '7px 12px', borderRadius: 10, border: city === c.slug && !customCity ? 'none' : '1px solid var(--border)',
+                                            padding: '7px 12px', borderRadius: 10, border: city === c.name && !customCity ? 'none' : '1px solid var(--border)',
                                             fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer',
-                                            background: city === c.slug && !customCity ? 'linear-gradient(135deg, #EC4899, #8B5CF6)' : 'var(--bg-primary)',
-                                            color: city === c.slug && !customCity ? 'white' : 'var(--text-secondary)',
+                                            background: city === c.name && !customCity ? 'linear-gradient(135deg, #EC4899, #8B5CF6)' : 'var(--bg-primary)',
+                                            color: city === c.name && !customCity ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms',
                                         }}>{c.emoji} {c.name}</button>
                                 ))}
@@ -226,12 +231,12 @@ export default function EventsPage() {
                             <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 6 }}>🌍 Uluslararası</label>
                             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                                 {CITIES_INT.map(c => (
-                                    <button key={c.slug} onClick={() => { setCity(c.slug); setCustomCity('') }}
+                                    <button key={c.slug} onClick={() => { setCity(c.name); setCustomCity('') }}
                                         style={{
-                                            padding: '7px 12px', borderRadius: 10, border: city === c.slug && !customCity ? 'none' : '1px solid var(--border)',
+                                            padding: '7px 12px', borderRadius: 10, border: city === c.name && !customCity ? 'none' : '1px solid var(--border)',
                                             fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer',
-                                            background: city === c.slug && !customCity ? 'linear-gradient(135deg, #3B82F6, #6366F1)' : 'var(--bg-primary)',
-                                            color: city === c.slug && !customCity ? 'white' : 'var(--text-secondary)',
+                                            background: city === c.name && !customCity ? 'linear-gradient(135deg, #3B82F6, #6366F1)' : 'var(--bg-primary)',
+                                            color: city === c.name && !customCity ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms',
                                         }}>{c.emoji} {c.name}</button>
                                 ))}
@@ -241,14 +246,24 @@ export default function EventsPage() {
                         {/* Custom City Input */}
                         <div style={{ marginBottom: 14 }}>
                             <label style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>🔍 Başka Şehir</label>
-                            <input type="text" placeholder="Herhangi bir şehir yazın... (ör: Milano, Singapur)"
-                                value={customCity} onChange={e => setCustomCity(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && searchEvents(customCity)}
-                                style={{
-                                    width: '100%', padding: '10px 14px', borderRadius: 12,
-                                    border: '1px solid var(--border)', background: 'var(--bg-primary)',
-                                    color: 'var(--text-primary)', fontSize: '0.85rem',
-                                }} />
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input type="text" placeholder="Herhangi bir şehir yazın... (ör: Milano, Singapur)"
+                                    value={customCity} onChange={e => setCustomCity(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleCustomCitySearch()}
+                                    style={{
+                                        flex: 1, padding: '10px 14px', borderRadius: 12,
+                                        border: '1px solid var(--border)', background: 'var(--bg-primary)',
+                                        color: 'var(--text-primary)', fontSize: '0.85rem',
+                                    }} />
+                                <button onClick={handleCustomCitySearch}
+                                    style={{
+                                        padding: '10px 16px', borderRadius: 12, border: 'none',
+                                        background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                                        color: 'white', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+                                    }}>
+                                    <Search size={14} /> Ara
+                                </button>
+                            </div>
                         </div>
 
                         {/* Format/Category Filter */}
