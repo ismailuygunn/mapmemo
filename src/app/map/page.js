@@ -38,6 +38,9 @@ export default function MapPage() {
     const [showCommunity, setShowCommunity] = useState(true)
     const [selectedCommunitySpot, setSelectedCommunitySpot] = useState(null)
     const communityMarkersRef = useRef([])
+    const [spotGoogleData, setSpotGoogleData] = useState(null)
+    const [spotLoading, setSpotLoading] = useState(false)
+    const spotPhotoCache = useRef({})
     const [loading, setLoading] = useState(true)
     const { user } = useAuth()
     const { space, loading: spaceLoading, dbError, loadSpace: reloadSpace } = useSpace()
@@ -344,6 +347,22 @@ export default function MapPage() {
             })
         })
     }, [showCommunity, mapLoaded])
+
+    // Fetch Google Places photo when a community spot is selected
+    useEffect(() => {
+        if (!selectedCommunitySpot) { setSpotGoogleData(null); return }
+        const id = selectedCommunitySpot.id
+        if (spotPhotoCache.current[id]) { setSpotGoogleData(spotPhotoCache.current[id]); return }
+        setSpotLoading(true)
+        setSpotGoogleData(null)
+        fetch(`/api/places/photo?name=${encodeURIComponent(selectedCommunitySpot.title)}&lat=${selectedCommunitySpot.lat}&lng=${selectedCommunitySpot.lng}`)
+            .then(r => r.json())
+            .then(d => {
+                if (d.found) { spotPhotoCache.current[id] = d; setSpotGoogleData(d) }
+                setSpotLoading(false)
+            })
+            .catch(() => setSpotLoading(false))
+    }, [selectedCommunitySpot])
 
     // Search via Mapbox Geocoding API
     const handleSearch = useCallback(async (query) => {
@@ -710,21 +729,39 @@ export default function MapPage() {
                                     <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}>
                                         <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)' }} />
                                     </div>
-                                    {/* Photo hero */}
-                                    {selectedCommunitySpot.photo && (
-                                        <div style={{ position: 'relative', height: 180, overflow: 'hidden', margin: '8px 16px 0', borderRadius: 16 }}>
-                                            <img src={selectedCommunitySpot.photo} alt={selectedCommunitySpot.title}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, right: 0,
-                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                                                padding: '30px 14px 12px', color: 'white',
-                                            }}>
-                                                <div style={{ fontSize: '1.05rem', fontWeight: 900 }}>📸 {selectedCommunitySpot.title}</div>
-                                                <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>📍 İstanbul · {'⭐'.repeat(Math.min(selectedCommunitySpot.rating || 3, 5))}</div>
+                                    {/* Photo hero — Google Places or fallback */}
+                                    <div style={{ position: 'relative', height: 200, overflow: 'hidden', margin: '8px 16px 0', borderRadius: 16, background: 'var(--bg-tertiary)' }}>
+                                        {spotLoading && (
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+                                                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: '#06B6D4' }} />
+                                                <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Fotoğraf yükleniyor...</span>
+                                            </div>
+                                        )}
+                                        {!spotLoading && (
+                                            <img
+                                                src={spotGoogleData?.photo || selectedCommunitySpot.photo}
+                                                alt={selectedCommunitySpot.title}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                onError={e => { e.target.src = selectedCommunitySpot.photo }}
+                                            />
+                                        )}
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                                            background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
+                                            padding: '40px 14px 12px', color: 'white',
+                                        }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 900 }}>📸 {selectedCommunitySpot.title}</div>
+                                            <div style={{ fontSize: '0.72rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                📍 İstanbul
+                                                {spotGoogleData?.rating > 0 && (
+                                                    <span style={{ background: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>
+                                                        ⭐ {spotGoogleData.rating}
+                                                        <span style={{ opacity: 0.7, marginLeft: 3 }}>({spotGoogleData.review_count})</span>
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
                                     {/* Close button */}
                                     <button onClick={() => setSelectedCommunitySpot(null)} style={{
                                         position: 'absolute', top: 12, right: 14, width: 30, height: 30, borderRadius: 10,
@@ -732,6 +769,12 @@ export default function MapPage() {
                                         display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', zIndex: 2,
                                     }}><X size={14} /></button>
                                     <div style={{ padding: '12px 16px 24px' }}>
+                                        {/* Google Place address */}
+                                        {spotGoogleData?.address && (
+                                            <div style={{ fontSize: '0.76rem', color: 'var(--text-tertiary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                <MapPin size={12} /> {spotGoogleData.address}
+                                            </div>
+                                        )}
                                         {selectedCommunitySpot.notes && (
                                             <div style={{
                                                 display: 'flex', gap: 8, padding: '10px 12px', borderRadius: 12,
@@ -755,11 +798,24 @@ export default function MapPage() {
                                                 ))}
                                             </div>
                                         )}
-                                        <div style={{ display: 'flex', gap: 6, fontSize: '0.7rem', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
+                                        <div style={{ display: 'flex', gap: 6, fontSize: '0.7rem', color: 'var(--text-tertiary)', flexWrap: 'wrap', marginBottom: 12 }}>
                                             <span>📍 {selectedCommunitySpot.lat.toFixed(4)}, {selectedCommunitySpot.lng.toFixed(4)}</span>
                                             <span>·</span>
                                             <span>🏷️ {selectedCommunitySpot.type === 'food' ? 'Gastro' : selectedCommunitySpot.type === 'photospot' ? 'Fotoğraf Noktası' : 'Manzara'}</span>
                                         </div>
+                                        {/* Google Maps button */}
+                                        {spotGoogleData?.maps_url && (
+                                            <a href={spotGoogleData.maps_url} target="_blank" rel="noopener noreferrer" style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                width: '100%', padding: '11px', borderRadius: 12,
+                                                background: 'linear-gradient(135deg, #4285F4, #34A853)',
+                                                color: 'white', fontWeight: 700, fontSize: '0.84rem',
+                                                textDecoration: 'none', border: 'none', cursor: 'pointer',
+                                                boxShadow: '0 3px 10px rgba(66,133,244,0.3)',
+                                            }}>
+                                                <Globe size={15} /> Google Maps'te Aç
+                                            </a>
+                                        )}
                                     </div>
                                 </motion.div>
                             </>
