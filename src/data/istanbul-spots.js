@@ -1,9 +1,20 @@
-// 120 Istanbul Photography Spots — Real coordinates, categories, tips
+// 120+ Istanbul Photography Spots — Real coordinates, categories, tips, photos
 // Categories: tarihi, sokak, doga, gece, mimari, gizli, yemek, sanat, deniz, panorama
+const PHOTOS = {
+    tarihi: '/spots/hagia.png', ikon: '/spots/galata.png', cami: '/spots/hagia.png',
+    sokak: '/spots/balat.png', renkli: '/spots/balat.png', mahalle: '/spots/balat.png',
+    panorama: '/spots/bosphorus.png', deniz: '/spots/bosphorus.png',
+    gece: '/spots/ortakoy.png', atmospheric: '/spots/ortakoy.png',
+    doga: '/spots/forest.png', orman: '/spots/forest.png', makro: '/spots/forest.png',
+    mimari: '/spots/galata.png', modern: '/spots/galata.png', sanat: '/spots/bazaar.png',
+    gizli: '/spots/bazaar.png', bizans: '/spots/hagia.png', saray: '/spots/hagia.png',
+    yemek: '/spots/food.png', gastro: '/spots/food.png', urban: '/spots/balat.png',
+}
 const p = (t, type, lat, lng, notes, tags, rating = 5) => ({
     id: `ist_${lat.toFixed(4)}_${lng.toFixed(4)}`.replace(/\./g, ''),
     title: t, type, lat, lng, city: 'Istanbul', country: 'Turkey',
-    notes, tags, rating, status: 'visited', created_at: new Date().toISOString()
+    notes, tags, rating, status: 'visited', created_at: new Date().toISOString(),
+    photo: PHOTOS[tags?.[0]] || '/spots/bosphorus.png',
 })
 
 export const ISTANBUL_SPOTS = [

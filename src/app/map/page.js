@@ -688,54 +688,81 @@ export default function MapPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Community Spot Info */}
+                    {/* Community Spot Info — Mobile Bottom Sheet */}
                     <AnimatePresence>
                         {selectedCommunitySpot && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                                style={{
-                                    position: 'absolute', bottom: 90, left: '50%', transform: 'translateX(-50%)',
-                                    width: 320, maxWidth: 'calc(100vw - 32px)', zIndex: 20,
-                                    background: 'var(--bg-primary)', borderRadius: 20,
-                                    boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
-                                    border: '1px solid var(--border)', overflow: 'hidden',
-                                }}>
-                                {/* Header */}
-                                <div style={{
-                                    padding: '16px 16px 12px',
-                                    background: 'linear-gradient(135deg, #06B6D4, #8B5CF6)',
-                                    color: 'white', position: 'relative',
-                                }}>
-                                    <button onClick={() => setSelectedCommunitySpot(null)} style={{
-                                        position: 'absolute', top: 10, right: 10, width: 28, height: 28,
-                                        borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none',
-                                        color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    }}><X size={14} /></button>
-                                    <div style={{ fontSize: '1rem', fontWeight: 800, marginBottom: 4 }}>
-                                        📸 {selectedCommunitySpot.title}
+                            <>
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    onClick={() => setSelectedCommunitySpot(null)}
+                                    style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.4)' }} />
+                                <motion.div
+                                    initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+                                    transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                                    style={{
+                                        position: 'fixed', bottom: 0, left: 0, right: 0,
+                                        zIndex: 9999, background: 'var(--bg-primary)',
+                                        borderRadius: '24px 24px 0 0',
+                                        boxShadow: '0 -10px 40px rgba(0,0,0,0.3)',
+                                        maxHeight: '75vh', overflowY: 'auto',
+                                        WebkitOverflowScrolling: 'touch',
+                                    }}>
+                                    {/* Drag bar */}
+                                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}>
+                                        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)' }} />
                                     </div>
-                                    <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>
-                                        📍 İstanbul · {'⭐'.repeat(selectedCommunitySpot.rating || 3)}
-                                    </div>
-                                </div>
-                                <div style={{ padding: '12px 16px 16px' }}>
-                                    {selectedCommunitySpot.notes && (
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 10px', lineHeight: 1.5 }}>
-                                            💡 {selectedCommunitySpot.notes}
-                                        </p>
-                                    )}
-                                    {selectedCommunitySpot.tags?.length > 0 && (
-                                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                            {selectedCommunitySpot.tags.map((tag, i) => (
-                                                <span key={i} style={{
-                                                    padding: '3px 8px', borderRadius: 6, fontSize: '0.65rem',
-                                                    fontWeight: 700, background: '#06B6D415', color: '#06B6D4',
-                                                }}>#{tag}</span>
-                                            ))}
+                                    {/* Photo hero */}
+                                    {selectedCommunitySpot.photo && (
+                                        <div style={{ position: 'relative', height: 180, overflow: 'hidden', margin: '8px 16px 0', borderRadius: 16 }}>
+                                            <img src={selectedCommunitySpot.photo} alt={selectedCommunitySpot.title}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <div style={{
+                                                position: 'absolute', bottom: 0, left: 0, right: 0,
+                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                                padding: '30px 14px 12px', color: 'white',
+                                            }}>
+                                                <div style={{ fontSize: '1.05rem', fontWeight: 900 }}>📸 {selectedCommunitySpot.title}</div>
+                                                <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>📍 İstanbul · {'⭐'.repeat(Math.min(selectedCommunitySpot.rating || 3, 5))}</div>
+                                            </div>
                                         </div>
                                     )}
-                                </div>
-                            </motion.div>
+                                    {/* Close button */}
+                                    <button onClick={() => setSelectedCommunitySpot(null)} style={{
+                                        position: 'absolute', top: 12, right: 14, width: 30, height: 30, borderRadius: 10,
+                                        background: 'var(--bg-secondary)', border: '1px solid var(--border)', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', zIndex: 2,
+                                    }}><X size={14} /></button>
+                                    <div style={{ padding: '12px 16px 24px' }}>
+                                        {selectedCommunitySpot.notes && (
+                                            <div style={{
+                                                display: 'flex', gap: 8, padding: '10px 12px', borderRadius: 12,
+                                                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                marginBottom: 12, alignItems: 'flex-start',
+                                            }}>
+                                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>💡</span>
+                                                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+                                                    {selectedCommunitySpot.notes}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {selectedCommunitySpot.tags?.length > 0 && (
+                                            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+                                                {selectedCommunitySpot.tags.map((tag, i) => (
+                                                    <span key={i} style={{
+                                                        padding: '4px 10px', borderRadius: 8, fontSize: '0.7rem',
+                                                        fontWeight: 700, background: '#06B6D412', color: '#06B6D4',
+                                                        border: '1px solid #06B6D425',
+                                                    }}>#{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', gap: 6, fontSize: '0.7rem', color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
+                                            <span>📍 {selectedCommunitySpot.lat.toFixed(4)}, {selectedCommunitySpot.lng.toFixed(4)}</span>
+                                            <span>·</span>
+                                            <span>🏷️ {selectedCommunitySpot.type === 'food' ? 'Gastro' : selectedCommunitySpot.type === 'photospot' ? 'Fotoğraf Noktası' : 'Manzara'}</span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </>
                         )}
                     </AnimatePresence>
 
