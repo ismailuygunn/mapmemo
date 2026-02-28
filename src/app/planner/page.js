@@ -727,7 +727,7 @@ export default function PlannerPage() {
                                                 background: formStep === i ? 'linear-gradient(135deg, var(--primary-1), var(--primary-2))' : formStep > i ? 'var(--success)' : 'var(--bg-tertiary)',
                                                 color: formStep >= i ? 'white' : 'var(--text-tertiary)',
                                                 transition: 'all 0.3s ease',
-                                                boxShadow: formStep === i ? '0 4px 12px rgba(79,70,229,0.3)' : 'none',
+                                                boxShadow: formStep === i ? '0 4px 12px rgba(15,40,71,0.3)' : 'none',
                                             }}>
                                                 {formStep > i ? '✓' : step.icon}
                                             </div>
@@ -870,7 +870,7 @@ export default function PlannerPage() {
                                                                 padding: '3px 10px', borderRadius: 8,
                                                                 fontSize: '0.66rem', fontWeight: 600,
                                                                 border: (formData.flexStart || 0) === flex ? '1.5px solid var(--primary-1)' : '1px solid var(--border)',
-                                                                background: (formData.flexStart || 0) === flex ? 'rgba(79,70,229,0.12)' : 'var(--bg-tertiary)',
+                                                                background: (formData.flexStart || 0) === flex ? 'rgba(15,40,71,0.12)' : 'var(--bg-tertiary)',
                                                                 color: (formData.flexStart || 0) === flex ? 'var(--primary-1)' : 'var(--text-tertiary)',
                                                                 cursor: 'pointer', transition: 'all 150ms',
                                                             }}
@@ -892,7 +892,7 @@ export default function PlannerPage() {
                                                                 padding: '3px 10px', borderRadius: 8,
                                                                 fontSize: '0.66rem', fontWeight: 600,
                                                                 border: (formData.flexEnd || 0) === flex ? '1.5px solid var(--primary-1)' : '1px solid var(--border)',
-                                                                background: (formData.flexEnd || 0) === flex ? 'rgba(79,70,229,0.12)' : 'var(--bg-tertiary)',
+                                                                background: (formData.flexEnd || 0) === flex ? 'rgba(15,40,71,0.12)' : 'var(--bg-tertiary)',
                                                                 color: (formData.flexEnd || 0) === flex ? 'var(--primary-1)' : 'var(--text-tertiary)',
                                                                 cursor: 'pointer', transition: 'all 150ms',
                                                             }}
@@ -923,7 +923,7 @@ export default function PlannerPage() {
                                                                 ? '2px solid var(--primary-1)'
                                                                 : '1px solid var(--border-primary)',
                                                             background: formData.groupType === g.id
-                                                                ? 'rgba(79, 70, 229, 0.1)'
+                                                                ? 'rgba(15, 40, 71, 0.1)'
                                                                 : 'var(--bg-tertiary)',
                                                             cursor: 'pointer', transition: 'all 150ms',
                                                             color: 'var(--text-primary)', fontSize: '0.8rem',
@@ -939,7 +939,7 @@ export default function PlannerPage() {
                                         {tripDays > 0 && (
                                             <div style={{
                                                 display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px',
-                                                background: 'rgba(79, 70, 229, 0.08)', borderRadius: 'var(--radius-md)',
+                                                background: 'rgba(15, 40, 71, 0.08)', borderRadius: 'var(--radius-md)',
                                                 fontSize: '0.875rem', color: 'var(--primary-1)', fontWeight: 500,
                                             }}>
                                                 <Calendar size={16} />
@@ -1240,8 +1240,8 @@ export default function PlannerPage() {
                                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                                     style={{
                                         marginTop: 16, padding: '16px 20px', borderRadius: 16,
-                                        background: 'linear-gradient(135deg, rgba(79,70,229,0.06), rgba(168,85,247,0.04))',
-                                        border: '1px solid rgba(79,70,229,0.15)',
+                                        background: 'linear-gradient(135deg, rgba(15,40,71,0.06), rgba(168,85,247,0.04))',
+                                        border: '1px solid rgba(15,40,71,0.15)',
                                     }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary-1)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                                         ✨ {locale === 'tr' ? 'Seyahat Özeti' : 'Trip Preview'}
@@ -1386,8 +1386,8 @@ export default function PlannerPage() {
 
                             {/* Overview */}
                             <div className="result-overview" style={{
-                                background: 'linear-gradient(135deg, rgba(79,70,229,0.04), rgba(168,85,247,0.04))',
-                                border: '1px solid rgba(79,70,229,0.15)',
+                                background: 'linear-gradient(135deg, rgba(15,40,71,0.04), rgba(168,85,247,0.04))',
+                                border: '1px solid rgba(15,40,71,0.15)',
                                 borderRadius: 16, padding: '20px 24px', marginBottom: 20,
                             }}>
                                 <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1675,7 +1675,7 @@ export default function PlannerPage() {
                                                         </p>
                                                     )}
                                                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                                        {trip.tempo && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(79,70,229,0.1)', color: '#0F2847', fontWeight: 700 }}>{trip.tempo}</span>}
+                                                        {trip.tempo && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(15,40,71,0.1)', color: '#0F2847', fontWeight: 700 }}>{trip.tempo}</span>}
                                                         {trip.budget && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 700 }}>{trip.budget}</span>}
                                                         {trip.itinerary_data?.days && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 700 }}>{trip.itinerary_data.days.length} gün</span>}
                                                     </div>

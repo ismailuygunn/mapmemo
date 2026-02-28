@@ -629,9 +629,12 @@ export default function SpacesPage() {
                             // ═══ GROUPS LIST VIEW ═══
                             <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
                                 <div className="gh-header">
-                                    <div>
-                                        <h1 className="gh-title">👥 {t('Gruplar', 'Groups')}</h1>
-                                        <p className="gh-subtitle">{t('Sevgilin, arkadaşların veya ailen ile seyahat planla', 'Plan trips with your partner, friends or family')}</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 32, height: 32, borderRadius: 8 }} />
+                                        <div>
+                                            <h1 className="gh-title">{t('Seyahat Ekipleri', 'Travel Teams')}</h1>
+                                            <p className="gh-subtitle">{t('Sevgilin, arkadaşların veya ailen ile seyahat planla', 'Plan trips with your partner, friends or family')}</p>
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <button className="btn btn-secondary" onClick={() => { setShowCreate(true); setCreateMode('join') }}>
@@ -738,17 +741,17 @@ export default function SpacesPage() {
                                     <div className="gh-loading"><Loader2 size={28} className="spin" /></div>
                                 ) : spaces.length === 0 ? (
                                     <div className="gh-empty">
-                                        <div style={{ fontSize: 52, marginBottom: 12, opacity: 0.3 }}>👥</div>
-                                        <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('Henüz grubun yok', 'No groups yet')}</p>
+                                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 52, height: 52, borderRadius: 14, opacity: 0.4, marginBottom: 12 }} />
+                                        <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('Henüz ekibin yok', 'No teams yet')}</p>
                                         <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 320, margin: '4px auto 16px' }}>
                                             {t('Sevgilinle, arkadaşlarınla veya ailenle seyahat planla', 'Plan trips with your partner, friends or family')}
                                         </p>
                                         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                                             <button className="btn btn-primary" onClick={() => { setShowCreate(true); setCreateMode('type') }}>
-                                                <Plus size={14} /> {t('Grup Oluştur', 'Create Group')}
+                                                <Plus size={14} /> {t('Ekip Oluştur', 'Create Team')}
                                             </button>
                                             <button className="btn btn-secondary" onClick={() => { setShowCreate(true); setCreateMode('join') }}>
-                                                <Link2 size={14} /> {t('Gruba Katıl', 'Join Group')}
+                                                <Link2 size={14} /> {t('Ekibe Katıl', 'Join Team')}
                                             </button>
                                         </div>
                                     </div>

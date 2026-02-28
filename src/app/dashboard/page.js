@@ -200,9 +200,12 @@ export default function DashboardPage() {
                 <div className="dash-container">
                     {/* ── Header ── */}
                     <motion.div className="dash-header" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                        <div>
-                            <h1 className="dash-greeting">{greeting}, <span className="dash-name">{profile?.display_name || user?.email?.split('@')[0]}</span> 👋</h1>
-                            <p className="dash-subtitle">{t('Seyahat maceranı planla', 'Plan your next adventure')}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <img src="/umae-icon.png" alt="UMAE" style={{ width: 44, height: 44, borderRadius: 12, boxShadow: '0 4px 16px rgba(10,22,40,0.25)' }} />
+                            <div>
+                                <h1 className="dash-greeting">{greeting}, <span className="dash-name">{profile?.display_name || user?.email?.split('@')[0]}</span> 👋</h1>
+                                <p className="dash-subtitle">{t('Seyahat maceranı planla', 'Plan your next adventure')}</p>
+                            </div>
                         </div>
                         <button className="dash-new-trip-btn" onClick={() => router.push('/planner')}>
                             <Plus size={16} /> {t('Yeni Trip', 'New Trip')}
@@ -212,10 +215,10 @@ export default function DashboardPage() {
                     {/* ── Stats ── */}
                     <motion.div className="dash-stats" variants={containerAnim} initial="hidden" animate="show">
                         {[
-                            { icon: <Plane size={20} />, value: trips.length, label: t('Trip', 'Trips'), color: '#818CF8', bg: 'rgba(129,140,248,0.12)' },
+                            { icon: <Plane size={20} />, value: trips.length, label: t('Trip', 'Trips'), color: '#D4A853', bg: 'rgba(212,168,83,0.12)' },
                             { icon: <MapPin size={20} />, value: pins.length, label: t('Pin', 'Pins'), color: '#F472B6', bg: 'rgba(244,114,182,0.12)' },
                             { icon: <Globe size={20} />, value: uniqueCities.length, label: t('Şehir', 'Cities'), color: '#34D399', bg: 'rgba(52,211,153,0.12)' },
-                            { icon: <Users size={20} />, value: members.length, label: t('Üye', 'Members'), color: '#FBBF24', bg: 'rgba(251,191,36,0.12)' },
+                            { icon: <Users size={20} />, value: members.length, label: t('Üye', 'Members'), color: '#4A7FBF', bg: 'rgba(74,127,191,0.12)' },
                         ].map((stat, i) => (
                             <motion.div key={i} className="dash-stat-card" variants={itemAnim}>
                                 <div className="dash-stat-icon" style={{ background: stat.bg, color: stat.color }}>{stat.icon}</div>
@@ -229,7 +232,7 @@ export default function DashboardPage() {
                     <motion.section className="dash-section" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                             <h2 className="dash-section-title" style={{ margin: 0 }}>
-                                <Globe size={18} style={{ color: '#818CF8' }} /> {t('Popüler Şehirler', 'Popular Cities')}
+                                <Globe size={18} style={{ color: '#D4A853' }} /> {t('Popüler Şehirler', 'Popular Cities')}
                             </h2>
                             <button className="btn btn-ghost" onClick={() => router.push('/explore')} style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
                                 <Sparkles size={12} /> {t('Keşfet', 'Explore')}
@@ -441,7 +444,7 @@ export default function DashboardPage() {
                         <h2 className="dash-section-title">{t('Yaklaşan Seyahatler', 'Upcoming Trips')} ✈️</h2>
                         {upcomingTrips.length === 0 ? (
                             <div className="dash-empty">
-                                <Plane size={40} style={{ color: 'var(--text-tertiary)' }} />
+                                <img src="/umae-icon.png" alt="UMAE" style={{ width: 48, height: 48, borderRadius: 12, opacity: 0.6, marginBottom: 8 }} />
                                 <p>{t('Henüz planlanmış trip yok', 'No upcoming trips yet')}</p>
                                 <button className="dash-cta-btn" onClick={() => router.push('/planner')}>{t('Trip Planla', 'Plan a Trip')} <ArrowRight size={14} /></button>
                             </div>
