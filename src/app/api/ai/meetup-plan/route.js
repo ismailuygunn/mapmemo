@@ -96,7 +96,7 @@ const SCENARIOS = {
 export async function POST(request) {
     try {
         const body = await request.json()
-        const { scenario, city, peopleCount, budget, extraNotes } = body
+        const { scenario, city, district, peopleCount, budget, extraNotes, startTime, endTime } = body
 
         if (!scenario || !city) {
             return NextResponse.json({ error: 'Senaryo ve şehir zorunlu' }, { status: 400 })
@@ -211,17 +211,21 @@ export async function POST(request) {
 
         // ── Build Mega Prompt ──
         const now = new Date()
-        const currentHour = now.getHours()
-        const currentTime = `${String(currentHour).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+        const planStartTime = startTime || `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+        const planEndTime = endTime || '23:00'
+
+        const districtNote = district ? `
+📍 İLÇE/SEMT: ${district}
+KRİTİK: Planların TAMAMI ${district} ve yakın çevresinde olmalı. Bu semtten çok uzaklaşma. Maksimum 15-20 dakikalık mesafe içinde kal.` : ''
 
         const prompt = `${scenarioConfig.persona}
 
 ═══ SOS PLAN TALEBİ ═══
 🚨 SENARYO: ${scenario.toUpperCase()}
-📍 Şehir: ${city}
+📍 Şehir: ${city}${districtNote}
 👥 Kişi Sayısı: ${peopleCount || 2}
 💰 Bütçe: ${budgetDesc}
-🕐 Şu anki saat: ${currentTime} (planı ŞİMDİDEN itibaren yap!)
+🕐 Plan Saatleri: ${planStartTime} - ${planEndTime} (Planı ${planStartTime}'da başlat ve ${planEndTime}'a kadar planla!)
 ${extraNotes ? `📝 Ekstra Bilgi: ${extraNotes}` : ''}
 
 ═══ SENARYO ODAĞI ═══
@@ -230,7 +234,7 @@ Odak: ${scenarioConfig.focus}
 
 ═══ KRİTİK KURALLAR ═══
 
-1. **ACELE ET AMA MANTIKLI OL**: Bu bir SOS plan — kullanıcı SON DAKİKA karar verdi. Plan ${currentTime}'dan itibaren başlamalı. Gerçekçi zamanlama yap.
+1. **ACELE ET AMA MANTIKLI OL**: Bu bir SOS plan — kullanıcı SON DAKİKA karar verdi. Plan ${planStartTime}'dan itibaren başlamalı ve ${planEndTime}'a kadar devam etmeli. Gerçekçi zamanlama yap.
 
 2. **DELİRMECELİ AMA MANTIKLI**: Her adım "vay be bunu düşünmezdim" dedirtmeli ama aynı zamanda uygulanabilir olmalı. Hayal kurma, gerçekçi ol.
 
@@ -266,7 +270,7 @@ ${placesContext}
   "totalBudget": { "min": 500, "max": 1200, "perPerson": "₺250-600" },
   "steps": [
     {
-      "time": "${currentTime}",
+      "time": "${planStartTime}",
       "duration": "30-45 dk",
       "emoji": "🎯",
       "title": "Kısa, çekici başlık (3-5 kelime)",
@@ -294,7 +298,7 @@ ${placesContext}
 KRİTİK:
 - Tüm metin TÜRKÇE olsun
 - steps dizisinde en az 4, en fazla 8 adım olsun
-- Saat ${currentTime}'dan başlayıp mantıklı ilerlesin
+- Saat ${planStartTime}'dan başlayıp ${planEndTime}'a kadar mantıklı ilerlesin
 - SADECE geçerli JSON döndür, markdown veya yorum EKLEME`
 
         // ── Call Gemini ──

@@ -133,6 +133,31 @@ const BUDGETS = [
     { key: 'luxury', label: 'Lüks', emoji: '👑', desc: '₺600+/kişi', color: '#8B5CF6' },
 ]
 
+const ISTANBUL_DISTRICTS = [
+    { key: 'Beşiktaş', emoji: '⚽', side: 'Avrupa' },
+    { key: 'Kadıköy', emoji: '🌊', side: 'Anadolu' },
+    { key: 'Beyoğlu', emoji: '🎸', side: 'Avrupa' },
+    { key: 'Şişli', emoji: '🏙️', side: 'Avrupa' },
+    { key: 'Sarıyer', emoji: '🌲', side: 'Avrupa' },
+    { key: 'Beykoz', emoji: '🌳', side: 'Anadolu' },
+    { key: 'Bakırköy', emoji: '✈️', side: 'Avrupa' },
+    { key: 'Üsküdar', emoji: '🚀', side: 'Anadolu' },
+    { key: 'Fatih', emoji: '🕌', side: 'Avrupa' },
+    { key: 'Ataşehir', emoji: '🏢', side: 'Anadolu' },
+    { key: 'Maltepe', emoji: '🏖️', side: 'Anadolu' },
+    { key: 'Kartal', emoji: '🚄', side: 'Anadolu' },
+    { key: 'Pendik', emoji: '🎣', side: 'Anadolu' },
+    { key: 'Eminönü', emoji: '🌽', side: 'Avrupa' },
+    { key: 'Nişantaşı', emoji: '🛍️', side: 'Avrupa' },
+    { key: 'Levent', emoji: '🏦', side: 'Avrupa' },
+    { key: 'EtilerBebek', emoji: '🍸', side: 'Avrupa' },
+    { key: 'Taksim', emoji: '🎠', side: 'Avrupa' },
+    { key: 'Karaköy', emoji: '⚓', side: 'Avrupa' },
+    { key: 'Cihangir', emoji: '☕', side: 'Avrupa' },
+    { key: 'Moda', emoji: '🎨', side: 'Anadolu' },
+    { key: 'Bağdat Caddesi', emoji: '🛍️', side: 'Anadolu' },
+]
+
 const PEOPLE_OPTIONS = [2, 3, 4, 6, 8]
 
 export default function SOSPlanPage() {
@@ -146,6 +171,9 @@ export default function SOSPlanPage() {
     const [selectedScenario, setSelectedScenario] = useState(null)
     const [city, setCity] = useState('')
     const [customCity, setCustomCity] = useState('')
+    const [district, setDistrict] = useState('')
+    const [startTime, setStartTime] = useState('18:00')
+    const [endTime, setEndTime] = useState('23:00')
     const [peopleCount, setPeopleCount] = useState(2)
     const [budget, setBudget] = useState('mid')
     const [extraNotes, setExtraNotes] = useState('')
@@ -245,9 +273,12 @@ export default function SOSPlanPage() {
                         _sosMetadata: {
                             scenario: selectedScenario.key,
                             city: finalCity,
+                            district,
                             peopleCount,
                             budget,
                             extraNotes,
+                            startTime,
+                            endTime,
                             savedAt: new Date().toISOString(),
                         }
                     },
@@ -314,19 +345,20 @@ export default function SOSPlanPage() {
 
     const generatePlan = async () => {
         const finalCity = city || customCity
-        if (!finalCity) { toast.error('Şehir seçmelisin!'); return }
+        if (!finalCity) { toast.error(t('sos.selectCity')); return }
         setLoading(true)
         setPlan(null)
         try {
+            const locationInfo = district ? `${finalCity}, ${district}` : finalCity
             const res = await fetch('/api/ai/meetup-plan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scenario: selectedScenario.key, city: finalCity, peopleCount, budget, extraNotes }),
+                body: JSON.stringify({ scenario: selectedScenario.key, city: locationInfo, district, peopleCount, budget, extraNotes, startTime, endTime }),
             })
             const data = await res.json()
             if (data.error) throw new Error(data.error)
             setPlan(data)
-            toast.success('🚨 SOS Planın hazır!')
+            toast.success(`🚨 ${t('sos.planReady')}`)
         } catch (err) {
             toast.error(err.message || 'Plan oluşturulamadı')
         }
@@ -344,6 +376,7 @@ export default function SOSPlanPage() {
 
     const resetAll = () => {
         setSelectedScenario(null); setPlan(null); setCity(''); setCustomCity('')
+        setDistrict(''); setStartTime('18:00'); setEndTime('23:00')
         setPeopleCount(2); setBudget('mid'); setExtraNotes('')
         setExpandedStep(null); setShowExtras({})
     }
@@ -593,23 +626,73 @@ export default function SOSPlanPage() {
                                         <div style={{ display: 'grid', gap: 20 }}>
                                             {/* City */}
                                             <div>
-                                                <label style={labelStyle}><MapPin size={16} /> Şehir</label>
+                                                <label style={labelStyle}><MapPin size={16} /> {t('sos.city')}</label>
                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
                                                     {CITIES.map(c => (
-                                                        <button key={c.key} onClick={() => { setCity(c.key); setCustomCity('') }}
+                                                        <button key={c.key} onClick={() => { setCity(c.key); setCustomCity(''); if (c.key !== 'İstanbul') setDistrict('') }}
                                                             style={chipStyle(city === c.key, scenario.color)}>
                                                             {c.emoji} {c.key}
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <input type="text" className="input" placeholder="veya başka bir şehir yaz..."
-                                                    value={customCity} onChange={e => { setCustomCity(e.target.value); setCity('') }}
+                                                <input type="text" className="input" placeholder={t('sos.cityPlaceholder')}
+                                                    value={customCity} onChange={e => { setCustomCity(e.target.value); setCity(''); setDistrict('') }}
                                                     style={{ fontSize: '0.88rem' }} />
+                                            </div>
+
+                                            {/* Istanbul District Picker */}
+                                            {city === 'İstanbul' && (
+                                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                                                    <label style={labelStyle}><MapPin size={16} /> İlçe <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>(opsiyonel)</span></label>
+                                                    <div style={{ marginBottom: 8 }}>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--primary-2)', marginBottom: 6 }}>🌉 Avrupa Yakası</div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                                                            {ISTANBUL_DISTRICTS.filter(d => d.side === 'Avrupa').map(d => (
+                                                                <button key={d.key} onClick={() => setDistrict(d.key)}
+                                                                    style={{
+                                                                        ...chipStyle(district === d.key, scenario.color),
+                                                                        padding: '6px 10px', fontSize: '0.78rem',
+                                                                    }}>
+                                                                    {d.emoji} {d.key}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--primary-2)', marginBottom: 6 }}>🌊 Anadolu Yakası</div>
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                            {ISTANBUL_DISTRICTS.filter(d => d.side === 'Anadolu').map(d => (
+                                                                <button key={d.key} onClick={() => setDistrict(d.key)}
+                                                                    style={{
+                                                                        ...chipStyle(district === d.key, scenario.color),
+                                                                        padding: '6px 10px', fontSize: '0.78rem',
+                                                                    }}>
+                                                                    {d.emoji} {d.key}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+
+                                            {/* Start / End Time */}
+                                            <div>
+                                                <label style={labelStyle}><Clock size={16} /> {t('sos.date')}</label>
+                                                <div style={{ display: 'flex', gap: 10 }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 4, fontWeight: 600 }}>Başlangıç</div>
+                                                        <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
+                                                            className="input" style={{ fontSize: '0.88rem', textAlign: 'center' }} />
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 4, fontWeight: 600 }}>Bitiş</div>
+                                                        <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
+                                                            className="input" style={{ fontSize: '0.88rem', textAlign: 'center' }} />
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             {/* People */}
                                             <div>
-                                                <label style={labelStyle}><Users size={16} /> Kaç kişi?</label>
+                                                <label style={labelStyle}><Users size={16} /> {t('sos.people')}</label>
                                                 <div style={{ display: 'flex', gap: 8 }}>
                                                     {PEOPLE_OPTIONS.map(n => (
                                                         <button key={n} onClick={() => setPeopleCount(n)}
@@ -629,7 +712,7 @@ export default function SOSPlanPage() {
 
                                             {/* Budget */}
                                             <div>
-                                                <label style={labelStyle}><DollarSign size={16} /> Bütçe</label>
+                                                <label style={labelStyle}><DollarSign size={16} /> {t('sos.budget')}</label>
                                                 <div style={{ display: 'flex', gap: 8 }}>
                                                     {BUDGETS.map(b => (
                                                         <button key={b.key} onClick={() => setBudget(b.key)}
@@ -649,7 +732,7 @@ export default function SOSPlanPage() {
 
                                             {/* Notes */}
                                             <div>
-                                                <label style={labelStyle}><Sparkles size={16} /> Ekstra bilgi <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>(opsiyonel)</span></label>
+                                                <label style={labelStyle}><Sparkles size={16} /> {t('sos.extraNotes')} <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>{t('sos.optional')}</span></label>
                                                 <textarea className="input" rows={2} value={extraNotes} onChange={e => setExtraNotes(e.target.value)}
                                                     placeholder={
                                                         scenario.key === 'anniversary' ? 'ör: 3. yıldönümümüz, deniz manzaralı mekan olsa süper...' :
@@ -730,10 +813,10 @@ export default function SOSPlanPage() {
                                         style={{
                                             display: 'flex', alignItems: 'flex-start', gap: 10,
                                             padding: '14px 16px', borderRadius: 14, marginBottom: 20,
-                                            background: '#FEF3C7', border: '1px solid #FCD34D',
+                                            background: 'var(--warning-bg)', border: '1px solid var(--warning)',
                                         }}>
-                                        <AlertTriangle size={18} style={{ color: '#D97706', flexShrink: 0, marginTop: 2 }} />
-                                        <div style={{ fontSize: '0.88rem', color: '#92400E', fontWeight: 500 }}>
+                                        <AlertTriangle size={18} style={{ color: 'var(--warning)', flexShrink: 0, marginTop: 2 }} />
+                                        <div style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 500 }}>
                                             ⚡ <strong>Hemen yap:</strong> {plan.urgencyNote}
                                         </div>
                                     </motion.div>
@@ -859,8 +942,8 @@ export default function SOSPlanPage() {
 
                                     {plan.apologyStrategy && <ExtraCard icon={<Target size={18} />} title="🕊️ Gönül Alma Stratejisi" color="#10B981" isOpen={showExtras.apology} toggle={() => toggleExtra('apology')}>
                                         <div style={{ fontSize: '0.88rem', marginBottom: 10 }}><strong>🎯 İlk Adım:</strong> {plan.apologyStrategy.openingMove}</div>
-                                        <div style={{ padding: '10px 14px', borderRadius: 10, background: '#ECFDF5', marginBottom: 10, fontStyle: 'italic', fontSize: '0.88rem' }}>"{plan.apologyStrategy.keyPhrase}"</div>
-                                        {plan.apologyStrategy.avoidList?.length > 0 && <div style={{ marginBottom: 8 }}><strong style={{ fontSize: '0.82rem', color: '#EF4444' }}>🚫 Sakın Yapma:</strong>{plan.apologyStrategy.avoidList.map((a, i) => <div key={i} style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', padding: '2px 0 2px 16px' }}>• {a}</div>)}</div>}
+                                        <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border)', marginBottom: 10, fontStyle: 'italic', fontSize: '0.88rem', color: 'var(--text-primary)' }}>"{plan.apologyStrategy.keyPhrase}"</div>
+                                        {plan.apologyStrategy.avoidList?.length > 0 && <div style={{ marginBottom: 8 }}><strong style={{ fontSize: '0.82rem', color: 'var(--error)' }}>🚫 Sakın Yapma:</strong>{plan.apologyStrategy.avoidList.map((a, i) => <div key={i} style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', padding: '2px 0 2px 16px' }}>• {a}</div>)}</div>}
                                     </ExtraCard>}
 
                                     {plan.groupChallenges?.length > 0 && <ExtraCard icon={<Trophy size={18} />} title="🏆 Grup Challenge" color="#8B5CF6" isOpen={showExtras.challenges} toggle={() => toggleExtra('challenges')}>
