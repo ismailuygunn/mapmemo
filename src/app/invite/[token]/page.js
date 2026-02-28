@@ -55,7 +55,7 @@ export default function InvitePage() {
                     <>
                         <h1 style={{ color: 'white' }}>{t('general.loading') || 'Loading...'}</h1>
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-                            <Loader2 size={32} color="#818CF8" style={{ animation: 'spin 1s linear infinite' }} />
+                            <Loader2 size={32} color="#D4A853" style={{ animation: 'spin 1s linear infinite' }} />
                         </div>
                     </>
                 )}
@@ -83,7 +83,7 @@ export default function InvitePage() {
                     <>
                         <h1 style={{ color: 'white' }}>{t('invite.joining') || 'Joining space...'}</h1>
                         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-                            <Loader2 size={32} color="#818CF8" style={{ animation: 'spin 1s linear infinite' }} />
+                            <Loader2 size={32} color="#D4A853" style={{ animation: 'spin 1s linear infinite' }} />
                         </div>
                     </>
                 )}

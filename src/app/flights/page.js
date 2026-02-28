@@ -19,7 +19,7 @@ const ORIGIN_CITIES = AIRPORTS.filter(a => a.country === 'Türkiye').map(a => ({
 }))
 
 const VISA_COLORS = {
-    domestic: '#6366F1', visa_free: '#22C55E',
+    domestic: '#4A7FBF', visa_free: '#22C55E',
     visa_on_arrival: '#F59E0B', visa_required: '#EF4444',
 }
 
@@ -218,12 +218,15 @@ export default function FlightsPage() {
                         }}>
                         <div style={{
                             position: 'absolute', inset: 0,
-                            background: 'linear-gradient(135deg, rgba(79,70,229,0.55), rgba(236,72,153,0.25))',
+                            background: 'linear-gradient(135deg, rgba(15,40,71,0.75), rgba(212,168,83,0.25))',
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 40px',
                         }}>
-                            <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0 }}>
-                                ✈️ Uçuş Fırsatları
-                            </h1>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                                <img src="/umae-icon.png" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 10 }} />
+                                <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0 }}>
+                                    Uçuş Fırsatları
+                                </h1>
+                            </div>
                             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.92rem', margin: '6px 0 0', maxWidth: 500 }}>
                                 Gerçek zamanlı fiyatlar · Skyscanner, Google Flights, Enuygun, Turna
                             </p>
@@ -261,7 +264,7 @@ export default function FlightsPage() {
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                             style={sectionStyle}>
                             <h2 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800 }}>
-                                <Search size={18} style={{ marginRight: 6, color: '#818CF8' }} /> Uçuş Ara
+                                <Search size={18} style={{ marginRight: 6, color: '#D4A853' }} /> Uçuş Ara
                             </h2>
 
                             {/* Row 1 */}
@@ -354,7 +357,7 @@ export default function FlightsPage() {
                                     background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                     color: 'white', fontSize: '1rem', fontWeight: 800, cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                    boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
+                                    boxShadow: '0 4px 14px rgba(15,40,71,0.3)',
                                 }}>
                                 {loading ? <Loader2 size={18} className="spin" /> : <Search size={18} />}
                                 {loading ? 'Fiyatlar Taranıyor...' : 'Fiyatları Karşılaştır'}
@@ -423,7 +426,7 @@ export default function FlightsPage() {
                                                     </h2>
                                                     <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                                                         <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>✈️ Duffel</span>
-                                                        <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.08)', color: '#6366F1', fontWeight: 500 }}>Amadeus (yedek)</span>
+                                                        <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.08)', color: '#4A7FBF', fontWeight: 500 }}>Amadeus (yedek)</span>
                                                         <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
                                                             📅 {new Date(deals[0].departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deals[0].returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                                                         </span>
@@ -443,7 +446,7 @@ export default function FlightsPage() {
                                                             }}>
                                                             {/* Header */}
                                                             <div style={{
-                                                                background: `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#0D9488', '#F59E0B', '#6366F1', '#10B981', '#EF4444'][i % 8]}, ${['#D4A853', '#EC4899', '#F59E0B', '#0F2847', '#0D9488', '#818CF8', '#34D399', '#F472B6'][i % 8]})`,
+                                                                background: `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#0D9488', '#F59E0B', '#4A7FBF', '#10B981', '#EF4444'][i % 8]}, ${['#D4A853', '#EC4899', '#F59E0B', '#0F2847', '#0D9488', '#D4A853', '#34D399', '#F472B6'][i % 8]})`,
                                                                 padding: '18px 22px', color: 'white',
                                                             }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -500,7 +503,7 @@ export default function FlightsPage() {
                                                                         </div>
                                                                         <div style={{ flex: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                                                                             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                                                                            <Plane size={12} style={{ color: '#818CF8', transform: 'rotate(45deg)' }} />
+                                                                            <Plane size={12} style={{ color: '#D4A853', transform: 'rotate(45deg)' }} />
                                                                             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
                                                                         </div>
                                                                         <div style={{ textAlign: 'center', flex: 1 }}>
@@ -514,10 +517,10 @@ export default function FlightsPage() {
                                                                 <div style={{ display: 'flex', gap: 5, marginBottom: 10, flexWrap: 'wrap' }}>
                                                                     <span style={{
                                                                         fontSize: '0.66rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6,
-                                                                        background: (VISA_COLORS[deal.visa?.type] || '#6366F1') + '18',
-                                                                        color: VISA_COLORS[deal.visa?.type] || '#6366F1',
+                                                                        background: (VISA_COLORS[deal.visa?.type] || '#4A7FBF') + '18',
+                                                                        color: VISA_COLORS[deal.visa?.type] || '#4A7FBF',
                                                                     }}>{deal.visa?.label}</span>
-                                                                    <span style={{ fontSize: '0.66rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(129,140,248,0.1)', color: '#818CF8' }}>
+                                                                    <span style={{ fontSize: '0.66rem', fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: 'rgba(212,168,83,0.1)', color: '#D4A853' }}>
                                                                         ✈️ ~{deal.flightHours}sa
                                                                     </span>
                                                                     {deal.airline && (
@@ -531,7 +534,7 @@ export default function FlightsPage() {
                                                                         </span>
                                                                     )}
                                                                     {deal.fallback && (
-                                                                        <span style={{ fontSize: '0.62rem', fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: 'rgba(99,102,241,0.08)', color: '#6366F1' }}>
+                                                                        <span style={{ fontSize: '0.62rem', fontWeight: 500, padding: '2px 6px', borderRadius: 4, background: 'rgba(74,127,191,0.08)', color: '#4A7FBF' }}>
                                                                             Amadeus
                                                                         </span>
                                                                     )}

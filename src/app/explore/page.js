@@ -71,7 +71,7 @@ const DESTINATION_CARDS = [
 const TRAVEL_MOODS = [
     { icon: Sun, label: 'Deniz & Güneş', emoji: '🏖️', color: '#F59E0B', cities: ['Antalya', 'Bodrum', 'Fethiye', 'Barselona'] },
     { icon: Mountain, label: 'Doğa & Macera', emoji: '🏔️', color: '#22C55E', cities: ['Kapadokya', 'Trabzon', 'Bolu', 'İsviçre'] },
-    { icon: Building, label: 'Şehir & Kültür', emoji: '🏛️', color: '#818CF8', cities: ['İstanbul', 'Paris', 'Roma', 'Londra'] },
+    { icon: Building, label: 'Şehir & Kültür', emoji: '🏛️', color: '#D4A853', cities: ['İstanbul', 'Paris', 'Roma', 'Londra'] },
     { icon: Heart, label: 'Romantik Kaçamak', emoji: '💕', color: '#EC4899', cities: ['Paris', 'Venedik', 'Santorini', 'Prag'] },
     { icon: Waves, label: 'Vizesiz Ucuz', emoji: '✅', color: '#10B981', cities: ['Tiflis', 'Saraybosna', 'Belgrad', 'Üsküp'] },
     { icon: TreePine, label: 'Kış Tatili', emoji: '❄️', color: '#06B6D4', cities: ['Uludağ', 'Viyana', 'Prag', 'Budapeşte'] },
@@ -271,7 +271,7 @@ const DEST_IMAGES = {
 const VISA_TAB_CONFIG = [
     { key: 'visa_free', label: 'Vizesiz', emoji: '✅', color: '#22C55E', count: VISA_COUNTRIES.visa_free.length },
     { key: 'visa_on_arrival', label: 'Kapıda Vize', emoji: '🛬', color: '#F59E0B', count: VISA_COUNTRIES.visa_on_arrival.length },
-    { key: 'e_visa', label: 'E-Vize', emoji: '💻', color: '#818CF8', count: VISA_COUNTRIES.e_visa.length },
+    { key: 'e_visa', label: 'E-Vize', emoji: '💻', color: '#D4A853', count: VISA_COUNTRIES.e_visa.length },
 ]
 
 export default function ExplorePage() {
@@ -395,7 +395,7 @@ export default function ExplorePage() {
                     {/* ═══ POPULAR DESTINATIONS ═══ */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                         <h2 style={{ margin: '0 0 14px', fontSize: '1.1rem', fontWeight: 800 }}>
-                            <Globe size={18} style={{ color: '#818CF8', marginRight: 6 }} /> Popüler Destinasyonlar
+                            <Globe size={18} style={{ color: '#D4A853', marginRight: 6 }} /> Popüler Destinasyonlar
                         </h2>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14, marginBottom: 24 }}>
                             {DESTINATION_CARDS.map((dest, i) => (

@@ -186,7 +186,7 @@ export default function ExpenseTracker({ tripId, spaceId, locale }) {
                 <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
                         <div style={{
-                            background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                            background: 'linear-gradient(135deg, #4A7FBF, #8B5CF6)',
                             borderRadius: 14, padding: '14px 16px', color: 'white',
                         }}>
                             <div style={{ fontSize: '0.68rem', opacity: 0.8 }}>{t('Toplam Harcama', 'Total Spent')}</div>

@@ -694,7 +694,7 @@ export default function PlannerPage() {
                                 {/* Progress bar */}
                                 <div style={{ width: '100%', maxWidth: 360, height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 99, overflow: 'hidden' }}>
                                     <motion.div
-                                        style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #818CF8, #F472B6, #FBBF24)' }}
+                                        style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, #D4A853, #F472B6, #FBBF24)' }}
                                         animate={{ width: `${loadingProgress}%` }}
                                         transition={{ duration: 0.5 }}
                                     />
@@ -1336,8 +1336,8 @@ export default function PlannerPage() {
                                 <motion.div
                                     initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                                     style={{
-                                        background: 'linear-gradient(135deg, rgba(129,140,248,0.08), rgba(244,114,182,0.08))',
-                                        border: '2px dashed rgba(129,140,248,0.3)',
+                                        background: 'linear-gradient(135deg, rgba(212,168,83,0.08), rgba(244,114,182,0.08))',
+                                        border: '2px dashed rgba(212,168,83,0.3)',
                                         borderRadius: 16, padding: '20px 24px', marginBottom: 16,
                                         display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
                                     }}

@@ -96,13 +96,16 @@ export default function StatsPage() {
     }, [stats])
 
     return (
-        <>
+        <div className="page-layout">
             <Sidebar />
-            <div className="main-content">
-                <div className="page" style={{ maxWidth: 700, margin: '0 auto', padding: '24px 16px 100px' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 24 }}>
-                        📊 {locale === 'tr' ? 'Seyahat İstatistikleri' : 'Travel Statistics'}
-                    </h1>
+            <main className="page-main">
+                <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px 16px 100px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>
+                            {locale === 'tr' ? 'Seyahat İstatistikleri' : 'Travel Statistics'}
+                        </h1>
+                    </div>
 
                     {loading ? (
                         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>⏳ {locale === 'tr' ? 'Yükleniyor...' : 'Loading...'}</div>
@@ -111,7 +114,7 @@ export default function StatsPage() {
                             {/* Stats Grid */}
                             <div className="stats-grid">
                                 {[
-                                    { value: stats.trips, label: locale === 'tr' ? 'Trip' : 'Trips', emoji: '✈️', color: '#818CF8' },
+                                    { value: stats.trips, label: locale === 'tr' ? 'Trip' : 'Trips', emoji: '✈️', color: '#D4A853' },
                                     { value: stats.cities, label: locale === 'tr' ? 'Şehir' : 'Cities', emoji: '🏙️', color: '#F472B6' },
                                     { value: stats.pins, label: locale === 'tr' ? 'Pin' : 'Pins', emoji: '📌', color: '#34D399' },
                                     { value: stats.photos, label: locale === 'tr' ? 'Fotoğraf' : 'Photos', emoji: '📸', color: '#FBBF24' },
@@ -178,7 +181,7 @@ export default function StatsPage() {
                         </>
                     )}
                 </div>
-            </div>
-        </>
+            </main>
+        </div>
     )
 }

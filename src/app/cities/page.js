@@ -215,7 +215,7 @@ export default function CitiesPage() {
                                                 {city.pins.length > 3 && (
                                                     <span style={{
                                                         fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6,
-                                                        background: 'rgba(79,70,229,0.08)', color: '#6366F1',
+                                                        background: 'rgba(79,70,229,0.08)', color: '#4A7FBF',
                                                         fontWeight: 600,
                                                     }}>+{city.pins.length - 3} daha</span>
                                                 )}

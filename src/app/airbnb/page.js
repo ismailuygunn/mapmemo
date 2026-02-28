@@ -591,12 +591,12 @@ export default function AirbnbPage() {
                                                             {/* Amenity badges */}
                                                             <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexWrap: 'wrap' }}>
                                                                 {listing.bedrooms > 0 && (
-                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(99,102,241,0.08)', color: '#6366F1', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(74,127,191,0.08)', color: '#4A7FBF', fontWeight: 600 }}>
                                                                         🚪 {listing.bedrooms} oda
                                                                     </span>
                                                                 )}
                                                                 {listing.beds > 0 && (
-                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(129,140,248,0.08)', color: '#818CF8', fontWeight: 600 }}>
+                                                                    <span style={{ fontSize: '0.62rem', padding: '2px 6px', borderRadius: 6, background: 'rgba(212,168,83,0.08)', color: '#D4A853', fontWeight: 600 }}>
                                                                         🛏️ {listing.beds} yatak
                                                                     </span>
                                                                 )}

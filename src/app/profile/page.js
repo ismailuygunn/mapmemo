@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 const AVATAR_COLORS = [
     ['#0F2847', '#D4A853'], ['#EC4899', '#F43F5E'], ['#0D9488', '#06B6D4'],
     ['#F59E0B', '#EF4444'], ['#8B5CF6', '#EC4899'], ['#10B981', '#3B82F6'],
-    ['#6366F1', '#818CF8'], ['#F97316', '#FBBF24'],
+    ['#4A7FBF', '#D4A853'], ['#F97316', '#FBBF24'],
 ]
 
 const HOME_CITIES = [
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
                         style={sectionStyle}>
                         <h3 style={{ margin: '0 0 14px', fontSize: '0.95rem', fontWeight: 800 }}>
-                            <User size={16} style={{ verticalAlign: -2, marginRight: 6, color: '#818CF8' }} />
+                            <User size={16} style={{ verticalAlign: -2, marginRight: 6, color: '#D4A853' }} />
                             Profil Bilgileri
                         </h3>
 
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                         ) : stats && (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                                 {[
-                                    { value: stats.trips, label: 'Trip', emoji: '✈️', color: '#818CF8' },
+                                    { value: stats.trips, label: 'Trip', emoji: '✈️', color: '#D4A853' },
                                     { value: stats.cities, label: 'Şehir', emoji: '🏙️', color: '#F472B6' },
                                     { value: stats.pins, label: 'Pin', emoji: '📌', color: '#34D399' },
                                     { value: stats.photos, label: 'Fotoğraf', emoji: '📸', color: '#FBBF24' },
@@ -357,7 +357,7 @@ export default function ProfilePage() {
                                     {stats.cityList.map(c => (
                                         <span key={c} style={{
                                             padding: '3px 10px', borderRadius: 8,
-                                            background: 'rgba(129,140,248,0.1)', color: '#818CF8',
+                                            background: 'rgba(212,168,83,0.1)', color: '#D4A853',
                                             fontSize: '0.7rem', fontWeight: 600,
                                         }}>📍 {c}</span>
                                     ))}
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                         {/* Theme */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '10px 14px', borderRadius: 12, background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                {theme === 'dark' ? <Moon size={15} color="#818CF8" /> : <Sun size={15} color="#F59E0B" />}
+                                {theme === 'dark' ? <Moon size={15} color="#D4A853" /> : <Sun size={15} color="#F59E0B" />}
                                 <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>
                                     {theme === 'dark' ? 'Karanlık Mod' : 'Aydınlık Mod'}
                                 </span>
@@ -444,7 +444,7 @@ export default function ProfilePage() {
                                     style={{ opacity: 0, width: 0, height: 0 }} />
                                 <span style={{
                                     position: 'absolute', inset: 0, borderRadius: 22,
-                                    background: theme === 'dark' ? '#818CF8' : '#CBD5E1',
+                                    background: theme === 'dark' ? '#D4A853' : '#CBD5E1',
                                     transition: 'background 200ms',
                                 }}>
                                     <span style={{
@@ -465,8 +465,8 @@ export default function ProfilePage() {
                                 <button key={lang.code} onClick={() => setLocale(lang.code)}
                                     style={{
                                         flex: 1, padding: '10px', borderRadius: 12,
-                                        border: locale === lang.code ? '2px solid #818CF8' : '1px solid var(--border)',
-                                        background: locale === lang.code ? 'rgba(129,140,248,0.08)' : 'var(--bg-primary)',
+                                        border: locale === lang.code ? '2px solid #D4A853' : '1px solid var(--border)',
+                                        background: locale === lang.code ? 'rgba(212,168,83,0.08)' : 'var(--bg-primary)',
                                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                                         fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)',
                                     }}>

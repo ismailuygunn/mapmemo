@@ -10,7 +10,7 @@ export const PIN_TYPES = {
     hotel: { emoji: '🏨', labelKey: 'pinType.hotel', color: '#8B5CF6' },
     memory: { emoji: '💕', labelKey: 'pinType.memory', color: '#EC4899' },
     photospot: { emoji: '📸', labelKey: 'pinType.photospot', color: '#FBBF24' },
-    transport: { emoji: '🚇', labelKey: 'pinType.transport', color: '#6366F1' },
+    transport: { emoji: '🚇', labelKey: 'pinType.transport', color: '#4A7FBF' },
     warning: { emoji: '⚠️', labelKey: 'pinType.warning', color: '#EF4444' },
 }
 

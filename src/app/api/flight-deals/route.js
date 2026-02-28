@@ -41,7 +41,7 @@ const VISA_LABELS = {
     visa_on_arrival: '🛬 Kapıda Vize', visa_required: '📋 Vize Gerekli',
 }
 const VISA_COLORS = {
-    domestic: '#6366F1', visa_free: '#22C55E',
+    domestic: '#4A7FBF', visa_free: '#22C55E',
     visa_on_arrival: '#F59E0B', visa_required: '#EF4444',
 }
 

@@ -18,7 +18,7 @@ import { useToast } from '@/context/ToastContext'
 
 const ROLE_COLORS = {
     owner: { bg: '#FBBF24', text: '#92400E', label: { tr: 'Yönetici', en: 'Owner' } },
-    admin: { bg: '#818CF8', text: '#312E81', label: { tr: 'Admin', en: 'Admin' } },
+    admin: { bg: '#D4A853', text: '#312E81', label: { tr: 'Admin', en: 'Admin' } },
     editor: { bg: '#34D399', text: '#064E3B', label: { tr: 'Editör', en: 'Editor' } },
     viewer: { bg: '#94A3B8', text: '#1E293B', label: { tr: 'İzleyici', en: 'Viewer' } },
 }

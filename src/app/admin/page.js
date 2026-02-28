@@ -222,7 +222,7 @@ export default function AdminPage() {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
                                 {[
-                                    { label: t('Toplam Kullanıcı', 'Total Users'), value: stats.totalUsers, icon: Users, color: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
+                                    { label: t('Toplam Kullanıcı', 'Total Users'), value: stats.totalUsers, icon: Users, color: '#D4A853', bg: 'rgba(212,168,83,0.1)' },
                                     { label: t('Toplam Grup', 'Total Groups'), value: stats.totalSpaces, icon: Globe, color: '#34D399', bg: 'rgba(52,211,153,0.1)' },
                                     { label: t('Toplam Trip', 'Total Trips'), value: stats.totalTrips, icon: Plane, color: '#F472B6', bg: 'rgba(244,114,182,0.1)' },
                                     { label: t('Son 7 Gün (Yeni)', 'Last 7 Days (New)'), value: stats.recentUsers, icon: Activity, color: '#FBBF24', bg: 'rgba(251,191,36,0.1)' },
@@ -255,7 +255,7 @@ export default function AdminPage() {
                                         }}>
                                             <div style={{
                                                 width: 32, height: 32, borderRadius: '50%',
-                                                background: 'linear-gradient(135deg, #818CF8, #F472B6)',
+                                                background: 'linear-gradient(135deg, #D4A853, #F472B6)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: 'white', fontWeight: 700, fontSize: '0.72rem',
                                             }}>
@@ -295,7 +295,7 @@ export default function AdminPage() {
                                     }}>
                                         <div style={{
                                             width: 40, height: 40, borderRadius: '50%',
-                                            background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : 'linear-gradient(135deg, #818CF8, #F472B6)',
+                                            background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : 'linear-gradient(135deg, #D4A853, #F472B6)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             color: 'white', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0,
                                         }}>

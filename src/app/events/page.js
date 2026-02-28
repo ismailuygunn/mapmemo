@@ -47,7 +47,7 @@ const CITIES_INT = [
 ]
 
 const FORMATS = [
-    { key: '', label: 'Tümü', emoji: '🎫', color: '#6366F1' },
+    { key: '', label: 'Tümü', emoji: '🎫', color: '#4A7FBF' },
     { key: 'konser', label: 'Konser', emoji: '🎵', color: '#EC4899' },
     { key: 'sahne-sanatlari', label: 'Tiyatro', emoji: '🎭', color: '#8B5CF6' },
     { key: 'stand-up', label: 'Stand Up', emoji: '😂', color: '#F59E0B' },
@@ -70,11 +70,11 @@ const QUICK_DATES = [
 
 const GRADIENTS = [
     'linear-gradient(135deg, #EC4899, #8B5CF6)',
-    'linear-gradient(135deg, #6366F1, #3B82F6)',
+    'linear-gradient(135deg, #4A7FBF, #3B82F6)',
     'linear-gradient(135deg, #10B981, #0EA5E9)',
     'linear-gradient(135deg, #F59E0B, #EF4444)',
     'linear-gradient(135deg, #8B5CF6, #EC4899)',
-    'linear-gradient(135deg, #0D9488, #6366F1)',
+    'linear-gradient(135deg, #0D9488, #4A7FBF)',
     'linear-gradient(135deg, #F97316, #F59E0B)',
     'linear-gradient(135deg, #3B82F6, #8B5CF6)',
 ]
@@ -338,18 +338,18 @@ export default function EventsPage() {
                                 onClick={handleCustomCitySearch}
                                 style={{
                                     padding: '12px 20px', borderRadius: 14, border: 'none',
-                                    background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+                                    background: 'linear-gradient(135deg, #4A7FBF, #8B5CF6)',
                                     color: 'white', fontSize: '0.84rem', fontWeight: 700, cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', gap: 6,
-                                    boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+                                    boxShadow: '0 4px 12px rgba(74,127,191,0.3)',
                                 }}>
                                 <Search size={14} /> Ara
                             </motion.button>
                             <button onClick={() => setShowFilters(!showFilters)}
                                 style={{
                                     padding: '12px', borderRadius: 14, border: '1px solid var(--border)',
-                                    background: showFilters ? 'rgba(99,102,241,0.1)' : 'var(--bg-primary)',
-                                    color: showFilters ? '#6366F1' : 'var(--text-secondary)',
+                                    background: showFilters ? 'rgba(74,127,191,0.1)' : 'var(--bg-primary)',
+                                    color: showFilters ? '#4A7FBF' : 'var(--text-secondary)',
                                     cursor: 'pointer', display: 'flex', alignItems: 'center',
                                 }}>
                                 <Filter size={16} />
@@ -384,7 +384,7 @@ export default function EventsPage() {
                                             padding: '6px 12px', borderRadius: 10,
                                             border: city === c.name && !customCity ? '2px solid #3B82F6' : '1px solid var(--border)',
                                             fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer',
-                                            background: city === c.name && !customCity ? 'linear-gradient(135deg, #3B82F6, #6366F1)' : 'var(--bg-primary)',
+                                            background: city === c.name && !customCity ? 'linear-gradient(135deg, #3B82F6, #4A7FBF)' : 'var(--bg-primary)',
                                             color: city === c.name && !customCity ? 'white' : 'var(--text-secondary)',
                                             transition: 'all 150ms',
                                         }}>{c.emoji} {c.name}</motion.button>
@@ -433,7 +433,7 @@ export default function EventsPage() {
                                                             style={{
                                                                 padding: '6px 12px', borderRadius: 10, border: 'none',
                                                                 fontSize: '0.74rem', fontWeight: 600, cursor: 'pointer',
-                                                                background: dateFilter === df.key && !customDateFrom ? '#818CF8' : 'var(--bg-tertiary)',
+                                                                background: dateFilter === df.key && !customDateFrom ? '#D4A853' : 'var(--bg-tertiary)',
                                                                 color: dateFilter === df.key && !customDateFrom ? 'white' : count > 0 ? 'var(--text-secondary)' : 'var(--text-tertiary)',
                                                                 transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 4,
                                                                 opacity: count === 0 && df.key !== 'all' ? 0.5 : 1,
@@ -566,7 +566,7 @@ export default function EventsPage() {
                                                                 <span style={{
                                                                     position: 'absolute', top: 12, right: 12,
                                                                     background: daysUntil(event.start) === 'Bugün' ? 'rgba(239,68,68,0.85)' :
-                                                                        daysUntil(event.start) === 'Yarın' ? 'rgba(245,158,11,0.85)' : 'rgba(99,102,241,0.85)',
+                                                                        daysUntil(event.start) === 'Yarın' ? 'rgba(245,158,11,0.85)' : 'rgba(74,127,191,0.85)',
                                                                     backdropFilter: 'blur(8px)',
                                                                     padding: '5px 12px', borderRadius: 10,
                                                                     color: 'white', fontSize: '0.68rem', fontWeight: 700,
@@ -587,7 +587,7 @@ export default function EventsPage() {
                                                             {(event.is_free || event.price_label) && (
                                                                 <span style={{
                                                                     position: 'absolute', bottom: 12, left: 12,
-                                                                    background: event.is_free ? 'rgba(16,185,129,0.85)' : 'rgba(99,102,241,0.85)',
+                                                                    background: event.is_free ? 'rgba(16,185,129,0.85)' : 'rgba(74,127,191,0.85)',
                                                                     backdropFilter: 'blur(8px)',
                                                                     padding: '4px 10px', borderRadius: 8,
                                                                     color: 'white', fontSize: '0.65rem', fontWeight: 700,
@@ -717,7 +717,7 @@ export default function EventsPage() {
                                             <button onClick={clearDateFilter}
                                                 style={{
                                                     padding: '10px 20px', borderRadius: 12, border: 'none',
-                                                    background: '#818CF8', color: 'white', fontSize: '0.82rem',
+                                                    background: '#D4A853', color: 'white', fontSize: '0.82rem',
                                                     fontWeight: 700, cursor: 'pointer',
                                                 }}>
                                                 📅 Tüm Tarihleri Göster

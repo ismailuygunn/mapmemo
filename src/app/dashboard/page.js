@@ -21,7 +21,7 @@ const CATEGORY_ICONS = {
     transport: Bus, food: Utensils, activity: Ticket, accommodation: Bed, hack: Lightbulb,
 }
 const CATEGORY_COLORS = {
-    transport: { bg: 'rgba(99,102,241,0.12)', color: '#818CF8' },
+    transport: { bg: 'rgba(74,127,191,0.12)', color: '#D4A853' },
     food: { bg: 'rgba(251,146,60,0.12)', color: '#FB923C' },
     activity: { bg: 'rgba(52,211,153,0.12)', color: '#34D399' },
     accommodation: { bg: 'rgba(244,114,182,0.12)', color: '#F472B6' },
