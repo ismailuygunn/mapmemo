@@ -307,7 +307,7 @@ export default function DashboardPage() {
                             </button>
                         </div>
 
-                        {tipsError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#EF4444', fontSize: '0.78rem', marginBottom: 12 }}>⚠️ {tipsError}</motion.p>}
+                        {tipsError && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: 'var(--error)', fontSize: '0.78rem', marginBottom: 12 }}>⚠️ {tipsError}</motion.p>}
 
                         <AnimatePresence>
                             {quickTips && (

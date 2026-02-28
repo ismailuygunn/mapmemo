@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/context/ToastContext'
 
 const ROLE_COLORS = {
-    owner: { bg: '#FBBF24', text: '#92400E', label: { tr: 'Yönetici', en: 'Owner' } },
+    owner: { bg: '#FBBF24', text: '#78350F', label: { tr: 'Yönetici', en: 'Owner' } },
     admin: { bg: '#D4A853', text: '#1A3A5C', label: { tr: 'Admin', en: 'Admin' } },
     editor: { bg: '#34D399', text: '#064E3B', label: { tr: 'Editör', en: 'Editor' } },
     viewer: { bg: '#94A3B8', text: '#1E293B', label: { tr: 'İzleyici', en: 'Viewer' } },
@@ -322,7 +322,7 @@ export default function SpacesPage() {
                                 background: error === 'RLS' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
                                 border: `1px solid ${error === 'RLS' ? 'rgba(251,191,36,0.3)' : 'rgba(239,68,68,0.3)'}`,
                                 borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10,
-                                fontSize: '0.82rem', color: error === 'RLS' ? '#F59E0B' : '#EF4444',
+                                fontSize: '0.82rem', color: error === 'RLS' ? 'var(--warning)' : 'var(--error)',
                             }}
                         >
                             <span>⚠️</span>
@@ -492,7 +492,7 @@ export default function SpacesPage() {
                                                                             <option value="editor">{t('Editör', 'Editor')}</option>
                                                                             <option value="viewer">{t('İzleyici', 'Viewer')}</option>
                                                                         </select>
-                                                                        <button className="btn btn-ghost" style={{ color: '#EF4444', padding: '4px 8px' }}
+                                                                        <button className="btn btn-ghost" style={{ color: 'var(--error)', padding: '4px 8px' }}
                                                                             onClick={() => removeMember(m.user_id)} title={t('Çıkar', 'Remove')}>
                                                                             <Trash2 size={14} />
                                                                         </button>
