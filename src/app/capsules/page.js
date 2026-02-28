@@ -182,28 +182,45 @@ export default function CapsulesPage() {
         return urls
     }
 
-    // ── Create capsule ──
+    // ── Create capsule (graceful fallback if new columns don't exist yet) ──
     const createCapsule = async () => {
         if (!form.title || !form.revealDate) return
         setCreating(true)
         try {
             const mediaUrls = await uploadMediaFiles()
-            const { data, error } = await supabase
-                .from('memory_capsules')
-                .insert({
+            const fullPayload = {
+                space_id: space?.id || null,
+                created_by: user.id,
+                title: form.title,
+                message: form.message,
+                reveal_date: form.revealDate,
+                reveal_time: form.revealTime || '12:00',
+                capsule_type: form.capsuleType,
+                color_theme: form.colorTheme,
+                allow_early_vote: form.allowEarlyVote,
+                collaborators: form.collaboratorIds,
+                media_urls: mediaUrls,
+            }
+            let { data, error } = await supabase
+                .from('memory_capsules').insert(fullPayload).select().single()
+
+            // Fallback: if new columns don't exist yet, use basic columns only
+            if (error && error.message?.includes('schema cache')) {
+                const basicPayload = {
                     space_id: space?.id || null,
                     created_by: user.id,
                     title: form.title,
                     message: form.message,
                     reveal_date: form.revealDate,
-                    reveal_time: form.revealTime || '12:00',
-                    capsule_type: form.capsuleType,
-                    color_theme: form.colorTheme,
-                    allow_early_vote: form.allowEarlyVote,
-                    collaborators: form.collaboratorIds,
                     media_urls: mediaUrls,
-                })
-                .select().single()
+                }
+                const result = await supabase
+                    .from('memory_capsules').insert(basicPayload).select().single()
+                data = result.data
+                error = result.error
+                if (!error) toast.info('💡 Migration çalıştırın — gelişmiş özellikler için')
+            }
+
             if (!error && data) {
                 setCapsules(prev => [...prev, data].sort((a, b) => new Date(a.reveal_date) - new Date(b.reveal_date)))
                 resetForm()
