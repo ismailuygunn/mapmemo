@@ -10,10 +10,11 @@ import { PIN_TYPES, PIN_STATUSES } from '@/lib/constants'
 import Sidebar from '@/components/layout/Sidebar'
 import PinForm from '@/components/map/PinForm'
 import PinDetail from '@/components/map/PinDetail'
-import { Plus, Search, X, MapPin, Loader2, Users, Globe } from 'lucide-react'
+import { Plus, Search, X, MapPin, Loader2, Users, Globe, Camera } from 'lucide-react'
 import { getAuthHeaders } from '@/lib/authHeaders'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import ISTANBUL_SPOTS from '@/data/istanbul-spots'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 export default function MapPage() {
@@ -34,6 +35,9 @@ export default function MapPage() {
     const [showSocial, setShowSocial] = useState(true)
     const [selectedSocialPin, setSelectedSocialPin] = useState(null)
     const socialMarkersRef = useRef([])
+    const [showCommunity, setShowCommunity] = useState(true)
+    const [selectedCommunitySpot, setSelectedCommunitySpot] = useState(null)
+    const communityMarkersRef = useRef([])
     const [loading, setLoading] = useState(true)
     const { user } = useAuth()
     const { space, loading: spaceLoading, dbError, loadSpace: reloadSpace } = useSpace()
@@ -295,6 +299,52 @@ export default function MapPage() {
         })
     }, [socialPins, showSocial, mapLoaded])
 
+    // Render Istanbul community photo spots
+    useEffect(() => {
+        if (!mapRef.current || !mapLoaded) return
+        communityMarkersRef.current.forEach(m => m.remove())
+        communityMarkersRef.current = []
+        if (!showCommunity) return
+
+        ISTANBUL_SPOTS.forEach(spot => {
+            const el = document.createElement('div')
+            el.className = 'community-spot-marker'
+            el.innerHTML = `
+                <div style="
+                    width: 22px; height: 22px;
+                    background: linear-gradient(135deg, #06B6D4, #8B5CF6);
+                    border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    box-shadow: 0 2px 8px rgba(6,182,212,0.4);
+                    border: 1.5px solid rgba(255,255,255,0.7);
+                    cursor: pointer;
+                    transition: transform 150ms;
+                ">
+                    <span style="font-size: 10px;">📸</span>
+                </div>
+            `
+            el.addEventListener('mouseenter', () => {
+                el.firstElementChild.style.transform = 'scale(1.3)'
+            })
+            el.addEventListener('mouseleave', () => {
+                el.firstElementChild.style.transform = 'scale(1)'
+            })
+            el.addEventListener('click', (e) => {
+                e.stopPropagation()
+                setSelectedCommunitySpot(spot)
+                setSelectedPin(null)
+                setSelectedSocialPin(null)
+            })
+
+            import('mapbox-gl').then(mapboxgl => {
+                const marker = new mapboxgl.default.Marker({ element: el, anchor: 'center' })
+                    .setLngLat([spot.lng, spot.lat])
+                    .addTo(mapRef.current)
+                communityMarkersRef.current.push(marker)
+            })
+        })
+    }, [showCommunity, mapLoaded])
+
     // Search via Mapbox Geocoding API
     const handleSearch = useCallback(async (query) => {
         setSearchQuery(query)
@@ -518,6 +568,22 @@ export default function MapPage() {
                             <Users size={20} />
                         </motion.button>
                         <motion.button
+                            onClick={() => setShowCommunity(!showCommunity)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title={showCommunity ? 'Fotoğraf noktalarını gizle' : 'Fotoğraf noktalarını göster'}
+                            style={{
+                                width: 48, height: 48, borderRadius: '50%',
+                                background: showCommunity ? 'linear-gradient(135deg, #06B6D4, #8B5CF6)' : 'var(--bg-secondary)',
+                                border: showCommunity ? 'none' : '1px solid var(--border)',
+                                color: showCommunity ? 'white' : 'var(--text-secondary)',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            }}
+                        >
+                            <Camera size={20} />
+                        </motion.button>
+                        <motion.button
                             className="fab-button"
                             onClick={handleAddPin}
                             whileHover={{ scale: 1.05 }}
@@ -616,6 +682,57 @@ export default function MapPage() {
                                                 cursor: 'pointer',
                                             }}
                                         >Profili Gör</button>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Community Spot Info */}
+                    <AnimatePresence>
+                        {selectedCommunitySpot && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+                                style={{
+                                    position: 'absolute', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+                                    width: 320, maxWidth: 'calc(100vw - 32px)', zIndex: 20,
+                                    background: 'var(--bg-primary)', borderRadius: 20,
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
+                                    border: '1px solid var(--border)', overflow: 'hidden',
+                                }}>
+                                {/* Header */}
+                                <div style={{
+                                    padding: '16px 16px 12px',
+                                    background: 'linear-gradient(135deg, #06B6D4, #8B5CF6)',
+                                    color: 'white', position: 'relative',
+                                }}>
+                                    <button onClick={() => setSelectedCommunitySpot(null)} style={{
+                                        position: 'absolute', top: 10, right: 10, width: 28, height: 28,
+                                        borderRadius: 8, background: 'rgba(255,255,255,0.2)', border: 'none',
+                                        color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}><X size={14} /></button>
+                                    <div style={{ fontSize: '1rem', fontWeight: 800, marginBottom: 4 }}>
+                                        📸 {selectedCommunitySpot.title}
+                                    </div>
+                                    <div style={{ fontSize: '0.72rem', opacity: 0.9 }}>
+                                        📍 İstanbul · {'⭐'.repeat(selectedCommunitySpot.rating || 3)}
+                                    </div>
+                                </div>
+                                <div style={{ padding: '12px 16px 16px' }}>
+                                    {selectedCommunitySpot.notes && (
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 10px', lineHeight: 1.5 }}>
+                                            💡 {selectedCommunitySpot.notes}
+                                        </p>
+                                    )}
+                                    {selectedCommunitySpot.tags?.length > 0 && (
+                                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                            {selectedCommunitySpot.tags.map((tag, i) => (
+                                                <span key={i} style={{
+                                                    padding: '3px 8px', borderRadius: 6, fontSize: '0.65rem',
+                                                    fontWeight: 700, background: '#06B6D415', color: '#06B6D4',
+                                                }}>#{tag}</span>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </motion.div>
