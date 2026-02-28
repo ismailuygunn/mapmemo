@@ -516,9 +516,9 @@ export default function SpacesPage() {
                                                     </p>
                                                     <div style={{ display: 'flex', gap: 8 }}>
                                                         <input className="input" readOnly
-                                                            value={selectedSpace.invite_token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${selectedSpace.invite_token}` : ''}
+                                                            value={selectedSpace.invite_code ? `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${selectedSpace.invite_code}` : ''}
                                                             style={{ flex: 1, fontSize: '0.78rem' }} />
-                                                        <button className="btn btn-primary" onClick={() => copyInviteLink(selectedSpace.invite_token)}>
+                                                        <button className="btn btn-primary" onClick={() => copyInviteLink(selectedSpace.invite_code)}>
                                                             {copied ? <Check size={14} /> : <Copy size={14} />}
                                                             {copied ? t('Kopyalandı!', 'Copied!') : t('Kopyala', 'Copy')}
                                                         </button>
@@ -527,7 +527,7 @@ export default function SpacesPage() {
                                                     {typeof navigator !== 'undefined' && navigator.share && (
                                                         <button className="btn btn-secondary" style={{ marginTop: 10, width: '100%' }}
                                                             onClick={() => {
-                                                                const link = `${window.location.origin}/invite/${selectedSpace.invite_token}`
+                                                                const link = `${window.location.origin}/invite/${selectedSpace.invite_code}`
                                                                 navigator.share({
                                                                     title: `${selectedSpace.name} - UMAE`,
                                                                     text: t('Bu gruba katıl!', 'Join this group!'),
@@ -575,11 +575,11 @@ export default function SpacesPage() {
                                                 <h3>🔗 {t('Davet Linki', 'Invite Link')}</h3>
                                                 <div className="gh-invite-link-box">
                                                     <code style={{ fontSize: '0.72rem', wordBreak: 'break-all' }}>
-                                                        {typeof window !== 'undefined' ? window.location.origin : ''}/invite/{selectedSpace.invite_token}
+                                                        {typeof window !== 'undefined' ? window.location.origin : ''}/invite/{selectedSpace.invite_code}
                                                     </code>
                                                 </div>
                                                 <button className="btn btn-secondary" style={{ marginTop: 8 }}
-                                                    onClick={() => copyInviteLink(selectedSpace.invite_token)}>
+                                                    onClick={() => copyInviteLink(selectedSpace.invite_code)}>
                                                     <Copy size={14} /> {t('Linki Kopyala', 'Copy Link')}
                                                 </button>
                                             </div>

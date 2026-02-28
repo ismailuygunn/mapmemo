@@ -107,7 +107,7 @@ export function SpaceProvider({ children }) {
 
                     const { data: newSpace, error: createErr } = await supabase
                         .from('spaces')
-                        .insert({ name: 'Benim Haritam', created_by: user.id, invite_token: inviteToken })
+                        .insert({ name: 'Benim Haritam', created_by: user.id, invite_code: inviteToken })
                         .select()
                         .single()
 
@@ -146,7 +146,7 @@ export function SpaceProvider({ children }) {
 
         const { data: spaceData, error: spaceError } = await supabase
             .from('spaces')
-            .insert({ name, created_by: user.id, invite_token: inviteToken })
+            .insert({ name, created_by: user.id, invite_code: inviteToken })
             .select()
             .single()
 
@@ -171,7 +171,7 @@ export function SpaceProvider({ children }) {
         const { data: spaceData, error: findError } = await supabase
             .from('spaces')
             .select('*')
-            .eq('invite_token', inviteToken)
+            .eq('invite_code', inviteToken)
             .single()
 
         if (findError || !spaceData) throw new Error('Geçersiz davet linki')

@@ -46,7 +46,7 @@ export default function SettingsPage() {
 
     const copyInvite = () => {
         if (!space) return
-        const link = `${window.location.origin}/invite/${space.invite_token}`
+        const link = `${window.location.origin}/invite/${space.invite_code}`
         navigator.clipboard.writeText(link)
         setCopied(true)
         toast.success(t('settings.inviteCopied') || 'Davet linki kopyalandı 📎')

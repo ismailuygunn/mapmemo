@@ -124,7 +124,7 @@ function OnboardingInner() {
                     .insert({
                         name: t(`${fullName.trim()} Seyahatleri`, `${fullName.trim()}'s Trips`),
                         created_by: user.id,
-                        invite_token: inviteToken,
+                        invite_code: inviteToken,
                     })
                     .select()
                     .single()
