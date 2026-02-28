@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Plane, User, Ticket, Home, Zap, Newspaper, Search, UserPlus, Heart, MoreHorizontal, X } from 'lucide-react'
+import { Map, Compass, Calendar, Settings, LogOut, Gift, ChevronLeft, ChevronRight, MapPin, CalendarDays, LayoutDashboard, Users, BarChart3, Shield, Zap, MoreHorizontal, X } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,21 +29,14 @@ export default function Sidebar() {
 
     const navItems = [
         { icon: LayoutDashboard, label: t('nav.dashboard') || 'Panel', href: '/dashboard' },
-        { icon: Newspaper, label: 'Feed', href: '/feed' },
-        { icon: Search, label: t('Gezginler', 'Travelers'), href: '/discover' },
-        { icon: Heart, label: 'Arkadaşlar', href: '/friends' },
-        { icon: Compass, label: 'Keşfet', href: '/explore' },
         { icon: Map, label: t('nav.map') || 'Harita', href: '/map' },
+        { icon: Compass, label: 'Keşfet', href: '/explore' },
         { icon: Compass, label: t('nav.cities') || 'Şehirler', href: '/cities' },
         { icon: Calendar, label: t('nav.planner') || 'Planla', href: '/planner' },
-        { icon: Plane, label: t('Uçuşlar', 'Flights'), href: '/flights' },
-        { icon: Home, label: 'Konaklama', href: '/airbnb' },
         { icon: Zap, label: 'SOS Plan', href: '/meetups' },
-        { icon: Ticket, label: 'Etkinlikler', href: '/events' },
-        { icon: Users, label: 'Seyahat Ekipleri', href: '/spaces' },
-        { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
+        { icon: Users, label: 'Ekiplerim', href: '/spaces' },
         { icon: Gift, label: t('nav.capsules') || 'Kapsüller', href: '/capsules' },
-        { icon: User, label: 'Profil', href: '/profile' },
+        { icon: BarChart3, label: t('nav.stats') || 'İstatistik', href: '/stats' },
         { icon: Settings, label: t('nav.settings') || 'Ayarlar', href: '/settings' },
         ...(profile?.role === 'admin' ? [{ icon: Shield, label: 'Admin', href: '/admin' }] : []),
     ]
@@ -51,9 +44,9 @@ export default function Sidebar() {
     // Mobile: 5 key items for bottom nav, rest in "More" drawer
     const mobileMainItems = [
         { icon: Map, label: 'Harita', href: '/map' },
-        { icon: Newspaper, label: 'Feed', href: '/feed' },
+        { icon: Zap, label: 'SOS Plan', href: '/meetups' },
         { icon: Compass, label: 'Keşfet', href: '/explore' },
-        { icon: Search, label: 'Kişiler', href: '/discover' },
+        { icon: Users, label: 'Ekipler', href: '/spaces' },
         { icon: MoreHorizontal, label: 'Daha', href: '__more__' },
     ]
 
