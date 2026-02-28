@@ -18,16 +18,13 @@ export default function Home() {
   return (
     <div className="auth-bg">
       <div style={{ color: 'white', textAlign: 'center' }}>
-        <div style={{
-          width: 60, height: 60, borderRadius: 16,
-          background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 16px', fontSize: '1.5rem'
-        }}>
-          📍
-        </div>
-        <h2 style={{ marginBottom: 8 }}>NAVISO</h2>
-        <p style={{ color: '#94A3B8' }}>Loading...</p>
+        <img src="/umae-icon.png" alt="UMAE" style={{
+          width: 72, height: 72, borderRadius: 18,
+          margin: '0 auto 16px', display: 'block',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+        }} />
+        <h2 style={{ marginBottom: 8, letterSpacing: '0.15em', fontWeight: 700 }}>UMAE</h2>
+        <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Loading...</p>
       </div>
     </div>
   )

@@ -66,7 +66,7 @@ export default function DashboardPage() {
     }, [space, user?.id])
 
     useEffect(() => {
-        const saved = localStorage.getItem('naviso-saved-tips')
+        const saved = localStorage.getItem('umae-saved-tips')
         if (saved) setSavedTips(JSON.parse(saved))
     }, [])
 
@@ -156,7 +156,7 @@ export default function DashboardPage() {
     const saveTip = (tip) => {
         const updated = [...savedTips, { ...tip, city: quickTips?.city, savedAt: new Date().toISOString() }]
         setSavedTips(updated)
-        localStorage.setItem('naviso-saved-tips', JSON.stringify(updated))
+        localStorage.setItem('umae-saved-tips', JSON.stringify(updated))
         toast.success(t('İpucu kaydedildi!', 'Tip saved!'))
     }
     const planFromTips = () => quickTips?.city && router.push(`/planner?city=${encodeURIComponent(quickTips.city)}`)

@@ -374,7 +374,7 @@ export default function SOSPlanPage() {
                 ${plan.whatToWear ? `<div style="flex:1;padding:14px;border:1px solid #e2e8f0;border-radius:10px;"><strong>👗 Kıyafet</strong><p style="font-size:12px;color:#4a5568;margin-top:4px;">${plan.whatToWear}</p></div>` : ''}
                 ${plan.playlistVibe ? `<div style="flex:1;padding:14px;border:1px solid #e2e8f0;border-radius:10px;"><strong>🎵 Müzik</strong><p style="font-size:12px;color:#4a5568;margin-top:4px;">${plan.playlistVibe}</p></div>` : ''}
             </div>
-            <div class="footer">NAVISO — SOS Plan · ${new Date().toLocaleDateString('tr-TR')}</div>
+            <div class="footer">UMAE — SOS Plan · ${new Date().toLocaleDateString('tr-TR')}</div>
         </body></html>`)
         printWindow.document.close()
         setTimeout(() => printWindow.print(), 500)

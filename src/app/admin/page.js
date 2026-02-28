@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/context/ToastContext'
 import { useRouter } from 'next/navigation'
 
-const ADMIN_EMAIL = 'admin@naviso.app' // Change to your admin email
+const ADMIN_EMAIL = 'admin@umae.app' // Change to your admin email
 
 export default function AdminPage() {
     const [isAdmin, setIsAdmin] = useState(false)
@@ -112,7 +112,7 @@ export default function AdminPage() {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `naviso-admin-export-${new Date().toISOString().split('T')[0]}.json`
+        a.download = `umae-admin-export-${new Date().toISOString().split('T')[0]}.json`
         a.click()
         URL.revokeObjectURL(url)
         toast.success(t('Veriler indirildi', 'Data exported'))

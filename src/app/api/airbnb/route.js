@@ -1,4 +1,4 @@
-// NAVISO — Airbnb Search API v3
+// UMAE — Airbnb Search API v3
 // Uses RapidAPI Airbnb endpoint with geo support + multiple pages + price breakdown
 import { NextResponse } from 'next/server'
 

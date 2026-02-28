@@ -66,7 +66,7 @@ export default function ProfilePage() {
     useEffect(() => {
         if (user) loadStats()
         try {
-            const fav = JSON.parse(localStorage.getItem('naviso-fav-dests') || '[]')
+            const fav = JSON.parse(localStorage.getItem('umae-fav-dests') || '[]')
             setFavorites(fav)
         } catch { }
         // Avatar color from profile or random

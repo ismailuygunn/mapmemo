@@ -196,15 +196,12 @@ export default function OnboardingPage() {
             >
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                    <div style={{
-                        width: 72, height: 72, margin: '0 auto 16px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--primary-1), #EC4899)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                        <Plane size={32} color="white" />
-                    </div>
+                    <img src="/umae-icon.png" alt="UMAE" style={{
+                        width: 72, height: 72, margin: '0 auto 16px', display: 'block',
+                        borderRadius: 18, boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+                    }} />
                     <h1 style={{ color: 'white', fontSize: '1.5rem', marginBottom: 8 }}>
-                        {t('NAVISO\'ya Hoş Geldin! ✈️', 'Welcome to NAVISO! ✈️')}
+                        {t('UMAE\'ya Hoş Geldin! ✈️', 'Welcome to UMAE! ✈️')}
                     </h1>
                     <p style={{ color: '#94A3B8', fontSize: '0.88rem', lineHeight: 1.5 }}>
                         {t(

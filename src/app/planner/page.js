@@ -521,7 +521,7 @@ export default function PlannerPage() {
             </div>
             ${extrasHTML.join('')}
             ${daysHTML}
-            <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#a0aec0;">NAVISO Planlayıcı · ${new Date().toLocaleDateString('tr-TR')}</div>
+            <div style="text-align:center;margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#a0aec0;">UMAE Planlayıcı · ${new Date().toLocaleDateString('tr-TR')}</div>
         </body></html>`)
         pw.document.close()
         setTimeout(() => pw.print(), 500)

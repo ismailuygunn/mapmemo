@@ -1,4 +1,4 @@
-// NAVISO — Multi-Source Flight Price Scanner v8
+// UMAE — Multi-Source Flight Price Scanner v8
 // Smart date search + comprehensive airports + verified deeplinks
 import { NextResponse } from 'next/server'
 import { DESTINATIONS_DEALS, resolveAirportCodes, AIRPORTS } from '@/lib/airports'

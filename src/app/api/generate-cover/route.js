@@ -1,4 +1,4 @@
-// NAVISO — AI Cover Image Generator
+// UMAE — AI Cover Image Generator
 // Supports: Gemini image gen, Unsplash fallback, multi-reference images, slogan generation
 import { NextResponse } from 'next/server'
 

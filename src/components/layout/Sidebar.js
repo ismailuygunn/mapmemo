@@ -82,8 +82,8 @@ export default function Sidebar() {
                 {/* Logo */}
                 <div className="sidebar-top">
                     <div className="sidebar-logo-area" onClick={() => router.push('/map')}>
-                        <div className="sidebar-logo-icon">
-                            <MapPin size={20} color="white" />
+                        <div className="sidebar-logo-icon" style={{ padding: 0, overflow: 'hidden', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <img src="/umae-icon.png" alt="UMAE" style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 10 }} />
                         </div>
                         <AnimatePresence>
                             {!collapsed && (

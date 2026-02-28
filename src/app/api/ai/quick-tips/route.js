@@ -1,4 +1,4 @@
-// NAVISO — Quick AI Budget Travel Suggestions (No Plan Needed)
+// UMAE — Quick AI Budget Travel Suggestions (No Plan Needed)
 // City-based cheap tips: budget food, free activities, transport hacks
 import { NextResponse } from 'next/server'
 

@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
-import { Eye, EyeOff, Globe, Plane, ChevronRight, Users, MapPin } from 'lucide-react'
+import { Eye, EyeOff, Globe, ChevronRight, Users, MapPin, Compass } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -61,10 +62,9 @@ export default function LoginPage() {
                 <motion.div className="auth-brand"
                     initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}
                 >
-                    <div className="auth-brand-icon">
-                        <Plane size={32} />
+                    <div style={{ marginBottom: 24 }}>
+                        <Image src="/umae-logo-dark.png" alt="UMAE" width={180} height={180} style={{ objectFit: 'contain', borderRadius: 16 }} priority />
                     </div>
-                    <h1 className="auth-brand-title">NAVISO</h1>
                     <p className="auth-brand-subtitle">
                         {locale === 'tr'
                             ? 'Seyahat grubunla giriş yap, planlamaya devam et.'
@@ -73,7 +73,7 @@ export default function LoginPage() {
                     <div className="auth-brand-features">
                         <div className="auth-feature"><Users size={16} /> {locale === 'tr' ? 'Grup seyahat planlaması' : 'Group trip planning'}</div>
                         <div className="auth-feature"><MapPin size={16} /> {locale === 'tr' ? 'Oteller, uçuşlar, Airbnb' : 'Hotels, flights, Airbnb'}</div>
-                        <div className="auth-feature"><Plane size={16} /> {locale === 'tr' ? 'Harita üzerinde keşfet' : 'Explore on map'}</div>
+                        <div className="auth-feature"><Compass size={16} /> {locale === 'tr' ? 'Harita üzerinde keşfet' : 'Explore on map'}</div>
                     </div>
                 </motion.div>
 
