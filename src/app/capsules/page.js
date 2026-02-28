@@ -96,11 +96,24 @@ export default function CapsulesPage() {
         setLoading(true)
         try {
             let query = supabase.from('memory_capsules').select('*')
-            if (space) query = query.eq('space_id', space.id)
-            else if (user) query = query.or(`created_by.eq.${user.id},collaborators.cs.{${user.id}}`)
-            else { setLoading(false); return }
+            if (space) {
+                query = query.eq('space_id', space.id)
+            } else if (user) {
+                // Simple query first — collaborators column may not exist yet
+                query = query.eq('created_by', user.id)
+            } else { setLoading(false); return }
             const { data, error } = await query.order('reveal_date', { ascending: true })
-            if (error) console.warn('Capsules load error:', error.message)
+            if (error) {
+                console.warn('Capsules load error:', error.message)
+                // If error mentions collaborators column, retry without it
+                if (error.message?.includes('collaborators')) {
+                    const { data: fallbackData } = await supabase
+                        .from('memory_capsules').select('*')
+                        .eq('created_by', user.id)
+                        .order('reveal_date', { ascending: true })
+                    if (fallbackData) setCapsules(fallbackData)
+                }
+            }
             if (data) setCapsules(data)
         } catch (err) { console.error(err) }
         setLoading(false)
@@ -181,6 +194,7 @@ export default function CapsulesPage() {
                 })
                 if (error) {
                     console.error('Upload error:', error.message)
+                    toast.error(`Yüklenemedi: ${item.name} — ${error.message}`)
                     failCount++
                 } else {
                     const { data: { publicUrl } } = supabase.storage.from('pin-media').getPublicUrl(path)
@@ -188,11 +202,12 @@ export default function CapsulesPage() {
                 }
             } catch (err) {
                 console.error('Upload exception:', err)
+                toast.error(`Yüklenemedi: ${item.name}`)
                 failCount++
             }
         }
-        if (failCount > 0) {
-            toast.error(`${failCount} dosya yüklenemedi`)
+        if (urls.length > 0 && failCount === 0) {
+            toast.success(`${urls.length} dosya yüklendi ✅`)
         }
         setUploadingMedia(false)
         return urls
@@ -287,9 +302,9 @@ export default function CapsulesPage() {
         setTimeout(() => setConfetti(false), 3000)
         await loadCapsules()
         setRevealingId(null)
-        // Auto-open detail modal for freshly revealed capsule
-        const revealed = { ...capsule, is_revealed: true, revealed_at: new Date().toISOString() }
-        setSelectedCapsule(revealed)
+        // Open detail modal with fresh data from DB
+        const freshCapsule = capsules.find(c => c.id === capsule.id) || capsule
+        setSelectedCapsule({ ...freshCapsule, is_revealed: true, revealed_at: new Date().toISOString() })
         toast.success(t('capsule.readyToOpen'))
     }
 
@@ -850,8 +865,8 @@ export default function CapsulesPage() {
                                                 )}
                                             </div>
 
-                                            {/* Early Vote Section */}
-                                            {locked && capsule.allow_early_vote && hasCollabs && (
+                                            {/* Early Vote Section — show when capsule is locked and early vote is allowed */}
+                                            {locked && capsule.allow_early_vote === true && (
                                                 <div style={{
                                                     padding: '12px', borderRadius: 12,
                                                     background: 'var(--bg-tertiary)', marginBottom: 12,
@@ -879,7 +894,7 @@ export default function CapsulesPage() {
                                                     </p>
                                                     {userVote === undefined && (
                                                         <div style={{ display: 'flex', gap: 6 }}>
-                                                            <button onClick={() => voteEarlyOpen(capsule, true)}
+                                                            <button onClick={(e) => { e.stopPropagation(); voteEarlyOpen(capsule, true) }}
                                                                 style={{
                                                                     flex: 1, padding: '6px', borderRadius: 8, border: 'none',
                                                                     background: '#10B981', color: 'white', fontSize: '0.72rem',
@@ -887,7 +902,7 @@ export default function CapsulesPage() {
                                                                 }}>
                                                                 ✅ {t('capsule.voteYes')}
                                                             </button>
-                                                            <button onClick={() => voteEarlyOpen(capsule, false)}
+                                                            <button onClick={(e) => { e.stopPropagation(); voteEarlyOpen(capsule, false) }}
                                                                 style={{
                                                                     flex: 1, padding: '6px', borderRadius: 8, border: '1px solid var(--border-primary)',
                                                                     background: 'transparent', color: 'var(--text-tertiary)', fontSize: '0.72rem',
@@ -905,8 +920,8 @@ export default function CapsulesPage() {
                                                 </div>
                                             )}
 
-                                            {/* No early vote notice */}
-                                            {locked && !capsule.allow_early_vote && hasCollabs && (
+                                            {/* No early vote notice — only when explicitly disabled and has collaborators */}
+                                            {locked && capsule.allow_early_vote === false && hasCollabs && (
                                                 <p style={{
                                                     fontSize: '0.68rem', color: 'var(--text-tertiary)',
                                                     display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12,

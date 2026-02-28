@@ -42,3 +42,29 @@ CREATE POLICY "capsules_update" ON public.memory_capsules FOR UPDATE USING (
 -- DELETE: only creator
 CREATE POLICY "capsules_delete" ON public.memory_capsules FOR DELETE
   USING (created_by = auth.uid());
+
+-- ═══════════════════════════════════════════
+-- 4) Storage: Ensure pin-media bucket allows capsule uploads
+-- The pin-media bucket should already exist, but ensure policies allow capsule paths
+-- ═══════════════════════════════════════════
+
+-- Make sure pin-media bucket exists and is public
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('pin-media', 'pin-media', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Ensure upload policy exists for authenticated users
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'pin_media_storage_upload' AND tablename = 'objects') THEN
+    CREATE POLICY "pin_media_storage_upload" ON storage.objects FOR INSERT
+      WITH CHECK (bucket_id = 'pin-media' AND auth.role() = 'authenticated');
+  END IF;
+END $$;
+
+-- Ensure read policy exists (public read)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'pin_media_storage_read' AND tablename = 'objects') THEN
+    CREATE POLICY "pin_media_storage_read" ON storage.objects FOR SELECT
+      USING (bucket_id = 'pin-media');
+  END IF;
+END $$;
