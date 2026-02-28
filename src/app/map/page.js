@@ -249,18 +249,27 @@ export default function MapPage() {
         ISTANBUL_SPOTS.forEach(spot => {
             const el = document.createElement('div')
             el.className = 'community-spot-marker'
+            const TAG_COLORS = {
+                tarihi: '#C2410C', ikon: '#D97706', cami: '#059669', sokak: '#7C3AED',
+                renkli: '#DB2777', panorama: '#0284C7', deniz: '#0891B2', gece: '#4338CA',
+                doga: '#16A34A', orman: '#15803D', mimari: '#6D28D9', modern: '#0369A1',
+                sanat: '#9333EA', gizli: '#A21CAF', yemek: '#EA580C', gastro: '#D97706',
+                urban: '#64748B', bizans: '#B45309', saray: '#B91C1C', makro: '#059669',
+                atmospheric: '#4338CA',
+            }
+            const bgColor = TAG_COLORS[spot.tags?.[0]] || '#06B6D4'
             el.innerHTML = `
                 <div style="
-                    width: 22px; height: 22px;
-                    background: linear-gradient(135deg, #06B6D4, #8B5CF6);
+                    width: 28px; height: 28px;
+                    background: ${bgColor};
                     border-radius: 50%;
                     display: flex; align-items: center; justify-content: center;
-                    box-shadow: 0 2px 8px rgba(6,182,212,0.4);
-                    border: 1.5px solid rgba(255,255,255,0.7);
+                    box-shadow: 0 2px 8px ${bgColor}66;
+                    border: 2px solid rgba(255,255,255,0.85);
                     cursor: pointer;
                     transition: transform 150ms;
                 ">
-                    <span style="font-size: 10px;">📸</span>
+                    <span style="font-size: 13px;">${spot.emoji || '📸'}</span>
                 </div>
             `
             el.addEventListener('mouseenter', () => {
