@@ -165,19 +165,34 @@ export default function CapsulesPage() {
         }
     }
 
-    // ── Upload media to Supabase Storage ──
+    // ── Upload media to Supabase Storage (uses existing 'pin-media' bucket) ──
     const uploadMediaFiles = async () => {
         if (mediaPreview.length === 0) return []
         setUploadingMedia(true)
         const urls = []
+        let failCount = 0
         for (const item of mediaPreview) {
-            const ext = item.name.split('.').pop()
-            const path = `capsules/${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
-            const { error } = await supabase.storage.from('media').upload(path, item.file)
-            if (!error) {
-                const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
-                urls.push(publicUrl)
+            try {
+                const ext = item.name.split('.').pop()
+                const path = `capsules/${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+                const { error } = await supabase.storage.from('pin-media').upload(path, item.file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                })
+                if (error) {
+                    console.error('Upload error:', error.message)
+                    failCount++
+                } else {
+                    const { data: { publicUrl } } = supabase.storage.from('pin-media').getPublicUrl(path)
+                    urls.push(publicUrl)
+                }
+            } catch (err) {
+                console.error('Upload exception:', err)
+                failCount++
             }
+        }
+        if (failCount > 0) {
+            toast.error(`${failCount} dosya yüklenemedi`)
         }
         setUploadingMedia(false)
         return urls
