@@ -5,7 +5,7 @@ import { translations } from '@/lib/i18n/translations'
 
 const LanguageContext = createContext({})
 
-const STORAGE_KEY = 'mapmemo-lang'
+const STORAGE_KEY = 'umae-lang'
 
 export function LanguageProvider({ children }) {
     const [locale, setLocaleState] = useState('en')

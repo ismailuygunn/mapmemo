@@ -17,14 +17,14 @@ export default function Sidebar() {
 
     // Persist collapse state
     useEffect(() => {
-        const saved = localStorage.getItem('mapmemo-sidebar')
+        const saved = localStorage.getItem('umae-sidebar')
         if (saved === 'collapsed') setCollapsed(true)
     }, [])
 
     const toggleCollapse = () => {
         const next = !collapsed
         setCollapsed(next)
-        localStorage.setItem('mapmemo-sidebar', next ? 'collapsed' : 'expanded')
+        localStorage.setItem('umae-sidebar', next ? 'collapsed' : 'expanded')
     }
 
     const navItems = [
@@ -94,7 +94,7 @@ export default function Sidebar() {
                                     exit={{ opacity: 0, width: 0 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    NAVISO
+                                    UMAE
                                 </motion.span>
                             )}
                         </AnimatePresence>

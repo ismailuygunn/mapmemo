@@ -529,7 +529,7 @@ export default function SpacesPage() {
                                                             onClick={() => {
                                                                 const link = `${window.location.origin}/invite/${selectedSpace.invite_token}`
                                                                 navigator.share({
-                                                                    title: `${selectedSpace.name} - MapMemo`,
+                                                                    title: `${selectedSpace.name} - UMAE`,
                                                                     text: t('Bu gruba katıl!', 'Join this group!'),
                                                                     url: link,
                                                                 }).catch(() => { })

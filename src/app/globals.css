@@ -1,24 +1,24 @@
 /* ============================================
-   MapMemo — Design System v2 (Premium)
+   UMAE — Design System (Premium Corporate)
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ---------- CSS Custom Properties ---------- */
 :root {
-  /* Primary — Vibrant Indigo → Violet */
-  --primary-1: #6366F1;
-  --primary-2: #8B5CF6;
-  --primary-1-hover: #4F46E5;
-  --primary-2-hover: #7C3AED;
-  --primary-glow: rgba(99, 102, 241, 0.35);
+  /* Primary — Deep Navy + Gold */
+  --primary-1: #0F2847;
+  --primary-2: #D4A853;
+  --primary-1-hover: #0A1E3A;
+  --primary-2-hover: #C49A45;
+  --primary-glow: rgba(15, 40, 71, 0.25);
 
   /* Accents — Rich & Harmonious */
-  --accent-lavender: #C4B5FD;
-  --accent-sky: #22D3EE;
-  --accent-rose: #F472B6;
-  --accent-gold: #FBBF24;
-  --accent-emerald: #34D399;
+  --accent-lavender: #B8C5D4;
+  --accent-sky: #3B9EBF;
+  --accent-rose: #E87F9E;
+  --accent-gold: #D4A853;
+  --accent-emerald: #2EAA7B;
   --accent-coral: #FB7185;
 
   /* Neutral — Clean Modern */
@@ -43,13 +43,13 @@
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-bg-strong: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-shadow: 0 8px 32px rgba(99, 102, 241, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --glass-shadow: 0 8px 32px rgba(15, 40, 71, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
 
   /* Shadows — Colored */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(99, 102, 241, 0.03);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(99, 102, 241, 0.04);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(99, 102, 241, 0.05);
-  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(99, 102, 241, 0.06);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(15, 40, 71, 0.03);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(15, 40, 71, 0.04);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(15, 40, 71, 0.05);
+  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(15, 40, 71, 0.06);
 
   /* Spacing */
   --space-1: 4px;
@@ -88,18 +88,18 @@
 
 /* ---------- Dark Theme ---------- */
 [data-theme="dark"] {
-  --primary-1: #818CF8;
-  --primary-2: #A78BFA;
-  --primary-1-hover: #6366F1;
-  --primary-2-hover: #8B5CF6;
-  --primary-glow: rgba(129, 140, 248, 0.25);
+  --primary-1: #4A7FBF;
+  --primary-2: #D4A853;
+  --primary-1-hover: #3B6BA8;
+  --primary-2-hover: #E0B964;
+  --primary-glow: rgba(74, 127, 191, 0.25);
 
-  --accent-lavender: #7C3AED;
-  --accent-sky: #22D3EE;
-  --accent-rose: #F472B6;
-  --accent-gold: #FBBF24;
-  --accent-emerald: #34D399;
-  --accent-coral: #FB7185;
+  --accent-lavender: #3B6BA8;
+  --accent-sky: #3B9EBF;
+  --accent-rose: #E87F9E;
+  --accent-gold: #D4A853;
+  --accent-emerald: #2EAA7B;
+  --accent-coral: #E87F6A;
 
   --bg-primary: #06080F;
   --bg-secondary: #0D1117;

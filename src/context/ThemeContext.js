@@ -8,14 +8,14 @@ export function ThemeProvider({ children }) {
     const [theme, setThemeState] = useState('dark')
 
     useEffect(() => {
-        const saved = localStorage.getItem('mapmemo-theme') || 'dark'
+        const saved = localStorage.getItem('umae-theme') || 'dark'
         setThemeState(saved)
         document.documentElement.setAttribute('data-theme', saved)
     }, [])
 
     const setTheme = (newTheme) => {
         setThemeState(newTheme)
-        localStorage.setItem('mapmemo-theme', newTheme)
+        localStorage.setItem('umae-theme', newTheme)
         document.documentElement.setAttribute('data-theme', newTheme)
     }
 

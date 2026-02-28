@@ -6,8 +6,8 @@ import { LanguageProvider } from '@/context/LanguageContext'
 import { ToastProvider } from '@/context/ToastContext'
 
 export const metadata = {
-  title: 'NAVISO — Travel Together',
-  description: 'Pin your travel memories together. Explore, plan, and remember every moment.',
+  title: 'UMAE — Explore Together',
+  description: 'Your premium travel companion. Explore, plan, and share every journey.',
   manifest: '/manifest.json',
 }
 
@@ -15,7 +15,7 @@ export const viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#4F46E5',
+  themeColor: '#0F2847',
 }
 
 export default function RootLayout({ children }) {

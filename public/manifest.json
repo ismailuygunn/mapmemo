@@ -1,19 +1,14 @@
 {
-  "name": "MapMemo",
-  "short_name": "MapMemo",
-  "description": "Pin your travel memories together",
+  "name": "UMAE",
+  "short_name": "UMAE",
+  "description": "Your premium travel companion. Explore, plan, and share every journey.",
   "start_url": "/map",
   "display": "standalone",
-  "background_color": "#0B1120",
-  "theme_color": "#4F46E5",
+  "background_color": "#0A1628",
+  "theme_color": "#0F2847",
   "icons": [
     {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
+      "src": "/umae-logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }

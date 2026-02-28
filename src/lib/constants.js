@@ -1,4 +1,4 @@
-// MapMemo – constants (i18n-ready, labels via translation keys)
+// UMAE – constants (i18n-ready, labels via translation keys)
 
 // ============================
 // PIN TYPES & STATUSES
