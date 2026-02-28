@@ -70,6 +70,27 @@ const SCENARIOS = {
         searchTerms: ['spa hamam', 'kafe rahat', 'park yürüyüş', 'sinema', 'yoga meditasyon', 'tatlıcı', 'hayvan kafe kedikafe'],
         mandatoryExtras: ['selfCareChecklist', 'moodPlaylist'],
     },
+    graduation: {
+        persona: 'Sen mezuniyet kutlaması planlama konusunda uzman bir organizatörsün. Akademik başarıyı kutlayan, duygusal ve eğlenceli planlar üretirsin.',
+        tone: 'Kutlama, gurur, duygusal ama eğlenceli',
+        focus: 'Kutlama mekanları, grup yemekleri, fotoğraf noktaları, hediye fikirleri, aile buluşması',
+        searchTerms: ['restoran grup kutlama', 'rooftop bar', 'pasta pastane', 'kafe özel etkinlik', 'meyhane', 'brunch mekan'],
+        mandatoryExtras: ['surpriseIdeas', 'messageDrafts', 'giftSuggestions'],
+    },
+    proposal: {
+        persona: 'Sen evlilik teklifi planlama konusunda dünyanın en romantik ve detaycı uzmanısın. Her saniye mükemmel olmalı, duygusal zirve noktası yaratmalısın.',
+        tone: 'Ultra romantik, duygusal, sinematik, nefes kesici',
+        focus: 'Manzara noktaları, yüzük sunumu, fotoğrafçı koordinasyonu, romantik mekan, çiçek düzeni, müzik',
+        searchTerms: ['romantik restoran manzara', 'rooftop bar', 'çiçekçi düğün', 'fotoğrafçı profesyonel', 'deniz kenarı mekan', 'butik otel'],
+        mandatoryExtras: ['surpriseIdeas', 'messageDrafts'],
+    },
+    business: {
+        persona: 'Sen profesyonel iş toplantıları ve networking etkinlikleri planlama konusunda deneyimli bir danışmansın. Etkileyici, kurumsal ama samimi planlar üretirsin.',
+        tone: 'Profesyonel, güven verici, şık, etkileyici',
+        focus: 'Şık restoranlar, toplantı odaları, networking mekanları, iş yemeği protokolü, menü seçimi',
+        searchTerms: ['iş yemeği restoran', 'fine dining', 'otel toplantı', 'şık kafe', 'steakhouse', 'lounge bar'],
+        mandatoryExtras: ['messageDrafts'],
+    },
 }
 
 export async function POST(request) {
@@ -227,6 +248,9 @@ ${scenario === 'birthday' ? '   - Sürpriz koordinasyonu: kim ne yapar, zamanlam
 ${scenario === 'friends' ? '   - HERKESIN BİLMEDİĞİ ama AŞIRI EĞLENCELİ hidden gem mekanlar\n   - Grup challenge/yarışma fikirleri\n   - "Bu gece efsane olacak" hissini yaratacak geçişler\n   - Spontan sürpriz anlar' : ''}
 ${scenario === 'apology' ? '   - Zamanlama stratejisi: ne zaman ne söylenir\n   - Beden dili ve ton ipuçları\n   - Küçük ama anlamlı jestler\n   - "Affedilme anı" nasıl yaratılır' : ''}
 ${scenario === 'mood' ? '   - Endorfin yükselten aktiviteler\n   - Comfort food sıralaması\n   - Küçük mutluluklar: köpek sevme, güneş batımı izleme\n   - "Kendine gel" ritüelleri' : ''}
+${scenario === 'graduation' ? '   - Kutlama mekanı seçimi: grup yemek, rooftop\n   - Diploma/kep fotoğraf noktaları\n   - Aile ve arkadaş grubu koordinasyonu\n   - Anlamlı hediye sunumu anı' : ''}
+${scenario === 'proposal' ? '   - Yüzük sunumu anı: nerede, nasıl, ışıklandırma\n   - Gizli fotoğrafçı koordinasyonu\n   - Backup plan: hava kötüyse ne olur\n   - Aile/arkadaş sürprizi koordinasyonu' : ''}
+${scenario === 'business' ? '   - Restoran/mekan seçimi: sessiz, şık, profesyonel\n   - Masa pozisyonu ve oturma düzeni\n   - İş yemeği protokolü: sipariş, ödeme\n   - Small talk konuları ve networking stratejisi' : ''}
 
 6. **B PLANI**: Her şey ters giderse alternatif senaryo hazırla.
 

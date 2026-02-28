@@ -12,7 +12,8 @@ import {
     Star, Navigation, Lightbulb, Gift, MessageCircle, CloudRain,
     Music, Shirt, Heart, Cake, Flame, Frown, Rainbow, ArrowLeft,
     Copy, Check, ChevronDown, ChevronUp, Sparkles, AlertTriangle,
-    Target, Trophy, Printer, Share2, Download, Save, Trash2, CalendarDays
+    Target, Trophy, Printer, Share2, Download, Save, Trash2, CalendarDays,
+    GraduationCap, Briefcase, Diamond, ExternalLink, Eye
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
@@ -79,6 +80,42 @@ const SCENARIOS = [
         vibe: 'cozy',
         image: '/images/sos/mood.png',
     },
+    {
+        key: 'graduation',
+        emoji: '🎓',
+        title: 'Mezuniyet Kutlaması',
+        subtitle: 'Diplomayı hak eden biri var!',
+        description: 'Kutlama mekanları, hediye fikirleri, grup aktiviteleri',
+        color: '#0F2847',
+        gradient: 'linear-gradient(135deg, #0F2847 0%, #D4A853 100%)',
+        icon: GraduationCap,
+        vibe: 'celebration',
+        image: '/images/sos/friends.png',
+    },
+    {
+        key: 'proposal',
+        emoji: '💍',
+        title: 'Evlilik Teklifi',
+        subtitle: 'Hayatının en önemli sorusu',
+        description: 'Mükemmel mekan, zamanlama, yüzük, anı',
+        color: '#D4A853',
+        gradient: 'linear-gradient(135deg, #D4A853 0%, #0F2847 100%)',
+        icon: Diamond,
+        vibe: 'romantic',
+        image: '/images/sos/anniversary.png',
+    },
+    {
+        key: 'business',
+        emoji: '🏢',
+        title: 'İş Toplantısı',
+        subtitle: 'Önemli bir buluşma geliyor',
+        description: 'Profesyonel mekan, menü, etkileme stratejisi',
+        color: '#1E293B',
+        gradient: 'linear-gradient(135deg, #1E293B 0%, #475569 100%)',
+        icon: Briefcase,
+        vibe: 'professional',
+        image: '/images/sos/mood.png',
+    },
 ]
 
 const CITIES = [
@@ -101,7 +138,7 @@ const PEOPLE_OPTIONS = [2, 3, 4, 6, 8]
 export default function SOSPlanPage() {
     const { user } = useAuth()
     const { space, createSpace } = useSpace()
-    const { locale } = useLanguage()
+    const { locale, t } = useLanguage()
     const { toast } = useToast()
     const supabase = createClient()
     const printRef = useRef(null)
@@ -258,6 +295,9 @@ export default function SOSPlanPage() {
         friends: ['🔥 Gizli mekanlar taranıyor...', '🎯 Çılgın aktiviteler bulunuyor...', '🍻 Efsane gece planlanıyor...'],
         apology: ['💐 Çiçekçiler kontrol ediliyor...', '💌 Mesaj taslakları yazılıyor...', '🕊️ Gönül alma stratejisi hazırlanıyor...'],
         mood: ['🌈 İyi his mekanları aranıyor...', '☕ Comfort food rotası çiziliyor...', '🧘 Moral planı oluşturuluyor...'],
+        graduation: ['🎓 Kutlama mekanları aranıyor...', '🥂 Kutlama menüsü hazırlanıyor...', '📸 Anı noktaları belirleniyor...'],
+        proposal: ['💍 Romantik lokasyonlar taranıyor...', '🌹 Mükemmel an planlanıyor...', '💎 Her detay düşünülüyor...'],
+        business: ['🏢 Profesyonel mekanlar aranıyor...', '🍽️ Menü alternatifleri sunuluyor...', '📋 Toplantı stratejisi hazırlanıyor...'],
     }
 
     useEffect(() => {
@@ -306,6 +346,21 @@ export default function SOSPlanPage() {
         setSelectedScenario(null); setPlan(null); setCity(''); setCustomCity('')
         setPeopleCount(2); setBudget('mid'); setExtraNotes('')
         setExpandedStep(null); setShowExtras({})
+    }
+
+    // ── SHARE ──
+    const sharePlan = async () => {
+        if (!plan) return
+        const sc = selectedScenario
+        const text = `🚨 SOS Plan — ${plan.planTitle}\n\n📍 ${city || customCity}\n👥 ${peopleCount} kişi\n\n${(plan.steps || []).map(s => `${s.time} ${s.emoji} ${s.title || s.action} — ${s.placeName}`).join('\n')}\n\n— UMAE SOS Plan`
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: `SOS Plan — ${plan.planTitle}`, text })
+            } catch { /* cancelled */ }
+        } else {
+            await navigator.clipboard.writeText(text)
+            toast.success(t('sos.copied'))
+        }
     }
 
     // ── PRINT / EXPORT ──
@@ -389,26 +444,43 @@ export default function SOSPlanPage() {
                 <div className="page">
                     <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }} ref={printRef}>
 
-                        {/* ═══ HEADER ═══ */}
+                        {/* ═══ UMAE BRANDED HERO ═══ */}
                         <div style={{ textAlign: 'center', marginBottom: 32 }}>
                             {plan && (
                                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
                                     <button onClick={resetAll} style={pillBtnStyle}>
-                                        <ArrowLeft size={14} /> Yeni Plan
+                                        <ArrowLeft size={14} /> {t('sos.newPlan')}
                                     </button>
-                                    <button onClick={handlePrint} style={{ ...pillBtnStyle, background: 'var(--accent)', color: 'white', border: 'none' }}>
-                                        <Printer size={14} /> Çıktı Al
+                                    <button onClick={handlePrint} style={{ ...pillBtnStyle, background: '#0F2847', color: '#D4A853', border: 'none' }}>
+                                        <Printer size={14} /> {t('sos.print')}
+                                    </button>
+                                    <button onClick={sharePlan} style={{ ...pillBtnStyle, background: '#D4A853', color: '#0F2847', border: 'none' }}>
+                                        <Share2 size={14} /> {t('sos.share')}
                                     </button>
                                 </div>
                             )}
-                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                                <div style={{ fontSize: '2.5rem', marginBottom: 4 }}>🚨</div>
-                                <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 6, background: 'linear-gradient(135deg, #EF4444, #8B5CF6, #06B6D4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                                    SOS Plan
-                                </h1>
-                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
-                                    Son dakika mı? AI sana 1 dakikada A'dan Z'ye plan çıkarsın.
-                                </p>
+                            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+                                style={{
+                                    borderRadius: 24, overflow: 'hidden', position: 'relative', minHeight: 140,
+                                    background: 'linear-gradient(135deg, #0F2847 0%, #1A3A5C 50%, #D4A853 100%)',
+                                    padding: '28px 24px',
+                                }}>
+                                <motion.span animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+                                    transition={{ repeat: Infinity, duration: 4 }}
+                                    style={{ position: 'absolute', top: 16, right: 40, fontSize: '2rem', opacity: 0.2 }}>🚨</motion.span>
+                                <motion.span animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 3, delay: 0.5 }}
+                                    style={{ position: 'absolute', bottom: 12, right: 100, fontSize: '1.4rem', opacity: 0.12 }}>⚡</motion.span>
+                                <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 5 }}
+                                    style={{ position: 'absolute', top: 20, right: 160, fontSize: '1.2rem', opacity: 0.1 }}>🎯</motion.span>
+                                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <Image src="/umae-icon.png" alt="UMAE" width={44} height={44} style={{ borderRadius: 12, marginBottom: 10 }} />
+                                    <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, marginBottom: 6, letterSpacing: '-0.02em' }}>
+                                        🚨 {t('sos.title')}
+                                    </h1>
+                                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.88rem', maxWidth: 400 }}>
+                                        {t('sos.subtitle')}
+                                    </p>
+                                </div>
                             </motion.div>
                         </div>
 
@@ -727,7 +799,19 @@ export default function SOSPlanPage() {
                                                                         </div>
                                                                     )}
                                                                     {step.transport && <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}><Navigation size={12} /> {step.transport}</div>}
-                                                                    {step.alternative && <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-secondary)', fontSize: '0.78rem' }}><strong>🔄 Alternatif:</strong> {step.alternative.name} — {step.alternative.reason}</div>}
+                                                                    {step.placeName && (
+                                                                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(step.placeName + ' ' + (city || customCity))}`}
+                                                                            target="_blank" rel="noopener noreferrer"
+                                                                            style={{
+                                                                                display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8,
+                                                                                padding: '6px 12px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 600,
+                                                                                background: `${scenario.color}15`, color: scenario.color,
+                                                                                textDecoration: 'none', border: `1px solid ${scenario.color}30`,
+                                                                            }}>
+                                                                            <ExternalLink size={12} /> {t('sos.mapsOpen')}
+                                                                        </a>
+                                                                    )}
+                                                                    {step.alternative && <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-secondary)', fontSize: '0.78rem' }}><strong>🔄 {t('sos.alternative')}</strong> {step.alternative.name} — {step.alternative.reason}</div>}
                                                                 </div>
                                                             </motion.div>
                                                         )}
