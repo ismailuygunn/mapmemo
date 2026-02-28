@@ -11,7 +11,7 @@ import {
     Users, Plus, Loader2, UserPlus, Copy, Check, Crown, Shield,
     ArrowLeft, Plane, Calendar, Settings, Trash2, LogOut, Edit3,
     MapPin, Link2, RefreshCw, ChevronRight, Star, Eye, Pencil, X,
-    Heart, Share2
+    Heart, Share2, MessageCircle, BarChart2, Vote, Send
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/context/ToastContext'
@@ -48,6 +48,11 @@ export default function SpacesPage() {
     const [showCreate, setShowCreate] = useState(false)
     const [newName, setNewName] = useState('')
     const [newGroupType, setNewGroupType] = useState(null)
+    // Polls state
+    const [polls, setPolls] = useState([])
+    const [showCreatePoll, setShowCreatePoll] = useState(false)
+    const [pollQuestion, setPollQuestion] = useState('')
+    const [pollOptions, setPollOptions] = useState(['', ''])
     const [joinToken, setJoinToken] = useState('')
     const [createMode, setCreateMode] = useState('type') // 'type' | 'name' | 'join'
     const [creating, setCreating] = useState(false)
@@ -385,6 +390,8 @@ export default function SpacesPage() {
                                 <div className="gh-tabs">
                                     {[
                                         { key: 'trips', icon: <Plane size={15} />, label: t('Seyahatler', 'Trips') },
+                                        { key: 'feed', icon: <MessageCircle size={15} />, label: t('Akış', 'Feed') },
+                                        { key: 'polls', icon: <BarChart2 size={15} />, label: t('Oylama', 'Polls') },
                                         { key: 'members', icon: <Users size={15} />, label: t('Üyeler', 'Members') },
                                         { key: 'settings', icon: <Settings size={15} />, label: t('Ayarlar', 'Settings') },
                                     ].map(tab => (
@@ -448,6 +455,228 @@ export default function SpacesPage() {
                                                 ))}
                                             </div>
                                         )}
+                                    </motion.div>
+                                )}
+
+                                {/* ── MEMBERS TAB ── */}
+                                {/* ── FEED TAB ── */}
+                                {detailTab === 'feed' && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                        <div style={{ padding: '16px 0' }}>
+                                            <h3 style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>
+                                                📋 {t('Ekip Aktivitesi', 'Team Activity')}
+                                            </h3>
+                                            {spaceTrips.length === 0 && spaceMembers.length <= 1 ? (
+                                                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
+                                                    <MessageCircle size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
+                                                    <p style={{ fontSize: '0.85rem' }}>{t('Henüz aktivite yok', 'No activity yet')}</p>
+                                                    <p style={{ fontSize: '0.78rem', marginTop: 4 }}>{t('Ekibinde plan oluştur veya pin ekle!', 'Create a plan or add pins!')}</p>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                    {spaceTrips.slice(0, 10).map((trip, i) => (
+                                                        <motion.div key={trip.id}
+                                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: i * 0.05 }}
+                                                            style={{
+                                                                display: 'flex', gap: 12, alignItems: 'flex-start',
+                                                                padding: 14, borderRadius: 14,
+                                                                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                            }}>
+                                                            <div style={{
+                                                                width: 36, height: 36, borderRadius: 10,
+                                                                background: 'linear-gradient(135deg, var(--primary-1), var(--primary-2))',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                fontSize: '0.9rem', flexShrink: 0,
+                                                            }}>
+                                                                ✈️
+                                                            </div>
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                                <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                                                                    {trip.title || trip.city || t('Yeni Seyahat', 'New Trip')}
+                                                                </p>
+                                                                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+                                                                    {trip.city && `📍 ${trip.city}`}
+                                                                    {trip.created_at && ` · ${new Date(trip.created_at).toLocaleDateString('tr-TR')}`}
+                                                                </p>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                    {spaceMembers.map((m, i) => (
+                                                        <motion.div key={`m-${m.user_id}`}
+                                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: (spaceTrips.length + i) * 0.05 }}
+                                                            style={{
+                                                                display: 'flex', gap: 12, alignItems: 'center',
+                                                                padding: 14, borderRadius: 14,
+                                                                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                            }}>
+                                                            <div style={{
+                                                                width: 36, height: 36, borderRadius: 10,
+                                                                background: 'rgba(16,185,129,0.12)',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            }}>
+                                                                👤
+                                                            </div>
+                                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
+                                                                <strong>{m.display_name || m.email?.split('@')[0]}</strong>
+                                                                <span style={{ color: 'var(--text-tertiary)' }}> {t('ekibe katıldı', 'joined the team')}</span>
+                                                            </p>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {/* ── POLLS TAB ── */}
+                                {detailTab === 'polls' && (
+                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                        <div style={{ padding: '16px 0' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                                                    🗳️ {t('Ekip Oylamaları', 'Team Polls')}
+                                                </h3>
+                                                <button className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.78rem' }}
+                                                    onClick={() => setShowCreatePoll(!showCreatePoll)}>
+                                                    <Plus size={14} /> {t('Yeni', 'New')}
+                                                </button>
+                                            </div>
+
+                                            {/* Create Poll Form */}
+                                            <AnimatePresence>
+                                                {showCreatePoll && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                                                        style={{
+                                                            padding: 16, borderRadius: 14, marginBottom: 16,
+                                                            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                        }}>
+                                                        <input className="input" placeholder={t('Soru... (örn: Nereye gidelim?)', 'Question... (e.g. Where should we go?)')}
+                                                            value={pollQuestion} onChange={e => setPollQuestion(e.target.value)}
+                                                            style={{ marginBottom: 10, fontSize: '0.85rem' }} />
+                                                        {pollOptions.map((opt, i) => (
+                                                            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                                                                <input className="input" placeholder={`${t('Seçenek', 'Option')} ${i + 1}`}
+                                                                    value={opt}
+                                                                    onChange={e => {
+                                                                        const newOpts = [...pollOptions]
+                                                                        newOpts[i] = e.target.value
+                                                                        setPollOptions(newOpts)
+                                                                    }}
+                                                                    style={{ flex: 1, fontSize: '0.82rem' }} />
+                                                                {pollOptions.length > 2 && (
+                                                                    <button className="btn btn-ghost" style={{ padding: '4px 8px', color: 'var(--error)' }}
+                                                                        onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}>
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                                            {pollOptions.length < 6 && (
+                                                                <button className="btn btn-ghost" style={{ fontSize: '0.78rem' }}
+                                                                    onClick={() => setPollOptions([...pollOptions, ''])}>
+                                                                    <Plus size={14} /> {t('Seçenek Ekle', 'Add Option')}
+                                                                </button>
+                                                            )}
+                                                            <button className="btn btn-primary" style={{ marginLeft: 'auto', fontSize: '0.78rem', padding: '6px 16px' }}
+                                                                disabled={!pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
+                                                                onClick={() => {
+                                                                    const newPoll = {
+                                                                        id: Date.now(),
+                                                                        question: pollQuestion,
+                                                                        options: pollOptions.filter(o => o.trim()).map(o => ({ text: o, votes: 0, voters: [] })),
+                                                                        created_at: new Date().toISOString(),
+                                                                        total_votes: 0,
+                                                                    }
+                                                                    setPolls([newPoll, ...polls])
+                                                                    setPollQuestion('')
+                                                                    setPollOptions(['', ''])
+                                                                    setShowCreatePoll(false)
+                                                                    toast.success(t('Oylama oluşturuldu! 🗳️', 'Poll created! 🗳️'))
+                                                                }}>
+                                                                <Send size={14} /> {t('Oluştur', 'Create')}
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+
+                                            {/* Poll Cards */}
+                                            {polls.length === 0 ? (
+                                                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
+                                                    <BarChart2 size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
+                                                    <p style={{ fontSize: '0.85rem' }}>{t('Henüz oylama yok', 'No polls yet')}</p>
+                                                    <p style={{ fontSize: '0.78rem', marginTop: 4 }}>{t('"Nereye gidelim?" gibi hızlı ankletler oluştur!', 'Create quick polls like "Where should we go?"')}</p>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                                    {polls.map(poll => (
+                                                        <motion.div key={poll.id}
+                                                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                                            style={{
+                                                                padding: 18, borderRadius: 16,
+                                                                background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                                                            }}>
+                                                            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 14, color: 'var(--text-primary)' }}>
+                                                                🗳️ {poll.question}
+                                                            </h4>
+                                                            {poll.options.map((opt, oi) => {
+                                                                const pct = poll.total_votes > 0 ? Math.round((opt.votes / poll.total_votes) * 100) : 0
+                                                                const voted = opt.voters?.includes(user?.id)
+                                                                return (
+                                                                    <button key={oi}
+                                                                        onClick={() => {
+                                                                            if (voted) return
+                                                                            const updated = polls.map(p => {
+                                                                                if (p.id !== poll.id) return p
+                                                                                const newOpts = p.options.map((o, j) => {
+                                                                                    if (j !== oi) return o
+                                                                                    return { ...o, votes: o.votes + 1, voters: [...(o.voters || []), user?.id] }
+                                                                                })
+                                                                                return { ...p, options: newOpts, total_votes: p.total_votes + 1 }
+                                                                            })
+                                                                            setPolls(updated)
+                                                                        }}
+                                                                        style={{
+                                                                            width: '100%', position: 'relative', overflow: 'hidden',
+                                                                            padding: '10px 14px', marginBottom: 8, borderRadius: 10,
+                                                                            background: voted ? 'rgba(66,133,244,0.08)' : 'var(--bg-primary)',
+                                                                            border: voted ? '2px solid var(--primary-2)' : '1px solid var(--border)',
+                                                                            cursor: voted ? 'default' : 'pointer',
+                                                                            textAlign: 'left', fontSize: '0.82rem',
+                                                                            color: 'var(--text-primary)', fontWeight: voted ? 600 : 400,
+                                                                            transition: 'all 0.15s ease',
+                                                                        }}>
+                                                                        {/* Progress bar */}
+                                                                        {poll.total_votes > 0 && (
+                                                                            <div style={{
+                                                                                position: 'absolute', left: 0, top: 0, bottom: 0,
+                                                                                width: `${pct}%`, background: 'rgba(66,133,244,0.1)',
+                                                                                borderRadius: 10, transition: 'width 0.3s ease',
+                                                                            }} />
+                                                                        )}
+                                                                        <span style={{ position: 'relative', zIndex: 1 }}>
+                                                                            {opt.text}
+                                                                            {poll.total_votes > 0 && (
+                                                                                <span style={{ float: 'right', color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                                                                                    {pct}% ({opt.votes})
+                                                                                </span>
+                                                                            )}
+                                                                        </span>
+                                                                    </button>
+                                                                )
+                                                            })}
+                                                            <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: 8 }}>
+                                                                {poll.total_votes} {t('oy', 'votes')} · {new Date(poll.created_at).toLocaleDateString('tr-TR')}
+                                                            </p>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </motion.div>
                                 )}
 
