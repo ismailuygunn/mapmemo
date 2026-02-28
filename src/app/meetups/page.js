@@ -122,6 +122,30 @@ export default function SOSPlanPage() {
     const [savedPlanId, setSavedPlanId] = useState(null)
     const [savedPlans, setSavedPlans] = useState([])
     const [loadingSaved, setLoadingSaved] = useState(true)
+    const [userSpaces, setUserSpaces] = useState([])
+    const [selectedSpaceId, setSelectedSpaceId] = useState(null)
+    const [creatingGroup, setCreatingGroup] = useState(false)
+    const [newGroupName, setNewGroupName] = useState('')
+
+    // Load user's groups/spaces
+    useEffect(() => {
+        if (!user) return
+        const loadSpaces = async () => {
+            try {
+                const { data: memberships } = await supabase
+                    .from('space_members').select('space_id, role').eq('user_id', user.id)
+                if (memberships && memberships.length > 0) {
+                    const { data: spacesData } = await supabase
+                        .from('spaces').select('id, name').in('id', memberships.map(m => m.space_id))
+                    if (spacesData && spacesData.length > 0) {
+                        setUserSpaces(spacesData)
+                        setSelectedSpaceId(space?.id || spacesData[0]?.id)
+                    }
+                }
+            } catch (e) { console.warn('SOS spaces load error:', e) }
+        }
+        loadSpaces()
+    }, [user])
 
     // Load previously saved SOS plans
     useEffect(() => {
@@ -141,15 +165,35 @@ export default function SOSPlanPage() {
         loadSaved()
     }, [user, space])
 
+    // Create new group inline
+    const createGroupInline = async () => {
+        if (!newGroupName.trim()) return
+        setCreatingGroup(true)
+        try {
+            const newSpace = await createSpace(newGroupName.trim())
+            setUserSpaces(prev => [...prev, { id: newSpace.id, name: newSpace.name }])
+            setSelectedSpaceId(newSpace.id)
+            setNewGroupName('')
+            toast.success('✅ Grup oluşturuldu!')
+        } catch (e) { toast.error(e.message) }
+        setCreatingGroup(false)
+    }
+
     // Save SOS plan to database
     const savePlan = async () => {
         if (!plan || !selectedScenario) return
         setSaving(true)
         try {
-            let targetSpaceId = space?.id
+            let targetSpaceId = selectedSpaceId
             if (!targetSpaceId) {
-                const newSpace = await createSpace('Seyahat Planlarım')
-                targetSpaceId = newSpace.id
+                if (space?.id) {
+                    targetSpaceId = space.id
+                } else {
+                    const newSpace = await createSpace('Seyahat Planlarım')
+                    targetSpaceId = newSpace.id
+                    setUserSpaces(prev => [...prev, { id: newSpace.id, name: newSpace.name }])
+                    setSelectedSpaceId(newSpace.id)
+                }
             }
             const finalCity = city || customCity
             const { data: trip, error } = await supabase
@@ -766,7 +810,30 @@ export default function SOSPlanPage() {
                                     )}
                                 </div>
 
-                                {/* ── ACTION BUTTONS ── */}
+                                {/* ── GROUP SELECTOR + ACTION BUTTONS ── */}
+                                <div style={{ padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '1px solid var(--border)', marginBottom: 8 }}>
+                                    <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <Users size={14} /> Gruba Kaydet
+                                    </div>
+                                    {userSpaces.length > 0 ? (
+                                        <select value={selectedSpaceId || ''} onChange={e => setSelectedSpaceId(e.target.value)}
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
+                                            {userSpaces.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                        </select>
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: 8 }}>
+                                            <input value={newGroupName} onChange={e => setNewGroupName(e.target.value)}
+                                                placeholder="Grup adı gir..."
+                                                onKeyDown={e => e.key === 'Enter' && createGroupInline()}
+                                                style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                                            <button onClick={createGroupInline} disabled={creatingGroup || !newGroupName.trim()}
+                                                style={{ padding: '10px 16px', borderRadius: 10, background: scenario.gradient, border: 'none', color: 'white', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                                {creatingGroup ? <Loader2 size={14} className="spin" /> : '+ Oluştur'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                                     <button onClick={savePlan} disabled={saving || !!savedPlanId}
                                         style={{
