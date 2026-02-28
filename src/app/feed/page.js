@@ -198,7 +198,7 @@ export default function FeedPage() {
                             marginBottom: 20, padding: '16px 0',
                         }}>
                         <div>
-                            <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0, background: 'linear-gradient(135deg, #4F46E5, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0, background: 'linear-gradient(135deg, #0F2847, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                 Feed
                             </h1>
                             <p style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
@@ -209,7 +209,7 @@ export default function FeedPage() {
                             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={() => setShowCheckin(true)}
                             style={{
-                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                 color: '#fff', border: 'none', borderRadius: 14,
                                 padding: '10px 18px', cursor: 'pointer', fontWeight: 700,
                                 fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6,
@@ -236,7 +236,7 @@ export default function FeedPage() {
                                     }}>
                                     <div style={{
                                         width: 64, height: 64, borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #EC4899, #8B5CF6, #4F46E5)',
+                                        background: 'linear-gradient(135deg, #EC4899, #8B5CF6, #0F2847)',
                                         padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
                                         <div style={{
@@ -278,7 +278,7 @@ export default function FeedPage() {
                                             borderRadius: 24, overflow: 'hidden', position: 'relative',
                                             background: story.mediaUrl
                                                 ? `url(${story.mediaUrl}) center/cover no-repeat`
-                                                : (story.bgColor || '#4F46E5'),
+                                                : (story.bgColor || '#0F2847'),
                                             color: '#fff', display: 'flex', flexDirection: 'column',
                                         }}>
                                         {/* Dark overlay for readability when image is background */}
@@ -460,7 +460,7 @@ export default function FeedPage() {
                                             }}
                                             style={{
                                                 width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                                                background: item.user?.avatar_url ? `url(${item.user.avatar_url}) center/cover` : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                background: item.user?.avatar_url ? `url(${item.user.avatar_url}) center/cover` : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer',
                                                 border: '2px solid var(--border)',
@@ -485,7 +485,7 @@ export default function FeedPage() {
                                     <div style={{ padding: '4px 16px 10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                                             <span style={{
-                                                background: 'rgba(79,70,229,0.08)', color: '#4F46E5',
+                                                background: 'rgba(79,70,229,0.08)', color: '#0F2847',
                                                 padding: '3px 10px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 700,
                                             }}>
                                                 📍 {item.placeName}
@@ -631,7 +631,7 @@ export default function FeedPage() {
                                     }}>
                                         <div style={{
                                             width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-                                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                            background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             color: 'white', fontWeight: 800, fontSize: '0.6rem',
                                         }}>
@@ -721,9 +721,9 @@ export default function FeedPage() {
                                                 onClick={() => setCheckinData(p => ({ ...p, category: cat.key, emoji: cat.emoji }))}
                                                 style={{
                                                     padding: '6px 12px', borderRadius: 10, fontSize: '0.78rem',
-                                                    border: checkinData.category === cat.key ? '2px solid #4F46E5' : '1px solid var(--border)',
+                                                    border: checkinData.category === cat.key ? '2px solid #0F2847' : '1px solid var(--border)',
                                                     background: checkinData.category === cat.key ? 'rgba(79,70,229,0.08)' : 'var(--bg-tertiary)',
-                                                    color: checkinData.category === cat.key ? '#4F46E5' : 'var(--text-secondary)',
+                                                    color: checkinData.category === cat.key ? '#0F2847' : 'var(--text-secondary)',
                                                     cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                                                 }}>
                                                 {cat.emoji} {cat.label}

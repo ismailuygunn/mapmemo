@@ -23,9 +23,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 const CAT_COLORS = {
-    'MUSEUMS': '#7C3AED', 'SIGHTS & LANDMARKS': '#0D9488', 'RELIGIOUS SITES': '#D97706',
+    'MUSEUMS': '#D4A853', 'SIGHTS & LANDMARKS': '#0D9488', 'RELIGIOUS SITES': '#D97706',
     'RESTAURANTS': '#DC2626', 'CAFES': '#92400E', 'NATURE & PARKS': '#16A34A',
-    'SHOPPING': '#DB2777', 'NIGHTLIFE': '#7C3AED', 'ART & CULTURE': '#4F46E5',
+    'SHOPPING': '#DB2777', 'NIGHTLIFE': '#D4A853', 'ART & CULTURE': '#0F2847',
     'ENTERTAINMENT': '#EA580C', 'HOTELS': '#2563EB', 'WELLNESS': '#0891B2',
 }
 

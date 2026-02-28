@@ -19,7 +19,7 @@ export function generateAlbumHtml(trip, pins, spaceName) {
     const coverHtml = `
         <div class="album-cover" style="
             text-align:center; padding:64px 32px;
-            background:linear-gradient(135deg,#4F46E5,#7C3AED);
+            background:linear-gradient(135deg,#0F2847,#D4A853);
             color:white; min-height:100vh; display:flex; flex-direction:column;
             align-items:center; justify-content:center; page-break-after:always;">
             <h1 style="font-size:2.5rem;margin-bottom:8px;">${trip.city || 'Our Adventure'}</h1>
@@ -35,7 +35,7 @@ export function generateAlbumHtml(trip, pins, spaceName) {
         <div class="album-day" style="page-break-before:always;padding:32px;">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
                 <div style="width:48px;height:48px;border-radius:50%;
-                    background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;
+                    background:linear-gradient(135deg,#0F2847,#D4A853);color:white;
                     display:flex;align-items:center;justify-content:center;
                     font-weight:700;font-size:1.125rem;">${day.dayNumber}</div>
                 <div>
@@ -44,11 +44,11 @@ export function generateAlbumHtml(trip, pins, spaceName) {
                 </div>
             </div>
             ${day.items?.map(item => `
-                <div style="padding:12px 16px;margin-bottom:8px;border-left:3px solid #4F46E5;
+                <div style="padding:12px 16px;margin-bottom:8px;border-left:3px solid #0F2847;
                     background:#F9FAFB;border-radius:0 8px 8px 0;">
                     <div style="display:flex;justify-content:space-between;align-items:baseline;">
                         <strong style="font-size:0.9375rem;">${item.title}</strong>
-                        <span style="font-size:0.8125rem;color:#4F46E5;">${item.timeStart || ''}${item.timeEnd ? '–' + item.timeEnd : ''}</span>
+                        <span style="font-size:0.8125rem;color:#0F2847;">${item.timeStart || ''}${item.timeEnd ? '–' + item.timeEnd : ''}</span>
                     </div>
                     <p style="font-size:0.8125rem;color:#6B7280;margin:4px 0 0;">${item.description || ''}</p>
                     ${item.estimatedCost ? `<span style="font-size:0.75rem;color:#10B981;background:#ECFDF5;padding:2px 8px;border-radius:999px;margin-top:4px;display:inline-block;">💰 ${item.estimatedCost}</span>` : ''}
@@ -86,9 +86,9 @@ export function generateAlbumHtml(trip, pins, spaceName) {
                 ${Object.entries(itinerary.budgetEstimate).map(([key, val]) => `
                     <div style="display:flex;justify-content:space-between;padding:10px 0;
                         border-bottom:1px solid #E5E7EB;font-size:0.9375rem;
-                        ${key === 'total' ? 'font-weight:700;font-size:1.125rem;border-top:2px solid #4F46E5;border-bottom:none;padding-top:16px;' : ''}">
+                        ${key === 'total' ? 'font-weight:700;font-size:1.125rem;border-top:2px solid #0F2847;border-bottom:none;padding-top:16px;' : ''}">
                         <span style="text-transform:capitalize;">${key}</span>
-                        <span style="color:#4F46E5;">${val}</span>
+                        <span style="color:#0F2847;">${val}</span>
                     </div>
                 `).join('')}
             </div>

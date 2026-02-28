@@ -149,7 +149,7 @@ export default function DiscoverPage() {
                                 onClick={() => setTab(tb.key)}
                                 style={{
                                     padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                    background: tab === tb.key ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : 'var(--bg-tertiary)',
+                                    background: tab === tb.key ? 'linear-gradient(135deg, #0F2847, #1A3A5C)' : 'var(--bg-tertiary)',
                                     color: tab === tb.key ? '#fff' : 'var(--text-secondary)',
                                     fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6,
                                     transition: 'all 200ms',
@@ -173,7 +173,7 @@ export default function DiscoverPage() {
                                 </span>
                                 <span style={{
                                     fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20,
-                                    background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 700,
+                                    background: 'rgba(79,70,229,0.1)', color: '#0F2847', fontWeight: 700,
                                 }}>{filteredUsers.length} kişi</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
@@ -185,7 +185,7 @@ export default function DiscoverPage() {
                                 {filteredUsers.map((u, i) => {
                                     const isFollowing = followingIds.has(u.id)
                                     const cardGradient = [
-                                        'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                         'linear-gradient(135deg, #EC4899, #F43F5E)',
                                         'linear-gradient(135deg, #10B981, #059669)',
                                         'linear-gradient(135deg, #F59E0B, #D97706)',
@@ -228,7 +228,7 @@ export default function DiscoverPage() {
                                                         disabled={followLoading[u.id]}
                                                         style={{
                                                             padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                                            background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                            background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                                             color: isFollowing ? 'var(--text-secondary)' : '#fff',
                                                             fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4,
                                                             transition: 'all 200ms',
@@ -271,7 +271,7 @@ export default function DiscoverPage() {
                                     }}>
                                     <div style={{
                                         width: 36, height: 36, borderRadius: '50%',
-                                        background: c.profiles?.avatar_url ? `url(${c.profiles.avatar_url}) center/cover` : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        background: c.profiles?.avatar_url ? `url(${c.profiles.avatar_url}) center/cover` : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         color: '#fff', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', flexShrink: 0,
                                     }} onClick={() => c.profiles?.username && router.push(`/u/${c.profiles.username}`)}>
@@ -283,7 +283,7 @@ export default function DiscoverPage() {
                                                 {c.profiles?.display_name || 'User'}
                                             </span>
                                             <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}> — </span>
-                                            <span style={{ color: '#4F46E5' }}>{c.emoji} {c.place_name}</span>
+                                            <span style={{ color: '#0F2847' }}>{c.emoji} {c.place_name}</span>
                                         </div>
                                         {c.note && <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.note}</p>}
                                     </div>

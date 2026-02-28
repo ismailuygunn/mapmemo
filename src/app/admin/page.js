@@ -347,7 +347,7 @@ export default function AdminPage() {
                                     }}>
                                         <div style={{
                                             width: 44, height: 44, borderRadius: 12,
-                                            background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B'][i % 5]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488'][i % 5]})`,
+                                            background: `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#0D9488', '#F59E0B'][i % 5]}, ${['#D4A853', '#EC4899', '#F59E0B', '#0F2847', '#0D9488'][i % 5]})`,
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                                             color: 'white', fontWeight: 800, fontSize: '1rem',
                                         }}>

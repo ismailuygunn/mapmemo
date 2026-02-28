@@ -27,7 +27,7 @@ const HERO_DESTINATIONS = [
 ]
 
 const QUICK_ACTIONS = [
-    { icon: Plane, label: 'Uçuş Ara', desc: '3 kaynaktan en ucuz', href: '/flights', gradient: 'linear-gradient(135deg, #4F46E5, #7C3AED)', emoji: '✈️' },
+    { icon: Plane, label: 'Uçuş Ara', desc: '3 kaynaktan en ucuz', href: '/flights', gradient: 'linear-gradient(135deg, #0F2847, #1A3A5C)', emoji: '✈️' },
     { icon: Home, label: 'Konaklama', desc: 'Airbnb ilanları', href: '/airbnb', gradient: 'linear-gradient(135deg, #E11D48, #F43F5E)', emoji: '🏠' },
     { icon: Ticket, label: 'Etkinlikler', desc: 'Konser, festival...', href: '/events', gradient: 'linear-gradient(135deg, #EC4899, #8B5CF6)', emoji: '🎭' },
     { icon: Calendar, label: 'Trip Planla', desc: 'AI destekli planlama', href: '/planner', gradient: 'linear-gradient(135deg, #0D9488, #10B981)', emoji: '📅' },
@@ -191,7 +191,7 @@ const DESTINATION_INFO_CARDS = [
     { city: 'Meksiko City', country: 'Meksika', emoji: '🇲🇽', cat: 'amerika', gradient: 'linear-gradient(135deg,#78350F,#B45309)', fact: "Azteklerin kurduğu Tenochtitlan üzerine inşa edilmiş. Her yıl 10 cm batıyor.", highlights: ['Zócalo', 'Teotihuacan', 'Frida'] },
 
     // TÜRKİYE
-    { city: 'İstanbul', country: 'Türkiye', emoji: '🇹🇷', cat: 'turkiye', gradient: 'linear-gradient(135deg,#4F46E5,#7C3AED)', fact: "Dünyanın üç imparatorluğa başkentlik yapmış tek şehri. Kapalıçarşı 4.000+ dükkan.", highlights: ['Ayasofya', 'Kapalıçarşı', 'Boğaz'] },
+    { city: 'İstanbul', country: 'Türkiye', emoji: '🇹🇷', cat: 'turkiye', gradient: 'linear-gradient(135deg,#0F2847,#D4A853)', fact: "Dünyanın üç imparatorluğa başkentlik yapmış tek şehri. Kapalıçarşı 4.000+ dükkan.", highlights: ['Ayasofya', 'Kapalıçarşı', 'Boğaz'] },
     { city: 'Kapadokya', country: 'Türkiye', emoji: '🇹🇷', cat: 'turkiye', gradient: 'linear-gradient(135deg,#78350F,#B45309)', fact: 'Peri bacaları 60 milyon yıllık volkanik tüften oluştu. Yeraltı şehirleri 8 kat derine iner.', highlights: ['Balonlar', 'Göreme', 'Yeraltı'] },
     { city: 'Antalya', country: 'Türkiye', emoji: '🇹🇷', cat: 'turkiye', gradient: 'linear-gradient(135deg,#0D9488,#06B6D4)', fact: "Yılda 300+ gün güneşli. Düden Şelalesi denize dökülen nadir şelalelerden.", highlights: ['Kaleiçi', 'Düden', 'Aspendos'] },
     { city: 'Efes', country: 'Türkiye', emoji: '🇹🇷', cat: 'turkiye', gradient: 'linear-gradient(135deg,#451a03,#78350F)', fact: "Antik dünyanın 7 harikasından biri Artemis Tapınağı buradaydı. 25.000 kişilik tiyatro.", highlights: ['Kütüphane', 'Tiyatro', 'Artemis'] },
@@ -635,7 +635,7 @@ export default function ExplorePage() {
                                                 onClick={() => { setSelectedDest(null); router.push('/flights') }}
                                                 style={{
                                                     flex: 1, padding: '14px 20px', borderRadius: 14, border: 'none',
-                                                    background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                                    background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                                     color: 'white', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                                 }}>✈️ Uçuş Ara</motion.button>

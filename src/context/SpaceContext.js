@@ -16,7 +16,8 @@ export function SpaceProvider({ children }) {
     const retryCountRef = useRef(0)
     const retryTimerRef = useRef(null)
     const loadingTimeoutRef = useRef(null)
-    const supabase = createClient()
+    const supabaseRef = useRef(createClient())
+    const supabase = supabaseRef.current
 
     useEffect(() => {
         if (!user) {
@@ -137,7 +138,7 @@ export function SpaceProvider({ children }) {
         }
         if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current)
         setLoading(false)
-    }, [user, supabase])
+    }, [user])
 
     const createSpace = async (name) => {
         const inviteToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))

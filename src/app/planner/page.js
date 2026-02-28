@@ -490,12 +490,12 @@ export default function PlannerPage() {
         const cities = formData.cities.join(' → ') || formData.cityInput
         const daysHTML = (itinerary.days || []).map((day, di) => `
             <div style="page-break-inside:avoid;margin-bottom:24px;">
-                <h3 style="color:#4F46E5;margin:0 0 8px;">📅 ${day.title || 'Gün ' + (di+1)}</h3>
+                <h3 style="color:#0F2847;margin:0 0 8px;">📅 ${day.title || 'Gün ' + (di+1)}</h3>
                 ${day.theme ? `<p style="font-size:12px;color:#64748B;margin:0 0 12px;">🎯 ${day.theme}</p>` : ''}
                 ${(day.items || []).map(item => `
                     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px;">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                            <span style="background:#4F46E515;color:#4F46E5;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${item.timeStart || ''}${item.timeEnd ? ' - '+item.timeEnd : ''}</span>
+                            <span style="background:#0F284715;color:#0F2847;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${item.timeStart || ''}${item.timeEnd ? ' - '+item.timeEnd : ''}</span>
                             <strong style="font-size:14px;">${item.title}</strong>
                         </div>
                         ${item.description ? `<p style="font-size:12px;color:#4a5568;margin:4px 0;">${item.description}</p>` : ''}
@@ -514,7 +514,7 @@ export default function PlannerPage() {
         if (itinerary.packingList?.length) extrasHTML.push(`<div style="margin-bottom:16px;"><h3>🎒 Valiz</h3>${itinerary.packingList.map(p => `<span style="display:inline-block;padding:3px 10px;margin:2px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">✓ ${p}</span>`).join('')}</div>`)
         pw.document.write(`<!DOCTYPE html><html><head><title>Seyahat Planı — ${cities}</title>
         <style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:700px;margin:0 auto;padding:32px 24px;color:#1a202c;}h2{font-size:20px;margin-bottom:4px;}@media print{body{padding:16px;}}</style></head><body>
-            <div style="text-align:center;margin-bottom:24px;padding:20px;border-radius:16px;background:linear-gradient(135deg,#4F46E515,#7C3AED15);">
+            <div style="text-align:center;margin-bottom:24px;padding:20px;border-radius:16px;background:linear-gradient(135deg,#0F284715,#D4A85315);">
                 <div style="font-size:36px;margin-bottom:8px;">✈️</div>
                 <h2>${cities}</h2>
                 <p style="color:#64748B;font-size:13px;">${formData.startDate ? new Date(formData.startDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} ${formData.endDate ? ' → ' + new Date(formData.endDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} · ${itinerary.days?.length || 0} gün</p>
@@ -586,7 +586,7 @@ export default function PlannerPage() {
                         style={{
                             borderRadius: 24, overflow: 'hidden', marginBottom: 24,
                             position: 'relative', minHeight: 180,
-                            background: 'linear-gradient(135deg, #4F46E5, #7C3AED, #A855F7)',
+                            background: 'linear-gradient(135deg, #0F2847, #D4A853, #A855F7)',
                         }}>
                         {/* Floating decorations */}
                         <motion.span animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
@@ -1368,7 +1368,7 @@ export default function PlannerPage() {
                                     gap: 10, marginBottom: 16,
                                 }}>
                                 {[
-                                    { icon: '📍', label: locale === 'tr' ? 'Şehirler' : 'Cities', value: formData.cities.join(' → ') || '—', color: '#4F46E5' },
+                                    { icon: '📍', label: locale === 'tr' ? 'Şehirler' : 'Cities', value: formData.cities.join(' → ') || '—', color: '#0F2847' },
                                     { icon: '📅', label: locale === 'tr' ? 'Tarih' : 'Dates', value: formData.startDate && formData.endDate ? `${new Date(formData.startDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${new Date(formData.endDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}` : '—', color: '#EC4899' },
                                     { icon: '🗓️', label: locale === 'tr' ? 'Süre' : 'Duration', value: `${itinerary.days?.length || tripDays} ${locale === 'tr' ? 'gün' : 'days'}`, color: '#10B981' },
                                     { icon: '💰', label: locale === 'tr' ? 'Bütçe' : 'Budget', value: formData.budget === 'budget' ? '💵' : formData.budget === 'moderate' ? '💵💵' : '💵💵💵', color: '#F59E0B' },
@@ -1515,7 +1515,7 @@ export default function PlannerPage() {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                                <button className="btn btn-primary" onClick={handlePrint} style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
+                                <button className="btn btn-primary" onClick={handlePrint} style={{ background: 'linear-gradient(135deg, #0F2847, #1A3A5C)' }}>
                                     <Printer size={16} /> {locale === 'tr' ? 'Çıktı Al / Yazdır' : 'Print / Export'}
                                 </button>
                                 <button className="btn btn-secondary" onClick={() => setShowRainPlan(!showRainPlan)}>
@@ -1657,7 +1657,7 @@ export default function PlannerPage() {
                                                 {!trip.cover_photo_url && (
                                                     <div style={{
                                                         height: 80,
-                                                        background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'][i % 6]}, ${['#7C3AED', '#EC4899', '#F43F5E', '#EF4444', '#06B6D4', '#8B5CF6'][i % 6]})`,
+                                                        background: `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#F59E0B', '#10B981', '#3B82F6'][i % 6]}, ${['#D4A853', '#EC4899', '#F43F5E', '#EF4444', '#06B6D4', '#8B5CF6'][i % 6]})`,
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     }}>
                                                         <Plane size={28} style={{ color: 'rgba(255,255,255,0.5)' }} />
@@ -1675,7 +1675,7 @@ export default function PlannerPage() {
                                                         </p>
                                                     )}
                                                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                                        {trip.tempo && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(79,70,229,0.1)', color: '#4F46E5', fontWeight: 700 }}>{trip.tempo}</span>}
+                                                        {trip.tempo && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(79,70,229,0.1)', color: '#0F2847', fontWeight: 700 }}>{trip.tempo}</span>}
                                                         {trip.budget && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontWeight: 700 }}>{trip.budget}</span>}
                                                         {trip.itinerary_data?.days && <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 700 }}>{trip.itinerary_data.days.length} gün</span>}
                                                     </div>

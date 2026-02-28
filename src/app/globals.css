@@ -84,6 +84,9 @@
   /* Map overlay */
   --map-control-bg: var(--glass-bg-strong);
   --sidebar-width: 320px;
+
+  /* Aliases */
+  --border-primary: var(--border);
 }
 
 /* ---------- Dark Theme ---------- */
@@ -126,6 +129,8 @@
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.5);
+
+  --border-primary: var(--border);
 }
 
 /* ---------- Reset & Base ---------- */
@@ -157,9 +162,9 @@ body {
 [data-theme="dark"] body {
   background: #06080F;
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(15, 40, 71, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(212, 168, 83, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 30% at 10% 80%, rgba(59, 158, 191, 0.04) 0%, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -634,7 +639,7 @@ select.input {
 }
 
 .pin-hotel {
-  --pin-color: #8B5CF6;
+  --pin-color: #D4A853;
 }
 
 .pin-memory {
@@ -646,7 +651,7 @@ select.input {
 }
 
 .pin-transport {
-  --pin-color: #6366F1;
+  --pin-color: #4A7FBF;
 }
 
 .pin-warning {
@@ -815,7 +820,7 @@ select.input {
   width: 64px;
   height: 64px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #0F2847, #1A3A5C);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1028,7 +1033,7 @@ select.input {
   gap: 8px;
   padding: 13px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #0F2847, #1A3A5C);
   border: none;
   color: white;
   font-size: 0.92rem;
@@ -1333,12 +1338,12 @@ select.input {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+  background: linear-gradient(135deg, #0A1628, #152A4A);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(10, 22, 40, 0.4);
 }
 
 .sidebar-logo-text {
@@ -3350,7 +3355,7 @@ select.input {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+  background: linear-gradient(90deg, #D4A853, #E0B964);
 }
 
 .capsule-ready {
@@ -3407,7 +3412,7 @@ select.input {
 }
 
 .capsule-locked .capsule-icon {
-  color: #8B5CF6;
+  color: #D4A853;
 }
 
 .capsule-ready .capsule-icon {
@@ -3710,7 +3715,7 @@ select.input {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   background: rgba(139, 92, 246, 0.1);
-  color: #8B5CF6;
+  color: #D4A853;
   font-size: 0.6875rem;
   text-transform: capitalize;
 }
@@ -7822,7 +7827,7 @@ select.input {
   gap: 6px;
   padding: 10px 18px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #818CF8, #6366F1);
+  background: linear-gradient(135deg, #4A7FBF, #D4A853);
   color: white;
   font-size: 0.85rem;
   font-weight: 600;
@@ -8194,7 +8199,7 @@ select.input {
 }
 
 .chat-me .chat-bubble {
-  background: linear-gradient(135deg, #818CF8, #6366F1);
+  background: linear-gradient(135deg, #4A7FBF, #D4A853);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -8262,7 +8267,7 @@ select.input {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #818CF8, #6366F1);
+  background: linear-gradient(135deg, #4A7FBF, #D4A853);
   color: white;
   border: none;
   cursor: pointer;
@@ -8300,7 +8305,7 @@ select.input {
   flex: 1;
   padding: 20px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #818CF8, #6366F1);
+  background: linear-gradient(135deg, #4A7FBF, #D4A853);
   color: white;
 }
 
@@ -8534,7 +8539,7 @@ select.input {
 .expense-modal-submit {
   padding: 12px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #818CF8, #6366F1);
+  background: linear-gradient(135deg, #4A7FBF, #D4A853);
   color: white;
   font-size: 0.9rem;
   font-weight: 700;
@@ -9243,7 +9248,7 @@ select.input {
 
 .gh-role-admin {
   background: rgba(129, 140, 248, 0.15);
-  color: #6366F1;
+  color: #4A7FBF;
 }
 
 .gh-role-editor {

@@ -311,7 +311,7 @@ export default function DashboardPage() {
                                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                                     {/* City Header */}
                                     <div style={{
-                                        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                         borderRadius: 16, padding: '20px 24px', marginBottom: 16,
                                         color: 'white', position: 'relative', overflow: 'hidden',
                                     }}>
@@ -449,7 +449,7 @@ export default function DashboardPage() {
                             <div className="dash-trip-list">
                                 {upcomingTrips.slice(0, 4).map((trip, i) => (
                                     <motion.div key={trip.id} className="dash-trip-card" variants={itemAnim} onClick={() => router.push(`/trip/${trip.id}`)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                                        <div className="dash-trip-hero" style={{ backgroundImage: trip.hero_image_url || trip.cover_photo_url ? `url(${trip.hero_image_url || trip.cover_photo_url})` : `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B'][i % 5]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488'][i % 5]})` }}>
+                                        <div className="dash-trip-hero" style={{ backgroundImage: trip.hero_image_url || trip.cover_photo_url ? `url(${trip.hero_image_url || trip.cover_photo_url})` : `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#0D9488', '#F59E0B'][i % 5]}, ${['#D4A853', '#EC4899', '#F59E0B', '#0F2847', '#0D9488'][i % 5]})` }}>
                                             <div className="dash-trip-countdown">{daysUntil(trip.start_date)}</div>
                                         </div>
                                         <div className="dash-trip-body">
@@ -555,7 +555,7 @@ export default function DashboardPage() {
                         >
                             {/* Modal Header — gradient */}
                             <div style={{
-                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                 padding: '24px 28px', color: 'white', position: 'relative',
                             }}>
                                 <button onClick={() => setQuickPlanDeal(null)} style={{

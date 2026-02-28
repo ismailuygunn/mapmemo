@@ -250,7 +250,7 @@ export default function MapPage() {
             const el = document.createElement('div')
             el.className = 'community-spot-marker'
             const TAG_COLORS = {
-                tarihi: '#C2410C', ikon: '#D97706', cami: '#059669', sokak: '#7C3AED',
+                tarihi: '#C2410C', ikon: '#D97706', cami: '#059669', sokak: '#D4A853',
                 renkli: '#DB2777', panorama: '#0284C7', deniz: '#0891B2', gece: '#4338CA',
                 doga: '#16A34A', orman: '#15803D', mimari: '#6D28D9', modern: '#0369A1',
                 sanat: '#9333EA', gizli: '#A21CAF', yemek: '#EA580C', gastro: '#D97706',

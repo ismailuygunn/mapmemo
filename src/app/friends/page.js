@@ -114,7 +114,7 @@ export default function FriendsPage() {
             >
                 <div style={{
                     width: 48, height: 48, borderRadius: '50%', flexShrink: 0,
-                    background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : `linear-gradient(135deg, ${['#4F46E5', '#EC4899', '#10B981', '#F59E0B', '#8B5CF6'][i % 5]}, ${['#7C3AED', '#F43F5E', '#06B6D4', '#EF4444', '#EC4899'][i % 5]})`,
+                    background: u.avatar_url ? `url(${u.avatar_url}) center/cover` : `linear-gradient(135deg, ${['#0F2847', '#EC4899', '#10B981', '#F59E0B', '#8B5CF6'][i % 5]}, ${['#D4A853', '#F43F5E', '#06B6D4', '#EF4444', '#EC4899'][i % 5]})`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: '#fff', fontWeight: 800, fontSize: '1rem',
                 }}>
@@ -143,7 +143,7 @@ export default function FriendsPage() {
                             disabled={followLoading[u.id]}
                             style={{
                                 padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                 color: isFollowing ? 'var(--text-secondary)' : '#fff',
                                 fontWeight: 700, fontSize: '0.73rem', display: 'flex', alignItems: 'center', gap: 4,
                                 transition: 'all 200ms', whiteSpace: 'nowrap',
@@ -177,7 +177,7 @@ export default function FriendsPage() {
                         style={{ marginBottom: 20 }}>
                         <h1 style={{
                             fontSize: '1.6rem', fontWeight: 900, margin: '0 0 4px',
-                            background: 'linear-gradient(135deg, #EC4899, #4F46E5)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            background: 'linear-gradient(135deg, #EC4899, #0F2847)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
                             ❤️ {t('Arkadaşlar', 'Friends')}
                         </h1>
@@ -205,7 +205,7 @@ export default function FriendsPage() {
                                 onClick={() => setTab(tb.key)}
                                 style={{
                                     padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                    background: tab === tb.key ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : 'var(--bg-tertiary)',
+                                    background: tab === tb.key ? 'linear-gradient(135deg, #0F2847, #1A3A5C)' : 'var(--bg-tertiary)',
                                     color: tab === tb.key ? '#fff' : 'var(--text-secondary)',
                                     fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6,
                                     transition: 'all 200ms',

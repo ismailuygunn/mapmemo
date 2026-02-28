@@ -193,7 +193,7 @@ export default function PublicProfilePage() {
                             height: 140,
                             background: profileData.cover_photo_url
                                 ? `url(${profileData.cover_photo_url}) center/cover`
-                                : 'linear-gradient(135deg, #4F46E5, #EC4899, #F59E0B)',
+                                : 'linear-gradient(135deg, #0F2847, #EC4899, #F59E0B)',
                         }} />
 
                         {/* Avatar + info */}
@@ -203,7 +203,7 @@ export default function PublicProfilePage() {
                                     width: 80, height: 80, borderRadius: '50%',
                                     background: profileData.avatar_url
                                         ? `url(${profileData.avatar_url}) center/cover`
-                                        : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                        : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: '#fff', fontWeight: 900, fontSize: '1.8rem',
                                     border: '4px solid var(--bg-secondary)',
@@ -223,7 +223,7 @@ export default function PublicProfilePage() {
                                     <button onClick={handleFollow} disabled={followLoading}
                                         style={{
                                             padding: '8px 18px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                            background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                            background: isFollowing ? 'var(--bg-tertiary)' : 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                             color: isFollowing ? 'var(--text-secondary)' : '#fff',
                                             fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6,
                                             marginBottom: 4,
@@ -294,7 +294,7 @@ export default function PublicProfilePage() {
                                 onClick={() => setTab(tb.key)}
                                 style={{
                                     padding: '8px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                    background: tab === tb.key ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : 'var(--bg-tertiary)',
+                                    background: tab === tb.key ? 'linear-gradient(135deg, #0F2847, #1A3A5C)' : 'var(--bg-tertiary)',
                                     color: tab === tb.key ? '#fff' : 'var(--text-secondary)',
                                     fontWeight: 700, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6,
                                 }}>

@@ -17,7 +17,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 
 const AVATAR_COLORS = [
-    ['#4F46E5', '#7C3AED'], ['#EC4899', '#F43F5E'], ['#0D9488', '#06B6D4'],
+    ['#0F2847', '#D4A853'], ['#EC4899', '#F43F5E'], ['#0D9488', '#06B6D4'],
     ['#F59E0B', '#EF4444'], ['#8B5CF6', '#EC4899'], ['#10B981', '#3B82F6'],
     ['#6366F1', '#818CF8'], ['#F97316', '#FBBF24'],
 ]

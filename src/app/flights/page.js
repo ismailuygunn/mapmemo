@@ -236,7 +236,7 @@ export default function FlightsPage() {
                         <button onClick={() => setActiveTab('deals')}
                             style={{
                                 flex: 1, padding: '12px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                                background: activeTab === 'deals' ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : 'transparent',
+                                background: activeTab === 'deals' ? 'linear-gradient(135deg, #0F2847, #1A3A5C)' : 'transparent',
                                 color: activeTab === 'deals' ? 'white' : 'var(--text-secondary)',
                                 fontWeight: 700, fontSize: '0.88rem', transition: 'all 200ms',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -351,7 +351,7 @@ export default function FlightsPage() {
                                 onClick={searchDeals} disabled={loading}
                                 style={{
                                     width: '100%', padding: '14px', borderRadius: 14, border: 'none',
-                                    background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                                    background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                                     color: 'white', fontSize: '1rem', fontWeight: 800, cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                                     boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
@@ -368,7 +368,7 @@ export default function FlightsPage() {
                                         <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                                             {loadingMessage}
                                         </span>
-                                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7C3AED' }}>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#D4A853' }}>
                                             {Math.round(loadingProgress)}%
                                         </span>
                                     </div>
@@ -383,7 +383,7 @@ export default function FlightsPage() {
                                             transition={{ duration: 0.4, ease: 'easeOut' }}
                                             style={{
                                                 height: '100%', borderRadius: 10,
-                                                background: 'linear-gradient(90deg, #4F46E5, #7C3AED, #EC4899, #F59E0B)',
+                                                background: 'linear-gradient(90deg, #0F2847, #D4A853, #E87F9E, #D4A853)',
                                                 backgroundSize: '200% 100%',
                                                 animation: 'gradientShift 2s ease infinite',
                                             }}
@@ -443,7 +443,7 @@ export default function FlightsPage() {
                                                             }}>
                                                             {/* Header */}
                                                             <div style={{
-                                                                background: `linear-gradient(135deg, ${['#4F46E5', '#7C3AED', '#EC4899', '#0D9488', '#F59E0B', '#6366F1', '#10B981', '#EF4444'][i % 8]}, ${['#7C3AED', '#EC4899', '#F59E0B', '#4F46E5', '#0D9488', '#818CF8', '#34D399', '#F472B6'][i % 8]})`,
+                                                                background: `linear-gradient(135deg, ${['#0F2847', '#D4A853', '#EC4899', '#0D9488', '#F59E0B', '#6366F1', '#10B981', '#EF4444'][i % 8]}, ${['#D4A853', '#EC4899', '#F59E0B', '#0F2847', '#0D9488', '#818CF8', '#34D399', '#F472B6'][i % 8]})`,
                                                                 padding: '18px 22px', color: 'white',
                                                             }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -833,7 +833,7 @@ export default function FlightsPage() {
                                                                 color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600,
                                                                 textDecoration: 'none', transition: 'all 150ms',
                                                             }}
-                                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(79,70,229,0.1)'; e.currentTarget.style.borderColor = '#4F46E5' }}
+                                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(79,70,229,0.1)'; e.currentTarget.style.borderColor = '#0F2847' }}
                                                             onMouseOut={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
                                                             {p.emoji} {p.name} <ExternalLink size={10} />
                                                         </a>

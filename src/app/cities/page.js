@@ -12,7 +12,7 @@ import { motion } from 'framer-motion'
 import { groupPinsByCity, getCitySlug } from '@/lib/utils'
 
 const CITY_GRADIENTS = [
-    'linear-gradient(135deg, #4F46E5, #7C3AED)',
+    'linear-gradient(135deg, #0F2847, #1A3A5C)',
     'linear-gradient(135deg, #EC4899, #F43F5E)',
     'linear-gradient(135deg, #0D9488, #06B6D4)',
     'linear-gradient(135deg, #F59E0B, #EF4444)',

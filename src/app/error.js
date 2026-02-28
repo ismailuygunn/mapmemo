@@ -24,7 +24,7 @@ export default function Error({ error, reset }) {
                     onClick={() => reset()}
                     style={{
                         padding: '10px 24px', borderRadius: 12, border: 'none',
-                        background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                        background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
                         color: 'white', fontSize: '0.85rem', fontWeight: 700,
                         cursor: 'pointer',
                     }}

@@ -24,13 +24,13 @@ const ROLE_COLORS = {
 }
 
 const GRADIENT_PALETTES = [
-    ['#4F46E5', '#7C3AED'], ['#EC4899', '#F43F5E'], ['#0D9488', '#06B6D4'],
+    ['#0F2847', '#D4A853'], ['#EC4899', '#F43F5E'], ['#0D9488', '#06B6D4'],
     ['#F59E0B', '#EF4444'], ['#8B5CF6', '#EC4899'], ['#10B981', '#3B82F6'],
 ]
 
 const GROUP_TYPES = [
     { key: 'couple', emoji: '💑', label: { tr: 'Sevgili', en: 'Couple' }, desc: { tr: 'Birlikte keşfedin', en: 'Explore together' }, gradient: ['#EC4899', '#F43F5E'] },
-    { key: 'friends', emoji: '👫', label: { tr: 'Arkadaşlar', en: 'Friends' }, desc: { tr: 'Arkadaşlarla macera', en: 'Adventure with friends' }, gradient: ['#4F46E5', '#7C3AED'] },
+    { key: 'friends', emoji: '👫', label: { tr: 'Arkadaşlar', en: 'Friends' }, desc: { tr: 'Arkadaşlarla macera', en: 'Adventure with friends' }, gradient: ['#0F2847', '#D4A853'] },
     { key: 'family', emoji: '👨‍👩‍👧‍👦', label: { tr: 'Aile', en: 'Family' }, desc: { tr: 'Aile gezileri', en: 'Family trips' }, gradient: ['#10B981', '#06B6D4'] },
     { key: 'solo', emoji: '🧳', label: { tr: 'Solo', en: 'Solo' }, desc: { tr: 'Kişisel haritam', en: 'My personal map' }, gradient: ['#F59E0B', '#EF4444'] },
 ]
