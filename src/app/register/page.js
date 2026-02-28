@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { MapPin, Eye, EyeOff, Globe, Users, Compass, ChevronRight } from 'lucide-react'
@@ -10,6 +10,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export default function RegisterPage() {
+    return <Suspense><RegisterInner /></Suspense>
+}
+
+function RegisterInner() {
     const [displayName, setDisplayName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -19,6 +23,8 @@ export default function RegisterPage() {
     const { signUp, signInWithGoogle } = useAuth()
     const { t, locale, setLocale } = useLanguage()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const inviteToken = searchParams.get('invite')
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -26,7 +32,7 @@ export default function RegisterPage() {
         setLoading(true)
         try {
             await signUp(email, password, displayName)
-            router.push('/onboarding')
+            router.push(inviteToken ? `/onboarding?invite=${inviteToken}` : '/onboarding')
         } catch (err) {
             const msg = err.message || ''
             if (msg.includes('already registered')) setError(locale === 'tr' ? 'Bu e-posta zaten kayıtlı' : 'This email is already registered')

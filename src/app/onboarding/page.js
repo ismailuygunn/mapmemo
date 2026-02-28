@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
@@ -10,6 +10,10 @@ import { motion } from 'framer-motion'
 import { useToast } from '@/context/ToastContext'
 
 export default function OnboardingPage() {
+    return <Suspense><OnboardingInner /></Suspense>
+}
+
+function OnboardingInner() {
     const [fullName, setFullName] = useState('')
     const [homeCity, setHomeCity] = useState('')
     const [loading, setLoading] = useState(false)
@@ -20,6 +24,8 @@ export default function OnboardingPage() {
     const { locale } = useLanguage()
     const { toast } = useToast()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const inviteToken = searchParams.get('invite')
     const supabase = createClient()
     const t = (tr, en) => locale === 'tr' ? tr : en
 
@@ -148,7 +154,7 @@ export default function OnboardingPage() {
             toast.success(t('Hoş geldin! 🎉', 'Welcome! 🎉'))
 
             // Force page reload to refresh SpaceContext
-            window.location.href = '/map'
+            window.location.href = inviteToken ? `/invite/${inviteToken}` : '/map'
         } catch (err) {
             console.error('[Onboarding] Error:', err)
             setError(err.message || t('Bir hata oluştu', 'Something went wrong'))
@@ -158,7 +164,7 @@ export default function OnboardingPage() {
 
     // Skip directly button
     const handleSkip = () => {
-        window.location.href = '/map'
+        window.location.href = inviteToken ? `/invite/${inviteToken}` : '/map'
     }
 
     if (checkingProfile) {

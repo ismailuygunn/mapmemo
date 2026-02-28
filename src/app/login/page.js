@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { Eye, EyeOff, Globe, ChevronRight, Users, MapPin, Compass } from 'lucide-react'
@@ -10,6 +10,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export default function LoginPage() {
+    return <Suspense><LoginInner /></Suspense>
+}
+
+function LoginInner() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPw, setShowPw] = useState(false)
@@ -18,6 +22,8 @@ export default function LoginPage() {
     const { signIn, signInWithGoogle } = useAuth()
     const { t, locale, setLocale } = useLanguage()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const inviteToken = searchParams.get('invite')
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -25,7 +31,7 @@ export default function LoginPage() {
         setLoading(true)
         try {
             await signIn(email, password)
-            router.push('/map')
+            router.push(inviteToken ? `/invite/${inviteToken}` : '/map')
         } catch (err) {
             const msg = err.message || ''
             if (msg.includes('Invalid login')) setError(locale === 'tr' ? 'E-posta veya şifre hatalı' : 'Invalid email or password')

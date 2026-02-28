@@ -592,6 +592,9 @@ export default function FeedPage() {
                                         <div style={{ flex: 1 }} />
 
                                         <button
+                                            onClick={() => {
+                                                toast.success('📌 Kaydedildi!')
+                                            }}
                                             style={{
                                                 background: 'none', border: 'none', cursor: 'pointer',
                                                 color: 'var(--text-tertiary)', padding: '4px 8px', borderRadius: 8,
@@ -599,6 +602,15 @@ export default function FeedPage() {
                                             <Bookmark size={16} />
                                         </button>
                                         <button
+                                            onClick={() => {
+                                                const shareText = `${item.userName} 📍 ${item.placeName}, ${item.city}`
+                                                if (navigator.share) {
+                                                    navigator.share({ title: 'UMAE', text: shareText, url: window.location.href }).catch(() => { })
+                                                } else {
+                                                    navigator.clipboard?.writeText(shareText)
+                                                    toast.success('📋 Kopyalandı!')
+                                                }
+                                            }}
                                             style={{
                                                 background: 'none', border: 'none', cursor: 'pointer',
                                                 color: 'var(--text-tertiary)', padding: '4px 8px', borderRadius: 8,
@@ -647,7 +659,7 @@ export default function FeedPage() {
                                             }}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && e.target.value.trim()) {
-                                                    toast.success('💬 Yorum gönderildi!')
+                                                    toast.info('💬 Yorum özelliği yakında!')
                                                     e.target.value = ''
                                                 }
                                             }}

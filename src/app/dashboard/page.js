@@ -630,7 +630,7 @@ export default function DashboardPage() {
                                 {/* Action Buttons */}
                                 <div style={{ display: 'flex', gap: 8 }}>
                                     <a
-                                        href={`https://www.google.com/travel/flights?q=Flights+from+${getOriginCity()}+to+${quickPlanDeal.destination}+on+${quickPlanDeal.departDate}+return+${quickPlanDeal.returnDate}&curr=TRY`}
+                                        href={`https://www.google.com/travel/flights?q=Flights+from+${encodeURIComponent(profile?.home_city || 'Istanbul')}+to+${quickPlanDeal.destination}+on+${quickPlanDeal.departDate}+return+${quickPlanDeal.returnDate}&curr=TRY`}
                                         target="_blank" rel="noopener noreferrer"
                                         style={{
                                             flex: 1, padding: '12px', borderRadius: 12,
