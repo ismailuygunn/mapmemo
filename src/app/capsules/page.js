@@ -44,6 +44,7 @@ export default function CapsulesPage() {
     const [creating, setCreating] = useState(false)
     const [revealingId, setRevealingId] = useState(null)
     const [openedCapsule, setOpenedCapsule] = useState(null)
+    const [selectedCapsule, setSelectedCapsule] = useState(null)
     const [userSearch, setUserSearch] = useState('')
     const [userResults, setUserResults] = useState([])
     const [selectedCollabs, setSelectedCollabs] = useState([])
@@ -271,7 +272,9 @@ export default function CapsulesPage() {
         setTimeout(() => setConfetti(false), 3000)
         await loadCapsules()
         setRevealingId(null)
-        setOpenedCapsule(capsule.id)
+        // Auto-open detail modal for freshly revealed capsule
+        const revealed = { ...capsule, is_revealed: true, revealed_at: new Date().toISOString() }
+        setSelectedCapsule(revealed)
         toast.success(t('capsule.readyToOpen'))
     }
 
@@ -709,11 +712,13 @@ export default function CapsulesPage() {
                                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.06 }}
                                         whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.3)' }}
+                                        onClick={() => isRevealed && setSelectedCapsule(capsule)}
                                         style={{
                                             borderRadius: 20, overflow: 'hidden',
                                             border: '1px solid var(--border-primary)',
                                             background: 'var(--bg-secondary)',
                                             transition: 'all 0.3s ease',
+                                            cursor: isRevealed ? 'pointer' : 'default',
                                         }}>
                                         {/* Card Header — Gradient */}
                                         <div style={{
@@ -899,7 +904,7 @@ export default function CapsulesPage() {
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 {ready && (
                                                     <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                                                        onClick={() => revealCapsule(capsule)}
+                                                        onClick={(e) => { e.stopPropagation(); revealCapsule(capsule) }}
                                                         disabled={revealingId === capsule.id}
                                                         style={{
                                                             flex: 1, padding: '10px', borderRadius: 12, border: 'none',
@@ -911,8 +916,20 @@ export default function CapsulesPage() {
                                                         {t('capsule.open')}
                                                     </motion.button>
                                                 )}
+                                                {isRevealed && (
+                                                    <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedCapsule(capsule) }}
+                                                        style={{
+                                                            flex: 1, padding: '10px', borderRadius: 12, border: 'none',
+                                                            background: 'linear-gradient(135deg, #0F2847, #1A3A5C)',
+                                                            color: 'white', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                        }}>
+                                                        <Eye size={16} /> {t('capsule.open')}
+                                                    </motion.button>
+                                                )}
                                                 {capsule.created_by === user?.id && (
-                                                    <button onClick={() => deleteCapsule(capsule.id)}
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteCapsule(capsule.id) }}
                                                         style={{
                                                             padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border-primary)',
                                                             background: 'transparent', cursor: 'pointer',
@@ -928,6 +945,147 @@ export default function CapsulesPage() {
                             })}
                         </div>
                     )}
+
+                    {/* ═══ DETAIL MODAL ═══ */}
+                    <AnimatePresence>
+                        {selectedCapsule && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setSelectedCapsule(null)}
+                                style={{
+                                    position: 'fixed', inset: 0, zIndex: 9000,
+                                    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: 20,
+                                }}>
+                                <motion.div
+                                    initial={{ scale: 0.8, opacity: 0, y: 40 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.8, opacity: 0, y: 40 }}
+                                    transition={{ type: 'spring', damping: 20 }}
+                                    onClick={e => e.stopPropagation()}
+                                    style={{
+                                        width: '100%', maxWidth: 540, maxHeight: '85vh', overflow: 'auto',
+                                        borderRadius: 24, background: 'var(--bg-secondary)',
+                                        border: '1px solid var(--border-primary)',
+                                        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+                                    }}>
+                                    {/* Modal Header with gradient */}
+                                    <div style={{
+                                        background: (getTheme(selectedCapsule.color_theme)).bg,
+                                        padding: '28px 24px 20px', position: 'relative',
+                                    }}>
+                                        <button onClick={() => setSelectedCapsule(null)}
+                                            style={{
+                                                position: 'absolute', top: 12, right: 12,
+                                                width: 32, height: 32, borderRadius: '50%',
+                                                background: 'rgba(255,255,255,0.15)', border: 'none',
+                                                color: 'white', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            }}><X size={16} /></button>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                            <span style={{ fontSize: '2rem' }}>
+                                                {(getType(selectedCapsule.capsule_type)).emoji}
+                                            </span>
+                                            <div>
+                                                <span style={{
+                                                    fontSize: '0.6rem', fontWeight: 700,
+                                                    color: (getTheme(selectedCapsule.color_theme)).accent,
+                                                    textTransform: 'uppercase', letterSpacing: 1,
+                                                }}>
+                                                    {t(`capsule.type${(getType(selectedCapsule.capsule_type)).key.charAt(0).toUpperCase() + (getType(selectedCapsule.capsule_type)).key.slice(1)}`)}
+                                                </span>
+                                                <h2 style={{ color: 'white', fontSize: '1.4rem', fontWeight: 900, margin: '2px 0 0' }}>
+                                                    {selectedCapsule.title}
+                                                </h2>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)' }}>
+                                            <Calendar size={12} />
+                                            <span>{t('capsule.openedOn')} {selectedCapsule.revealed_at ? new Date(selectedCapsule.revealed_at).toLocaleDateString() : '-'}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Modal Body */}
+                                    <div style={{ padding: '20px 24px' }}>
+                                        {/* Message */}
+                                        {selectedCapsule.message && (
+                                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                                style={{
+                                                    padding: '16px 20px', borderRadius: 16, marginBottom: 16,
+                                                    background: 'var(--bg-tertiary)',
+                                                    border: '1px solid var(--border-primary)',
+                                                }}>
+                                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                                                    💬 {t('capsule.message')}
+                                                </p>
+                                                <p style={{
+                                                    fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: 1.7,
+                                                    whiteSpace: 'pre-wrap', margin: 0,
+                                                }}>
+                                                    {selectedCapsule.message}
+                                                </p>
+                                            </motion.div>
+                                        )}
+
+                                        {/* Media Gallery */}
+                                        {selectedCapsule.media_urls?.length > 0 && (
+                                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                                                <p style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 8 }}>
+                                                    📎 {t('capsule.media')} ({selectedCapsule.media_urls.length})
+                                                </p>
+                                                <div style={{
+                                                    display: 'grid',
+                                                    gridTemplateColumns: selectedCapsule.media_urls.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+                                                    gap: 8, marginBottom: 16,
+                                                }}>
+                                                    {selectedCapsule.media_urls.map((url, mi) => (
+                                                        <motion.a key={mi} href={url} target="_blank" rel="noreferrer"
+                                                            initial={{ scale: 0.8, opacity: 0 }}
+                                                            animate={{ scale: 1, opacity: 1 }}
+                                                            transition={{ delay: 0.5 + mi * 0.1 }}
+                                                            style={{
+                                                                borderRadius: 14, overflow: 'hidden',
+                                                                aspectRatio: selectedCapsule.media_urls.length === 1 ? '16/9' : '1',
+                                                                display: 'block',
+                                                            }}>
+                                                            {url.match(/\.(mp4|webm|mov)$/i) ? (
+                                                                <video src={url} controls style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            )}
+                                                        </motion.a>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        {/* No content message */}
+                                        {!selectedCapsule.message && (!selectedCapsule.media_urls || selectedCapsule.media_urls.length === 0) && (
+                                            <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                                                <motion.div animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 2.5 }}
+                                                    style={{ fontSize: '3rem', marginBottom: 12 }}>🔮</motion.div>
+                                                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
+                                                    {t('capsule.emptyDesc')}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Close button */}
+                                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                                            onClick={() => setSelectedCapsule(null)}
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: 12,
+                                                border: '1px solid var(--border-primary)',
+                                                background: 'transparent', cursor: 'pointer',
+                                                color: 'var(--text-secondary)', fontSize: '0.82rem', fontWeight: 600,
+                                            }}>
+                                            {t('general.close')}
+                                        </motion.button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </>
