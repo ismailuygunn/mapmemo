@@ -36,7 +36,7 @@ const QUICK_ACTIONS = [
 const DESTINATION_CARDS = [
     {
         city: 'Paris', country: 'Fransa', emoji: '🇫🇷', tag: 'Romantik', tagColor: '#EC4899',
-        gradient: 'linear-gradient(135deg, #1E1B4B, #312E81)', highlights: ['Eyfel Kulesi', 'Louvre', 'Montmartre']
+        gradient: 'linear-gradient(135deg, #0F2847, #1A3A5C)', highlights: ['Eyfel Kulesi', 'Louvre', 'Montmartre']
     },
     {
         city: 'Roma', country: 'İtalya', emoji: '🇮🇹', tag: 'Tarih', tagColor: '#F59E0B',
@@ -143,7 +143,7 @@ const VISA_COUNTRIES = {
 // ═══ 50+ DESTINATION INFO CARDS ═══
 const DESTINATION_INFO_CARDS = [
     // AVRUPA
-    { city: 'Paris', country: 'Fransa', emoji: '🇫🇷', cat: 'avrupa', gradient: 'linear-gradient(135deg,#1E1B4B,#312E81)', fact: 'Eyfel Kulesi her 7 yılda 60 ton boyayla boyanır. Yaz sıcağında 15 cm uzar.', highlights: ['Eyfel', 'Louvre', 'Montmartre'] },
+    { city: 'Paris', country: 'Fransa', emoji: '🇫🇷', cat: 'avrupa', gradient: 'linear-gradient(135deg,#0F2847,#1A3A5C)', fact: 'Eyfel Kulesi her 7 yılda 60 ton boyayla boyanır. Yaz sıcağında 15 cm uzar.', highlights: ['Eyfel', 'Louvre', 'Montmartre'] },
     { city: 'Roma', country: 'İtalya', emoji: '🇮🇹', cat: 'avrupa', gradient: 'linear-gradient(135deg,#78350F,#92400E)', fact: 'Trevi Çeşmesi\'ne her gün yaklaşık 3.000€ atılır. Bu para hayır kurumlarına gider.', highlights: ['Kolezyum', 'Vatikan', 'Pantheon'] },
     { city: 'Barselona', country: 'İspanya', emoji: '🇪🇸', cat: 'avrupa', gradient: 'linear-gradient(135deg,#7F1D1D,#991B1B)', fact: 'Sagrada Familia\'nın yapımı 1882\'de başladı ve hâlâ tamamlanmadı. 2026 hedefleniyor.', highlights: ['Sagrada Familia', 'La Rambla', 'Park Güell'] },
     { city: 'Amsterdam', country: 'Hollanda', emoji: '🇳🇱', cat: 'avrupa', gradient: 'linear-gradient(135deg,#0C4A6E,#075985)', fact: 'Şehirde 1.281 köprü var — Venedik\'ten bile fazla. Bisiklet sayısı insandan çok.', highlights: ['Kanallar', 'Van Gogh', 'Anne Frank'] },
@@ -161,13 +161,13 @@ const DESTINATION_INFO_CARDS = [
 
     // ASYA
     { city: 'Tokyo', country: 'Japonya', emoji: '🇯🇵', cat: 'asya', gradient: 'linear-gradient(135deg,#0F172A,#1E293B)', fact: "Dünyanın en yoğun metro ağı. Shibuya kavşağından her seferinde 3.000 kişi geçer.", highlights: ['Shibuya', 'Akihabara', 'Meiji'] },
-    { city: 'Seul', country: 'Güney Kore', emoji: '🇰🇷', cat: 'asya', gradient: 'linear-gradient(135deg,#312E81,#4338CA)', fact: "Dünyanın en hızlı WiFi'si. Gangnam ilçesinde dünya nüfusunun 1/7'si K-pop dinler.", highlights: ['Gyeongbokgung', 'Myeongdong', 'Han'] },
+    { city: 'Seul', country: 'Güney Kore', emoji: '🇰🇷', cat: 'asya', gradient: 'linear-gradient(135deg,#1A3A5C,#2A5A8F)', fact: "Dünyanın en hızlı WiFi'si. Gangnam ilçesinde dünya nüfusunun 1/7'si K-pop dinler.", highlights: ['Gyeongbokgung', 'Myeongdong', 'Han'] },
     { city: 'Bangkok', country: 'Tayland', emoji: '🇹🇭', cat: 'asya', gradient: 'linear-gradient(135deg,#78350F,#B45309)', fact: "Şehrin resmi adı 168 harften oluşur — dünyanın en uzun şehir adı.", highlights: ['Grand Palace', 'Wat Arun', 'Chatuchak'] },
     { city: 'Bali', country: 'Endonezya', emoji: '🇮🇩', cat: 'asya', gradient: 'linear-gradient(135deg,#065F46,#047857)', fact: "Adada 20.000'den fazla tapınak var. Her evin önünde günlük çiçek sunusu yapılır.", highlights: ['Ubud', 'Tapınaklar', 'Pirinç'] },
     { city: 'Singapur', country: 'Singapur', emoji: '🇸🇬', cat: 'asya', gradient: 'linear-gradient(135deg,#0F172A,#334155)', fact: "Sakız çiğnemek yasak. Changi Havalimanı'nda kelebek bahçesi ve kayak pisti var.", highlights: ['Marina Bay', 'Gardens', 'Sentosa'] },
     { city: 'Kuala Lumpur', country: 'Malezya', emoji: '🇲🇾', cat: 'asya', gradient: 'linear-gradient(135deg,#1E3A5F,#1E40AF)', fact: "Petronas Kuleleri 1998-2004 arası dünyanın en yüksek binasıydı (452m).", highlights: ['Petronas', 'Batu Caves', 'Jalan Alor'] },
     { city: 'Hanoi', country: 'Vietnam', emoji: '🇻🇳', cat: 'asya', gradient: 'linear-gradient(135deg,#7F1D1D,#991B1B)', fact: "1.000 yıllık şehirde tren evlerin arasından geçer. Pho çorbası ulusal gurur.", highlights: ['Old Quarter', 'Tren Sokağı', 'Ha Long'] },
-    { city: 'Katmandu', country: 'Nepal', emoji: '🇳🇵', cat: 'asya', gradient: 'linear-gradient(135deg,#312E81,#4338CA)', fact: "Dünyanın çatısı Everest buradan tırmanılır. 7 UNESCO mirası tek vadide.", highlights: ['Durbar', 'Swayambhu', 'Everest'] },
+    { city: 'Katmandu', country: 'Nepal', emoji: '🇳🇵', cat: 'asya', gradient: 'linear-gradient(135deg,#1A3A5C,#2A5A8F)', fact: "Dünyanın çatısı Everest buradan tırmanılır. 7 UNESCO mirası tek vadide.", highlights: ['Durbar', 'Swayambhu', 'Everest'] },
     { city: 'Kolombo', country: 'Sri Lanka', emoji: '🇱🇰', cat: 'asya', gradient: 'linear-gradient(135deg,#065F46,#047857)', fact: "Dünyanın en iyi çayı burada yetişir. Sigiriya kaya kalesi 200m yükseklikte.", highlights: ['Sigiriya', 'Çay', 'Galle'] },
 
     // ORTADOĞU & KUZEY AFRİKA

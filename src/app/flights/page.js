@@ -426,7 +426,7 @@ export default function FlightsPage() {
                                                     </h2>
                                                     <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                                                         <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 600 }}>✈️ Duffel</span>
-                                                        <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(79,70,229,0.08)', color: '#4A7FBF', fontWeight: 500 }}>Amadeus (yedek)</span>
+                                                        <span style={{ fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6, background: 'rgba(15,40,71,0.08)', color: '#4A7FBF', fontWeight: 500 }}>Amadeus (yedek)</span>
                                                         <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)', marginLeft: 6 }}>
                                                             📅 {new Date(deals[0].departDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} → {new Date(deals[0].returnDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
                                                         </span>
@@ -441,7 +441,7 @@ export default function FlightsPage() {
                                                             whileHover={{ y: -5, boxShadow: '0 14px 35px rgba(0,0,0,0.12)' }}
                                                             style={{
                                                                 background: 'var(--bg-secondary)', borderRadius: 20,
-                                                                border: i === 0 ? '2px solid rgba(79,70,229,0.4)' : '1px solid var(--border)',
+                                                                border: i === 0 ? '2px solid rgba(15,40,71,0.4)' : '1px solid var(--border)',
                                                                 overflow: 'hidden', transition: 'all 200ms',
                                                             }}>
                                                             {/* Header */}
@@ -836,7 +836,7 @@ export default function FlightsPage() {
                                                                 color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600,
                                                                 textDecoration: 'none', transition: 'all 150ms',
                                                             }}
-                                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(79,70,229,0.1)'; e.currentTarget.style.borderColor = '#0F2847' }}
+                                                            onMouseOver={e => { e.currentTarget.style.background = 'rgba(15,40,71,0.1)'; e.currentTarget.style.borderColor = '#0F2847' }}
                                                             onMouseOut={e => { e.currentTarget.style.background = 'var(--bg-tertiary)'; e.currentTarget.style.borderColor = 'var(--border)' }}>
                                                             {p.emoji} {p.name} <ExternalLink size={10} />
                                                         </a>

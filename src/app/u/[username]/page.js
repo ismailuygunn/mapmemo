@@ -277,7 +277,7 @@ export default function PublicProfilePage() {
                                     style={{
                                         display: 'inline-flex', alignItems: 'center', gap: 4,
                                         padding: '4px 10px', borderRadius: 8,
-                                        background: 'rgba(79,70,229,0.06)', fontSize: '0.75rem', fontWeight: 600,
+                                        background: 'rgba(15,40,71,0.06)', fontSize: '0.75rem', fontWeight: 600,
                                     }}>
                                     {a.emoji} {a.name}
                                 </span>

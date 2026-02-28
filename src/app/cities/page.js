@@ -18,7 +18,7 @@ const CITY_GRADIENTS = [
     'linear-gradient(135deg, #F59E0B, #EF4444)',
     'linear-gradient(135deg, #8B5CF6, #EC4899)',
     'linear-gradient(135deg, #10B981, #3B82F6)',
-    'linear-gradient(135deg, #1E1B4B, #312E81)',
+    'linear-gradient(135deg, #0F2847, #1A3A5C)',
     'linear-gradient(135deg, #7F1D1D, #991B1B)',
 ]
 
@@ -75,8 +75,8 @@ export default function CitiesPage() {
                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                             style={{
                                 borderRadius: 20, overflow: 'hidden', padding: '28px 32px',
-                                background: 'linear-gradient(135deg, rgba(79,70,229,0.1), rgba(124,58,237,0.05))',
-                                border: '1px solid rgba(79,70,229,0.15)',
+                                background: 'linear-gradient(135deg, rgba(15,40,71,0.1), rgba(124,58,237,0.05))',
+                                border: '1px solid rgba(15,40,71,0.15)',
                             }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                                 <div>
@@ -215,7 +215,7 @@ export default function CitiesPage() {
                                                 {city.pins.length > 3 && (
                                                     <span style={{
                                                         fontSize: '0.62rem', padding: '3px 8px', borderRadius: 6,
-                                                        background: 'rgba(79,70,229,0.08)', color: '#4A7FBF',
+                                                        background: 'rgba(15,40,71,0.08)', color: '#4A7FBF',
                                                         fontWeight: 600,
                                                     }}>+{city.pins.length - 3} daha</span>
                                                 )}

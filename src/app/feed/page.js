@@ -213,7 +213,7 @@ export default function FeedPage() {
                                 color: '#fff', border: 'none', borderRadius: 14,
                                 padding: '10px 18px', cursor: 'pointer', fontWeight: 700,
                                 fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6,
-                                boxShadow: '0 4px 15px rgba(79,70,229,0.3)',
+                                boxShadow: '0 4px 15px rgba(15,40,71,0.3)',
                             }}>
                             <Plus size={16} /> Check-in
                         </motion.button>
@@ -485,7 +485,7 @@ export default function FeedPage() {
                                     <div style={{ padding: '4px 16px 10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
                                             <span style={{
-                                                background: 'rgba(79,70,229,0.08)', color: '#0F2847',
+                                                background: 'rgba(15,40,71,0.08)', color: 'var(--text-primary)',
                                                 padding: '3px 10px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 700,
                                             }}>
                                                 📍 {item.placeName}
@@ -721,9 +721,9 @@ export default function FeedPage() {
                                                 onClick={() => setCheckinData(p => ({ ...p, category: cat.key, emoji: cat.emoji }))}
                                                 style={{
                                                     padding: '6px 12px', borderRadius: 10, fontSize: '0.78rem',
-                                                    border: checkinData.category === cat.key ? '2px solid #0F2847' : '1px solid var(--border)',
-                                                    background: checkinData.category === cat.key ? 'rgba(79,70,229,0.08)' : 'var(--bg-tertiary)',
-                                                    color: checkinData.category === cat.key ? '#0F2847' : 'var(--text-secondary)',
+                                                    border: checkinData.category === cat.key ? '2px solid var(--primary-1)' : '1px solid var(--border)',
+                                                    background: checkinData.category === cat.key ? 'rgba(15,40,71,0.08)' : 'var(--bg-tertiary)',
+                                                    color: checkinData.category === cat.key ? 'var(--text-primary)' : 'var(--text-secondary)',
                                                     cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
                                                 }}>
                                                 {cat.emoji} {cat.label}

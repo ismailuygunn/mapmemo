@@ -251,11 +251,11 @@ export default function MapPage() {
             el.className = 'community-spot-marker'
             const TAG_COLORS = {
                 tarihi: '#C2410C', ikon: '#D97706', cami: '#059669', sokak: '#D4A853',
-                renkli: '#DB2777', panorama: '#0284C7', deniz: '#0891B2', gece: '#4338CA',
+                renkli: '#DB2777', panorama: '#0284C7', deniz: '#0891B2', gece: '#2A5A8F',
                 doga: '#16A34A', orman: '#15803D', mimari: '#6D28D9', modern: '#0369A1',
                 sanat: '#9333EA', gizli: '#A21CAF', yemek: '#EA580C', gastro: '#D97706',
                 urban: '#64748B', bizans: '#B45309', saray: '#B91C1C', makro: '#059669',
-                atmospheric: '#4338CA',
+                atmospheric: '#2A5A8F',
             }
             const bgColor = TAG_COLORS[spot.tags?.[0]] || '#06B6D4'
             el.innerHTML = `

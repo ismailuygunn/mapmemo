@@ -254,7 +254,7 @@ export default function EventsPage() {
                         style={{
                             borderRadius: 28, overflow: 'hidden', marginBottom: 24,
                             position: 'relative', minHeight: 220,
-                            background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
+                            background: 'linear-gradient(135deg, #0F172A 0%, #0F2847 50%, #1A3A5C 100%)',
                         }}>
                         {/* Floating decoration */}
                         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>

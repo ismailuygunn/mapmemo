@@ -240,7 +240,7 @@ export default function DashboardPage() {
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: 12 }}>
                             {[
-                                { city: 'İstanbul', emoji: '🌉', tag: 'Kültür', gradient: 'linear-gradient(135deg, #1E1B4B, #312E81)', highlights: ['Boğaz', 'Tarihi Yarımada'] },
+                                { city: 'İstanbul', emoji: '🌉', tag: 'Kültür', gradient: 'linear-gradient(135deg, #0F2847, #1A3A5C)', highlights: ['Boğaz', 'Tarihi Yarımada'] },
                                 { city: 'Antalya', emoji: '🏖️', tag: 'Deniz', gradient: 'linear-gradient(135deg, #164E63, #0E7490)', highlights: ['Kaleiçi', 'Konyaaltı'] },
                                 { city: 'Paris', emoji: '🇫🇷', tag: 'Romantik', gradient: 'linear-gradient(135deg, #4C1D95, #6D28D9)', highlights: ['Eyfel', 'Louvre'] },
                                 { city: 'Roma', emoji: '🇮🇹', tag: 'Tarih', gradient: 'linear-gradient(135deg, #78350F, #92400E)', highlights: ['Kolezyum', 'Vatikan'] },

@@ -173,7 +173,7 @@ export default function DiscoverPage() {
                                 </span>
                                 <span style={{
                                     fontSize: '0.65rem', padding: '2px 8px', borderRadius: 20,
-                                    background: 'rgba(79,70,229,0.1)', color: '#0F2847', fontWeight: 700,
+                                    background: 'rgba(15,40,71,0.1)', color: '#0F2847', fontWeight: 700,
                                 }}>{filteredUsers.length} kişi</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
@@ -283,7 +283,7 @@ export default function DiscoverPage() {
                                                 {c.profiles?.display_name || 'User'}
                                             </span>
                                             <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}> — </span>
-                                            <span style={{ color: '#0F2847' }}>{c.emoji} {c.place_name}</span>
+                                            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.emoji} {c.place_name}</span>
                                         </div>
                                         {c.note && <p style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.note}</p>}
                                     </div>
