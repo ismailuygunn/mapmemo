@@ -4,6 +4,7 @@ import { SpaceProvider } from '@/context/SpaceContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import { ToastProvider } from '@/context/ToastContext'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata = {
   title: 'UMAE — Explore Together',
@@ -47,6 +48,7 @@ export default function RootLayout({ children }) {
             </ToastProvider>
           </ThemeProvider>
         </LanguageProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
