@@ -80,7 +80,8 @@ export default function CitiesPage() {
                             }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                                 <div>
-                                    <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900 }}>
+                                    <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
                                         🌍 {t('cities.title')}
                                     </h1>
                                     <p style={{ margin: '4px 0 0', color: 'var(--text-tertiary)', fontSize: '0.88rem' }}>

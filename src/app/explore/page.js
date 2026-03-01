@@ -302,6 +302,15 @@ export default function ExplorePage() {
             <main className="page-main" style={{ overflowY: 'auto' }}>
                 <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(12px, 3vw, 20px) 80px' }}>
 
+                    {/* ═══ UMAE HEADER ═══ */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingTop: 8 }}>
+                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900 }}>Keşfet</h2>
+                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Nereye gitmek istiyorsun?</p>
+                        </div>
+                    </div>
+
                     {/* ═══ HERO CAROUSEL ═══ */}
                     <motion.div
                         key={heroIdx}

@@ -83,7 +83,8 @@ export default function SettingsPage() {
             <Sidebar />
             <div className="main-content">
                 <div className="page" style={{ maxWidth: 640 }}>
-                    <div className="page-header">
+                    <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
                         <h1>⚙️ {t('settings.title')}</h1>
                     </div>
 
