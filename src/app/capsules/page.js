@@ -553,7 +553,7 @@ export default function CapsulesPage() {
                                         {wizardStep === 2 && (
                                             <motion.div key="s2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
                                                 {/* Date + Time */}
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(130px, 100%), 1fr))', gap: 12, marginBottom: 16 }}>
                                                     <div>
                                                         <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6, display: 'block' }}>
                                                             📅 {t('capsule.revealDate')} *
@@ -725,7 +725,7 @@ export default function CapsulesPage() {
                             </motion.button>
                         </motion.div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: 16 }}>
                             {capsules.map((capsule, i) => {
                                 const theme = getTheme(capsule.color_theme)
                                 const type = getType(capsule.capsule_type)
@@ -994,7 +994,7 @@ export default function CapsulesPage() {
                                     transition={{ type: 'spring', damping: 20 }}
                                     onClick={e => e.stopPropagation()}
                                     style={{
-                                        width: '100%', maxWidth: 540, maxHeight: '85vh', overflow: 'auto',
+                                        width: '100%', maxWidth: 'min(540px, 95vw)', maxHeight: '85vh', overflow: 'auto',
                                         borderRadius: 24, background: 'var(--bg-secondary)',
                                         border: '1px solid var(--border-primary)',
                                         boxShadow: '0 24px 64px rgba(0,0,0,0.5)',

@@ -247,7 +247,7 @@ export default function EventsPage() {
         <div className="page-layout">
             <Sidebar />
             <main className="page-main" style={{ overflowY: 'auto' }}>
-                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px 60px' }}>
+                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(12px, 3vw, 20px) 80px' }}>
 
                     {/* ═══ ANIMATED HERO ═══ */}
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
@@ -284,7 +284,7 @@ export default function EventsPage() {
                             </motion.h1>
                             <motion.p
                                 initial={{ opacity: 0 }} animate={{ opacity: 0.85 }} transition={{ delay: 0.15 }}
-                                style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1rem', margin: '8px 0 0', maxWidth: 500, lineHeight: 1.5 }}>
+                                style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1rem', margin: '8px 0 0', maxWidth: 'min(500px, 100%)', lineHeight: 1.5 }}>
                                 Konser, tiyatro, festival ve daha fazlasını keşfet
                             </motion.p>
                             {searched && (
@@ -531,7 +531,7 @@ export default function EventsPage() {
                                         {/* Event Cards Grid */}
                                         <div style={{
                                             display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                                            gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))',
                                             gap: 18,
                                         }}>
                                             {filteredEvents.map((event, i) => (

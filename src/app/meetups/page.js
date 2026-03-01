@@ -638,12 +638,12 @@ export default function SOSPlanPage() {
                                             />
                                             <div style={{
                                                 position: 'absolute', inset: 0, display: 'flex',
-                                                alignItems: 'center', padding: '0 24px', gap: 14,
+                                                alignItems: 'center', padding: '0 clamp(14px, 3vw, 24px)', gap: 14,
                                                 background: `linear-gradient(90deg, ${scenario.color}CC, transparent)`,
                                             }}>
-                                                <span style={{ fontSize: '2.2rem' }}>{scenario.emoji}</span>
+                                                <span style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>{scenario.emoji}</span>
                                                 <div style={{ color: 'white' }}>
-                                                    <div style={{ fontWeight: 800, fontSize: '1.3rem' }}>{scenario.title}</div>
+                                                    <div style={{ fontWeight: 800, fontSize: 'clamp(1rem, 3vw, 1.3rem)' }}>{scenario.title}</div>
                                                     <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>{scenario.subtitle}</div>
                                                 </div>
                                                 <button
@@ -998,7 +998,7 @@ export default function SOSPlanPage() {
                                 </div>
 
                                 {/* ── BOTTOM CARDS ── */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 12, marginBottom: 24 }}>
                                     {plan.whatToWear && (
                                         <div style={bottomCardStyle}>
                                             <div style={bottomCardTitle}><Shirt size={14} /> Kıyafet</div>
@@ -1054,11 +1054,11 @@ export default function SOSPlanPage() {
                                                 <><Save size={18} /> Kaydet</>}
                                     </button>
                                     <button onClick={handlePrint}
-                                        style={{ flex: '1 1 140px', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                        style={{ flex: '1 1 min(140px, 100%)', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                         <Printer size={18} /> Çıktı Al
                                     </button>
                                     <button onClick={resetAll}
-                                        style={{ flex: '1 1 140px', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                        style={{ flex: '1 1 min(140px, 100%)', padding: '14px', borderRadius: 14, background: 'var(--bg-secondary)', border: '2px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.92rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                                         <Zap size={18} /> Yeni Plan
                                     </button>
                                 </div>

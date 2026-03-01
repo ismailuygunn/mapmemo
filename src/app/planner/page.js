@@ -490,12 +490,12 @@ export default function PlannerPage() {
         const cities = formData.cities.join(' → ') || formData.cityInput
         const daysHTML = (itinerary.days || []).map((day, di) => `
             <div style="page-break-inside:avoid;margin-bottom:24px;">
-                <h3 style="color:#0F2847;margin:0 0 8px;">📅 ${day.title || 'Gün ' + (di+1)}</h3>
+                <h3 style="color:#0F2847;margin:0 0 8px;">📅 ${day.title || 'Gün ' + (di + 1)}</h3>
                 ${day.theme ? `<p style="font-size:12px;color:#64748B;margin:0 0 12px;">🎯 ${day.theme}</p>` : ''}
                 ${(day.items || []).map(item => `
                     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:8px;">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                            <span style="background:#0F284715;color:#0F2847;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${item.timeStart || ''}${item.timeEnd ? ' - '+item.timeEnd : ''}</span>
+                            <span style="background:#0F284715;color:#0F2847;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${item.timeStart || ''}${item.timeEnd ? ' - ' + item.timeEnd : ''}</span>
                             <strong style="font-size:14px;">${item.title}</strong>
                         </div>
                         ${item.description ? `<p style="font-size:12px;color:#4a5568;margin:4px 0;">${item.description}</p>` : ''}
@@ -517,7 +517,7 @@ export default function PlannerPage() {
             <div style="text-align:center;margin-bottom:24px;padding:20px;border-radius:16px;background:linear-gradient(135deg,#0F284715,#D4A85315);">
                 <div style="font-size:36px;margin-bottom:8px;">✈️</div>
                 <h2>${cities}</h2>
-                <p style="color:#64748B;font-size:13px;">${formData.startDate ? new Date(formData.startDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} ${formData.endDate ? ' → ' + new Date(formData.endDate).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) : ''} · ${itinerary.days?.length || 0} gün</p>
+                <p style="color:#64748B;font-size:13px;">${formData.startDate ? new Date(formData.startDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : ''} ${formData.endDate ? ' → ' + new Date(formData.endDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) : ''} · ${itinerary.days?.length || 0} gün</p>
             </div>
             ${extrasHTML.join('')}
             ${daysHTML}
@@ -857,7 +857,7 @@ export default function PlannerPage() {
                                     <motion.div key="step1" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
 
                                         {/* Dates with integrated flex */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: 16 }}>
                                             <div className="input-group">
                                                 <label>📅 {t('planner.startDate')} <span style={{ color: 'var(--error)', fontSize: '0.75rem' }}>*</span></label>
                                                 <input type="date" className="input" value={formData.startDate} onChange={(e) => update('startDate', e.target.value)} required />
@@ -907,7 +907,7 @@ export default function PlannerPage() {
                                         {/* Group Type Selector */}
                                         <div className="input-group" style={{ marginTop: 16 }}>
                                             <label>👥 {locale === 'tr' ? 'Grup Tipi' : 'Group Type'}</label>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(70px, 100%), 1fr))', gap: 8 }}>
                                                 {[
                                                     { id: 'solo', emoji: '🧑', label: locale === 'tr' ? 'Solo' : 'Solo' },
                                                     { id: 'couple', emoji: '💑', label: locale === 'tr' ? 'Çift' : 'Couple' },
@@ -993,7 +993,7 @@ export default function PlannerPage() {
                                             )}
                                         </div>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: 16 }}>
 
                                             {/* Time Preference */}
                                             <div className="input-group" style={{ marginBottom: 0 }}>
@@ -1130,7 +1130,7 @@ export default function PlannerPage() {
                                                         <div className="advanced-content">
                                                             <label>{t('transport.label')}</label>
                                                             <p className="input-hint">{t('transport.hint')}</p>
-                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(120px, 100%), 1fr))', gap: 8 }}>
                                                                 {TRANSPORT_MODES.map(m => (
                                                                     <Chip key={m.value} active={formData.transportMode === m.value}
                                                                         onClick={() => update('transportMode', m.value)}>
@@ -1631,7 +1631,7 @@ export default function PlannerPage() {
                                         <button className="btn btn-primary" onClick={() => setView('form')}>{t('planner.createPlan')}</button>
                                     </div>
                                 ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
                                         {savedTrips.map((trip, i) => (
                                             <motion.div key={trip.id}
                                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}

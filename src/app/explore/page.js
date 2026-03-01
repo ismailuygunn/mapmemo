@@ -293,14 +293,14 @@ export default function ExplorePage() {
 
     const sectionStyle = {
         background: 'var(--bg-secondary)', borderRadius: 20,
-        border: '1px solid var(--border)', padding: '24px 28px', marginBottom: 24,
+        border: '1px solid var(--border)', padding: 'clamp(16px, 3vw, 24px) clamp(14px, 3vw, 28px)', marginBottom: 24,
     }
 
     return (
         <div className="page-layout">
             <Sidebar />
             <main className="page-main" style={{ overflowY: 'auto' }}>
-                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px 60px' }}>
+                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(12px, 3vw, 20px) 80px' }}>
 
                     {/* ═══ HERO CAROUSEL ═══ */}
                     <motion.div
@@ -316,13 +316,13 @@ export default function ExplorePage() {
                         <div style={{
                             position: 'absolute', inset: 0,
                             background: 'linear-gradient(transparent 30%, rgba(0,0,0,0.75))',
-                            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 32px 28px',
+                            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '0 clamp(16px, 4vw, 32px) clamp(18px, 3vw, 28px)',
                         }}>
                             <span style={{
                                 alignSelf: 'flex-start', background: hero.color, color: 'white',
                                 padding: '4px 12px', borderRadius: 8, fontSize: '0.68rem', fontWeight: 700, marginBottom: 8,
                             }}>{hero.tag}</span>
-                            <h1 style={{ color: 'white', fontSize: '2.2rem', fontWeight: 900, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(1.4rem, 5vw, 2.2rem)', fontWeight: 900, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
                                 {hero.emoji} {hero.city}
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1rem', margin: '4px 0 0' }}>{hero.desc}</p>
@@ -341,7 +341,7 @@ export default function ExplorePage() {
                     </motion.div>
 
                     {/* ═══ QUICK ACTIONS ═══ */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: 12, marginBottom: 24 }}>
                         {QUICK_ACTIONS.map((action, i) => (
                             <motion.div key={i}
                                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -366,7 +366,7 @@ export default function ExplorePage() {
                         <h2 style={{ margin: '0 0 14px', fontSize: '1.1rem', fontWeight: 800 }}>
                             <Sparkles size={18} style={{ color: '#FBBF24', marginRight: 6 }} /> Nasıl Bir Tatil İstiyorsun?
                         </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(140px, 100%), 1fr))', gap: 10 }}>
                             {TRAVEL_MOODS.map((mood, i) => (
                                 <motion.div key={i} whileHover={{ scale: 1.03, y: -2 }}
                                     onClick={() => router.push(`/flights`)}
@@ -397,7 +397,7 @@ export default function ExplorePage() {
                         <h2 style={{ margin: '0 0 14px', fontSize: '1.1rem', fontWeight: 800 }}>
                             <Globe size={18} style={{ color: '#D4A853', marginRight: 6 }} /> Popüler Destinasyonlar
                         </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14, marginBottom: 24 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 14, marginBottom: 24 }}>
                             {DESTINATION_CARDS.map((dest, i) => (
                                 <motion.div key={i}
                                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -463,7 +463,7 @@ export default function ExplorePage() {
                         </div>
 
                         {/* Info Cards Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 14 }}>
                             {DESTINATION_INFO_CARDS
                                 .filter(c => infoCat === 'all' || c.cat === infoCat)
                                 .map((card, i) => {
@@ -551,7 +551,7 @@ export default function ExplorePage() {
                                     transition={{ type: 'spring', damping: 25 }}
                                     onClick={e => e.stopPropagation()}
                                     style={{
-                                        width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto',
+                                        width: '100%', maxWidth: 'min(520px, 95vw)', maxHeight: '90vh', overflowY: 'auto',
                                         background: 'var(--bg-primary)', borderRadius: 28,
                                         boxShadow: '0 25px 80px rgba(0,0,0,0.3)',
                                         border: '1px solid var(--border)',
@@ -687,7 +687,7 @@ export default function ExplorePage() {
                         </div>
 
                         {/* Country Grid */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(180px, 100%), 1fr))', gap: 10 }}>
                             {(showAllVisa ? VISA_COUNTRIES[visaTab] : VISA_COUNTRIES[visaTab].slice(0, 8)).map((c, i) => (
                                 <motion.div key={c.country}
                                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -749,7 +749,7 @@ export default function ExplorePage() {
                         <h2 style={{ margin: '0 0 14px', fontSize: '1.1rem', fontWeight: 800 }}>
                             <TrendingUp size={18} style={{ color: '#10B981', marginRight: 6 }} /> Seyahat İpuçları
                         </h2>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 10 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 10 }}>
                             {TRAVEL_TIPS.map((tip, i) => (
                                 <motion.div key={i} whileHover={{ x: 4 }}
                                     style={{

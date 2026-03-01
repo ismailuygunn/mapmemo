@@ -889,7 +889,7 @@ export default function SpacesPage() {
                                                                 <X size={16} />
                                                             </button>
                                                         </div>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(120px, 100%), 1fr))', gap: 10 }}>
                                                             {GROUP_TYPES.map(gt => (
                                                                 <motion.button key={gt.key}
                                                                     className={`gh-type-card ${newGroupType === gt.key ? 'gh-type-card-active' : ''}`}
@@ -972,7 +972,7 @@ export default function SpacesPage() {
                                     <div className="gh-empty">
                                         <img src="/umae-icon.png" alt="UMAE" style={{ width: 52, height: 52, borderRadius: 14, opacity: 0.4, marginBottom: 12 }} />
                                         <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('Henüz ekibin yok', 'No teams yet')}</p>
-                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 320, margin: '4px auto 16px' }}>
+                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 'min(320px, 100%)', margin: '4px auto 16px' }}>
                                             {t('Sevgilinle, arkadaşlarınla veya ailenle seyahat planla', 'Plan trips with your partner, friends or family')}
                                         </p>
                                         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>

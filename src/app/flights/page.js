@@ -207,7 +207,7 @@ export default function FlightsPage() {
         <div className="page-layout">
             <Sidebar />
             <main className="page-main" style={{ overflowY: 'auto' }}>
-                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px 60px' }}>
+                <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 clamp(12px, 3vw, 20px) 80px' }}>
 
                     {/* ═══ HERO ═══ */}
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
@@ -227,7 +227,7 @@ export default function FlightsPage() {
                                     Uçuş Fırsatları
                                 </h1>
                             </div>
-                            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.92rem', margin: '6px 0 0', maxWidth: 500 }}>
+                            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.92rem', margin: '6px 0 0', maxWidth: 'min(500px, 100%)' }}>
                                 Gerçek zamanlı fiyatlar · Skyscanner, Google Flights, Enuygun, Turna
                             </p>
                         </div>
@@ -433,7 +433,7 @@ export default function FlightsPage() {
                                                     </div>
                                                 </div>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))', gap: 16 }}>
                                                     {deals.map((deal, i) => (
                                                         <motion.div key={deal.destination}
                                                             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}

@@ -238,7 +238,7 @@ export default function DashboardPage() {
                                 <Sparkles size={12} /> {t('Keşfet', 'Explore')}
                             </button>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(195px, 1fr))', gap: 12 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: 12 }}>
                             {[
                                 { city: 'İstanbul', emoji: '🌉', tag: 'Kültür', gradient: 'linear-gradient(135deg, #0F2847, #1A3A5C)', highlights: ['Boğaz', 'Tarihi Yarımada'] },
                                 { city: 'Antalya', emoji: '🏖️', tag: 'Deniz', gradient: 'linear-gradient(135deg, #164E63, #0E7490)', highlights: ['Kaleiçi', 'Konyaaltı'] },
@@ -342,7 +342,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     {/* Tips Cards */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12, marginBottom: 16 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 12, marginBottom: 16 }}>
                                         {(quickTips.quickTips || []).map((tip, idx) => {
                                             if (dismissedTips.includes(idx)) return null
                                             const cat = CATEGORY_COLORS[tip.category] || CATEGORY_COLORS.hack
@@ -370,7 +370,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     {/* Detail sections */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12, marginBottom: 16 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 12, marginBottom: 16 }}>
                                         {quickTips.budgetTransport && (
                                             <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, padding: '16px 18px', border: '1px solid var(--border)' }}>
                                                 <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: 8 }}>🚌 {t('Ulaşım', 'Transport')}</h4>
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                                     onClick={() => setShowAssignModal(false)}>
                                     <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
                                         onClick={e => e.stopPropagation()}
-                                        style={{ background: 'var(--bg-primary)', borderRadius: 20, padding: 24, minWidth: 320, maxWidth: 400, border: '1px solid var(--border)' }}>
+                                        style={{ background: 'var(--bg-primary)', borderRadius: 20, padding: 24, minWidth: 'min(320px, 90vw)', maxWidth: 'min(400px, 90vw)', border: '1px solid var(--border)' }}>
                                         <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 700 }}>👥 {t('Gruba Ata', 'Assign to Group')}</h3>
                                         {userSpaces.length === 0 ? (
                                             <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)' }}>{t('Henüz grubun yok.', 'No groups yet.')}</p>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                             onClick={e => e.stopPropagation()}
                             style={{
                                 background: 'var(--bg-secondary)', borderRadius: 24,
-                                width: '100%', maxWidth: 480, overflow: 'hidden',
+                                width: '100%', maxWidth: 'min(480px, 95vw)', overflow: 'hidden',
                                 border: '1px solid var(--border)',
                                 boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
                             }}
