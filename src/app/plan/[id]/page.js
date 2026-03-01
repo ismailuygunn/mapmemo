@@ -92,7 +92,7 @@ export default function SharedPlanPage() {
                 <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 5 }}
                     style={{ position: 'absolute', bottom: 20, left: 40, fontSize: '1.5rem', opacity: 0.1 }}>⚡</motion.span>
 
-                <Image src="/umae-icon.png" alt="UMAE" width={48} height={48} style={{ borderRadius: 14, marginBottom: 12 }} />
+                <img src="/umae-icon.png?v=2" alt="UMAE" width={48} height={48} style={{ borderRadius: 14, marginBottom: 12 }} />
                 <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.1em', marginBottom: 6 }}>UMAE SOS PLAN</div>
                 <h1 style={{ color: 'white', fontSize: '1.6rem', fontWeight: 900, marginBottom: 8, letterSpacing: '-0.02em' }}>
                     {plan.planEmoji} {plan.planTitle}
@@ -251,7 +251,7 @@ export default function SharedPlanPage() {
 
                 {/* Footer */}
                 <div style={{ textAlign: 'center', padding: '24px 0 48px', borderTop: '1px solid var(--border)', marginTop: 24 }}>
-                    <Image src="/umae-icon.png" alt="UMAE" width={32} height={32} style={{ borderRadius: 10, marginBottom: 8 }} />
+                    <img src="/umae-icon.png?v=2" alt="UMAE" width={32} height={32} style={{ borderRadius: 10, marginBottom: 8 }} />
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', letterSpacing: '0.05em' }}>Powered by UMAE SOS Plan</div>
                     <a href="/meetups" style={{
                         display: 'inline-block', marginTop: 12, padding: '10px 20px', borderRadius: 10,

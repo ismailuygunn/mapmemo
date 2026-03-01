@@ -222,7 +222,7 @@ export default function FlightsPage() {
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 40px',
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                <img src="/umae-icon.png" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 10 }} />
+                                <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 10 }} />
                                 <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0 }}>
                                     Uçuş Fırsatları
                                 </h1>

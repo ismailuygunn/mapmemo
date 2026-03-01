@@ -304,7 +304,7 @@ export default function ExplorePage() {
 
                     {/* ═══ UMAE HEADER ═══ */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingTop: 8 }}>
-                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
+                        <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
                         <div>
                             <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900 }}>Keşfet</h2>
                             <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Nereye gitmek istiyorsun?</p>

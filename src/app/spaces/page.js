@@ -859,7 +859,7 @@ export default function SpacesPage() {
                             <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
                                 <div className="gh-header">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 32, height: 32, borderRadius: 8 }} />
+                                        <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 32, height: 32, borderRadius: 8 }} />
                                         <div>
                                             <h1 className="gh-title">{t('Seyahat Ekipleri', 'Travel Teams')}</h1>
                                             <p className="gh-subtitle">{t('Sevgilin, arkadaşların veya ailen ile seyahat planla', 'Plan trips with your partner, friends or family')}</p>
@@ -970,7 +970,7 @@ export default function SpacesPage() {
                                     <div className="gh-loading"><Loader2 size={28} className="spin" /></div>
                                 ) : spaces.length === 0 ? (
                                     <div className="gh-empty">
-                                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 52, height: 52, borderRadius: 14, opacity: 0.4, marginBottom: 12 }} />
+                                        <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 52, height: 52, borderRadius: 14, opacity: 0.4, marginBottom: 12 }} />
                                         <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('Henüz ekibin yok', 'No teams yet')}</p>
                                         <p style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 'min(320px, 100%)', margin: '4px auto 16px' }}>
                                             {t('Sevgilinle, arkadaşlarınla veya ailenle seyahat planla', 'Plan trips with your partner, friends or family')}

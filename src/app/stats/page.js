@@ -101,7 +101,7 @@ export default function StatsPage() {
             <main className="page-main">
                 <div style={{ maxWidth: 700, margin: '0 auto', padding: '24px clamp(10px, 3vw, 16px) 100px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                        <img src="/umae-icon.png" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
+                        <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>
                             {locale === 'tr' ? 'Seyahat İstatistikleri' : 'Travel Statistics'}
                         </h1>

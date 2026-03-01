@@ -363,7 +363,7 @@ export default function CapsulesPage() {
                             padding: '24px 32px', flexWrap: 'wrap', gap: 12,
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                                <Image src="/umae-icon.png" alt="UMAE" width={40} height={40} style={{ borderRadius: 10 }} />
+                                <img src="/umae-icon.png?v=2" alt="UMAE" width={40} height={40} style={{ borderRadius: 10 }} />
                                 <div>
                                     <h1 style={{ color: 'white', fontSize: '1.6rem', fontWeight: 900, margin: 0 }}>
                                         🔮 {t('capsule.title')}

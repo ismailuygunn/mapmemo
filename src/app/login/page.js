@@ -69,7 +69,7 @@ function LoginInner() {
                     initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}
                 >
                     <div style={{ marginBottom: 24 }}>
-                        <Image src="/umae-logo-dark.png" alt="UMAE" width={180} height={180} style={{ objectFit: 'contain', borderRadius: 16 }} priority />
+                        <img src="/umae-logo-dark.png?v=2" alt="UMAE" width={180} height={180} style={{ objectFit: 'contain', borderRadius: 16 }} />
                     </div>
                     <p className="auth-brand-subtitle">
                         {locale === 'tr'
