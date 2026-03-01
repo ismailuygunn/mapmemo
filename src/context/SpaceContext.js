@@ -167,14 +167,24 @@ export function SpaceProvider({ children }) {
         return spaceData
     }
 
-    const joinSpace = async (inviteToken) => {
+    const joinSpace = async (rawInput) => {
+        // Parse invite token from URL or raw token
+        let inviteToken = rawInput.trim()
+        // Handle full URL: https://site.com/invite/abc123
+        const urlMatch = inviteToken.match(/\/invite\/([a-zA-Z0-9]+)/)
+        if (urlMatch) inviteToken = urlMatch[1]
+        // Handle just /invite/abc123
+        if (inviteToken.startsWith('/invite/')) inviteToken = inviteToken.replace('/invite/', '')
+
+        if (!inviteToken) throw new Error('Geçersiz davet linki')
+
         const { data: spaceData, error: findError } = await supabase
             .from('spaces')
             .select('*')
             .eq('invite_code', inviteToken)
             .single()
 
-        if (findError || !spaceData) throw new Error('Geçersiz davet linki')
+        if (findError || !spaceData) throw new Error('Geçersiz davet linki — bu kod bulunamadı')
 
         // Check if already a member
         const { data: existing } = await supabase

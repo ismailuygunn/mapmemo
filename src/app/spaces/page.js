@@ -201,12 +201,16 @@ export default function SpacesPage() {
         if (!joinToken.trim()) return
         setJoining(true)
         try {
+            // ctxJoinSpace already handles URL parsing
             await ctxJoinSpace(joinToken.trim())
             setJoinToken('')
             setShowCreate(false)
-            toast.success(t('Gruba katıldın!', 'Joined group!'))
+            toast.success(t('Gruba katıldın! 🎉', 'Joined group! 🎉'))
             loadSpaces()
-        } catch (err) { toast.error(err.message) }
+        } catch (err) {
+            console.error('Join error:', err)
+            toast.error(err.message || t('Katılım başarısız', 'Join failed'))
+        }
         setJoining(false)
     }
 
@@ -316,7 +320,7 @@ export default function SpacesPage() {
     return (
         <>
             <Sidebar />
-            <div className="main-content">
+            <div className="main-content" style={{ overflowY: 'auto' }}>
                 <div className="groups-hub">
                     {/* Error Banner */}
                     {error && (
@@ -519,7 +523,7 @@ export default function SpacesPage() {
                                                                 👤
                                                             </div>
                                                             <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', margin: 0 }}>
-                                                                <strong>{m.display_name || m.email?.split('@')[0]}</strong>
+                                                                <strong>{m.profiles?.display_name || m.profiles?.full_name || m.profiles?.email?.split('@')[0] || 'Kullanıcı'}</strong>
                                                                 <span style={{ color: 'var(--text-tertiary)' }}> {t('ekibe katıldı', 'joined the team')}</span>
                                                             </p>
                                                         </motion.div>

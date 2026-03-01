@@ -34,6 +34,7 @@ const COLOR_THEMES = [
 export default function CapsulesPage() {
     const [capsules, setCapsules] = useState([])
     const [loading, setLoading] = useState(true)
+    const [loadError, setLoadError] = useState(null)
     const [showCreate, setShowCreate] = useState(false)
     const [wizardStep, setWizardStep] = useState(0)
     const [form, setForm] = useState({
@@ -94,28 +95,36 @@ export default function CapsulesPage() {
 
     const loadCapsules = async () => {
         setLoading(true)
+        setLoadError(null)
         try {
             let query = supabase.from('memory_capsules').select('*')
             if (space) {
                 query = query.eq('space_id', space.id)
             } else if (user) {
-                // Simple query first — collaborators column may not exist yet
                 query = query.eq('created_by', user.id)
             } else { setLoading(false); return }
             const { data, error } = await query.order('reveal_date', { ascending: true })
             if (error) {
                 console.warn('Capsules load error:', error.message)
-                // If error mentions collaborators column, retry without it
-                if (error.message?.includes('collaborators')) {
-                    const { data: fallbackData } = await supabase
-                        .from('memory_capsules').select('*')
+                // If error is column-related, retry with basic query
+                if (error.message?.includes('column') || error.message?.includes('schema') || error.code === '42703') {
+                    const { data: fallbackData, error: fallbackErr } = await supabase
+                        .from('memory_capsules').select('id, space_id, created_by, title, message, reveal_date, is_revealed, revealed_at, media_urls, created_at')
                         .eq('created_by', user.id)
                         .order('reveal_date', { ascending: true })
                     if (fallbackData) setCapsules(fallbackData)
+                    else if (fallbackErr) setLoadError(fallbackErr.message)
+                } else if (error.message?.includes('infinite recursion') || error.code === '42P17') {
+                    setLoadError('RLS')
+                } else {
+                    setLoadError(error.message)
                 }
             }
             if (data) setCapsules(data)
-        } catch (err) { console.error(err) }
+        } catch (err) {
+            console.error(err)
+            setLoadError(err.message)
+        }
         setLoading(false)
     }
 
@@ -235,8 +244,8 @@ export default function CapsulesPage() {
             let { data, error } = await supabase
                 .from('memory_capsules').insert(fullPayload).select().single()
 
-            // Fallback: if new columns don't exist yet, use basic columns only
-            if (error && error.message?.includes('schema cache')) {
+            // Fallback: if columns don't exist, use basic columns
+            if (error && (error.message?.includes('schema') || error.message?.includes('column') || error.code === '42703')) {
                 const basicPayload = {
                     space_id: space?.id || null,
                     created_by: user.id,
@@ -249,7 +258,7 @@ export default function CapsulesPage() {
                     .from('memory_capsules').insert(basicPayload).select().single()
                 data = result.data
                 error = result.error
-                if (!error) toast.info('💡 Migration çalıştırın — gelişmiş özellikler için')
+                if (!error) toast.info('💡 Gelişmiş özellikler için migration çalıştırın')
             }
 
             if (!error && data) {
@@ -696,6 +705,32 @@ export default function CapsulesPage() {
                             </motion.div>
                         )}
                     </AnimatePresence>
+
+                    {/* ═══ ERROR BANNER ═══ */}
+                    {loadError && (
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                            style={{
+                                padding: '12px 16px', marginBottom: 16,
+                                background: loadError === 'RLS' ? 'rgba(251,191,36,0.1)' : 'rgba(239,68,68,0.1)',
+                                border: `1px solid ${loadError === 'RLS' ? 'rgba(251,191,36,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                                borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10,
+                                fontSize: '0.82rem', color: loadError === 'RLS' ? '#D97706' : '#EF4444',
+                            }}>
+                            <span>⚠️</span>
+                            <span style={{ flex: 1 }}>
+                                {loadError === 'RLS'
+                                    ? 'Veritabanı izin hatası. Kapsül oluşturabilirsiniz.'
+                                    : `Hata: ${loadError}`}
+                            </span>
+                            <button onClick={loadCapsules} style={{
+                                background: 'none', border: '1px solid currentColor',
+                                borderRadius: 8, padding: '4px 12px', color: 'inherit',
+                                cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                            }}>
+                                Tekrar Dene
+                            </button>
+                        </motion.div>
+                    )}
 
                     {/* ═══ CAPSULES LIST ═══ */}
                     {loading ? (
