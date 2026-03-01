@@ -705,7 +705,7 @@ export default function TripPage() {
                         <button className={`trip-tab ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}><DollarSign size={15} /> {t('Masraf', 'Expenses')}</button>
                         <button className={`trip-tab ${activeTab === 'packing' ? 'active' : ''}`} onClick={() => setActiveTab('packing')}>🎒 {t('Bavul', 'Pack')}</button>
                         <button className={`trip-tab ${activeTab === 'phrases' ? 'active' : ''}`} onClick={() => setActiveTab('phrases')}>🗣️ {t('Cümleler', 'Phrases')}</button>
-                        <button className={`trip-tab ${activeTab === 'emergency' ? 'active' : ''}`} onClick={() => setActiveTab('emergency')}>🆘 {t('Güvenlik', 'Safety')}</button>
+                        <button className={`trip-tab ${activeTab === 'emergency' ? 'active' : ''}`} onClick={() => setActiveTab('emergency')}>📖 {t('Rehber', 'Guide')}</button>
                         <button className={`trip-tab ${activeTab === 'photospots' ? 'active' : ''}`} onClick={() => setActiveTab('photospots')}>📸 {t('Spot', 'Spots')}</button>
                         <button className={`trip-tab ${activeTab === 'menu' ? 'active' : ''}`} onClick={() => setActiveTab('menu')}>🍽️ {t('Menü', 'Menu')}</button>
                         <button className={`trip-tab ${activeTab === 'daytrip' ? 'active' : ''}`} onClick={() => setActiveTab('daytrip')}>🏕️ {t('Günübirlik', 'Day Trip')}</button>
@@ -1056,219 +1056,270 @@ function PhrasebookTab({ city, locale }) {
 function EmergencyTab({ city, locale }) {
     const [data, setData] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [activeCat, setActiveCat] = useState('safety')
+    const t = (tr, en) => locale === 'tr' ? tr : en
 
     const generate = async () => {
         setLoading(true)
         try {
             const res = await fetch('/api/emergency', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
             const d = await res.json()
-            if (d.emergencyNumbers) setData(d)
+            if (!d.error) setData(d)
         } catch { }
         setLoading(false)
     }
 
     useEffect(() => { if (city && !data) generate() }, [city])
 
-    if (loading) return <LoadingPlaceholder text={locale === 'tr' ? 'Güvenlik bilgileri alınıyor...' : 'Getting safety info...'} />
+    if (loading) return <LoadingPlaceholder text={t('Seyahat rehberi hazırlanıyor...', 'Preparing travel guide...')} />
     if (!data) return (
-        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>🆘</span><p>{locale === 'tr' ? 'Güvenlik bilgisi yok' : 'No safety info'}</p><button className="btn btn-primary btn-sm" onClick={generate}>{locale === 'tr' ? 'Yükle' : 'Load'}</button></div>
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>📖</span><p>{t('Rehber yüklenmedi', 'Guide not loaded')}</p><button className="btn btn-primary btn-sm" onClick={generate}>{t('Yükle', 'Load')}</button></div>
     )
+
+    const CATS = [
+        { id: 'safety', emoji: '🛡️', label: t('Güvenlik', 'Safety'), photo: '/guide-photos/safety.png', color: '#EF4444' },
+        { id: 'daily', emoji: '🏪', label: t('Günlük', 'Daily'), photo: '/guide-photos/daily.png', color: '#F59E0B' },
+        { id: 'transport', emoji: '🚇', label: t('Ulaşım', 'Transport'), photo: '/guide-photos/transport.png', color: '#3B82F6' },
+        { id: 'money', emoji: '💰', label: t('Para', 'Money'), photo: '/guide-photos/money.png', color: '#10B981' },
+        { id: 'food', emoji: '🍽️', label: t('Yemek', 'Food'), photo: '/guide-photos/food.png', color: '#F97316' },
+        { id: 'culture', emoji: '🕌', label: t('Kültür', 'Culture'), photo: '/guide-photos/culture.png', color: '#8B5CF6' },
+        { id: 'health', emoji: '💊', label: t('Sağlık', 'Health'), photo: '/guide-photos/health.png', color: '#06B6D4' },
+        { id: 'digital', emoji: '📱', label: t('Dijital', 'Digital'), photo: '/guide-photos/digital.png', color: '#EC4899' },
+    ]
+    const active = CATS.find(c => c.id === activeCat) || CATS[0]
+
+    const InfoRow = ({ emoji, label, value }) => value ? <div style={{ display: 'flex', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: '0.8rem' }}><span>{emoji}</span><div style={{ flex: 1 }}><span style={{ fontWeight: 600 }}>{label}</span><div style={{ color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.4 }}>{value}</div></div></div> : null
+    const TipsList = ({ tips }) => tips?.length > 0 ? <div style={{ marginTop: 12 }}>{tips.map((tip, i) => <div key={i} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.06)', marginBottom: 4, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>💡 {tip}</div>)}</div> : null
 
     return (
         <div className="tool-tab">
-            <div className="tool-header"><h3>🆘 {locale === 'tr' ? 'Güvenlik & Acil' : 'Safety & Emergency'}</h3></div>
+            {/* Category Photo Header */}
+            <div style={{ position: 'relative', height: 120, borderRadius: 16, overflow: 'hidden', marginBottom: 14 }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${active.photo})`, backgroundSize: 'cover', backgroundPosition: 'center', transition: 'background-image 0.3s' }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 100%)' }} />
+                <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end', padding: '14px 16px' }}>
+                    <div>
+                        <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>📖 {t('Seyahat Rehberi', 'Travel Guide')}</div>
+                        <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>{active.emoji} {active.label}</h3>
+                    </div>
+                </div>
+            </div>
 
-            {/* Emergency Numbers */}
-            <div className="emer-numbers">
-                {data.emergencyNumbers?.map((n, i) => (
-                    <a key={i} href={`tel:${n.number}`} className="emer-num-card">
-                        <span className="emer-emoji">{n.emoji}</span>
-                        <span className="emer-service">{n.service}</span>
-                        <span className="emer-number">{n.number}</span>
-                    </a>
+            {/* Category Tabs */}
+            <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 10, marginBottom: 12 }}>
+                {CATS.map(cat => (
+                    <button key={cat.id} onClick={() => setActiveCat(cat.id)}
+                        style={{ padding: '6px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', background: activeCat === cat.id ? active.color : 'var(--bg-tertiary)', color: activeCat === cat.id ? '#fff' : 'var(--text-secondary)', fontWeight: 700, fontSize: '0.72rem', transition: 'all 0.2s' }}>
+                        {cat.emoji} {cat.label}
+                    </button>
                 ))}
             </div>
 
-            {/* Embassy */}
-            {data.embassy && (
-                <div className="emer-section">
-                    <h4>🏛️ {locale === 'tr' ? 'Büyükelçilik' : 'Embassy'}</h4>
-                    <div className="emer-embassy-card">
-                        <strong>{data.embassy.name}</strong>
-                        <p>📍 {data.embassy.address}</p>
-                        {data.embassy.phone && <p>📞 <a href={`tel:${data.embassy.phone}`}>{data.embassy.phone}</a></p>}
-                        {data.embassy.workingHours && <p>🕐 {data.embassy.workingHours}</p>}
-                        {data.embassy.googleMapsUrl && <a href={data.embassy.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn">📍 Google Maps</a>}
+            {/* ═══ SAFETY ═══ */}
+            {activeCat === 'safety' && data.safety && (
+                <motion.div key="safety" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {/* Emergency Numbers - Always visible */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
+                        {data.safety.emergencyNumbers?.map((num, i) => (
+                            <a key={i} href={`tel:${num.number}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 12, border: '1px solid rgba(239,68,68,0.15)', textDecoration: 'none', color: 'inherit' }}>
+                                <span style={{ fontSize: '1.2rem' }}>{num.emoji}</span>
+                                <div><div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{num.service}</div><div style={{ color: '#EF4444', fontWeight: 800, fontSize: '0.9rem' }}>{num.number}</div></div>
+                            </a>
+                        ))}
                     </div>
-                </div>
-            )}
-
-            {/* Hospitals */}
-            {data.hospitals?.length > 0 && (
-                <div className="emer-section">
-                    <h4>🏥 {locale === 'tr' ? 'Hastaneler' : 'Hospitals'}</h4>
-                    {data.hospitals.map((h, i) => (
-                        <div key={i} className="emer-hospital-card">
-                            <strong>{h.name}</strong>
-                            <p className="emer-addr">📍 {h.address}</p>
-                            {h.phone && <a href={`tel:${h.phone}`} className="emer-phone">📞 {h.phone}</a>}
-                            <div className="emer-tags">
-                                {h.hasER && <span className="emer-tag er">🚨 {locale === 'tr' ? 'Acil' : 'ER'}</span>}
-                                <span className={`emer-tag ${h.isPublic ? 'public' : 'private'}`}>{h.isPublic ? '🏛️ Devlet' : '🏢 Özel'}</span>
+                    {/* Embassy */}
+                    {data.safety.embassy && (
+                        <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, padding: 14, marginBottom: 10, border: '1px solid var(--border)' }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 8px' }}>🏛️ {data.safety.embassy.name}</h4>
+                            <InfoRow emoji="📍" label={t('Adres', 'Address')} value={data.safety.embassy.address} />
+                            <InfoRow emoji="📞" label={t('Telefon', 'Phone')} value={data.safety.embassy.phone} />
+                            {data.safety.embassy.googleMapsUrl && <a href={data.safety.embassy.googleMapsUrl} target="_blank" rel="noopener" style={{ display: 'inline-block', marginTop: 6, padding: '4px 10px', borderRadius: 8, background: 'rgba(59,130,246,0.08)', color: '#3B82F6', fontSize: '0.72rem', fontWeight: 600, textDecoration: 'none' }}>🗺️ {t('Haritada Aç', 'Open Map')}</a>}
+                        </div>
+                    )}
+                    {/* Hospitals */}
+                    {data.safety.hospitals?.map((h, i) => (
+                        <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: '10px 14px', marginBottom: 6, border: '1px solid var(--border)' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>🏥 {h.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>📍 {h.address}</div>
+                            <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                                {h.phone && <a href={`tel:${h.phone}`} style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(16,185,129,0.08)', color: '#10B981', fontSize: '0.68rem', fontWeight: 600, textDecoration: 'none' }}>📞 {h.phone}</a>}
+                                {h.hasER && <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(239,68,68,0.08)', color: '#EF4444', fontSize: '0.68rem', fontWeight: 600 }}>🚨 ER</span>}
                             </div>
-                            {h.googleMapsUrl && <a href={h.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ai-sugg-maps-btn" style={{ marginTop: 6 }}>📍 Harita</a>}
                         </div>
                     ))}
-                </div>
+                    {/* Safe/Caution areas */}
+                    {data.safety.safeAreas?.map((a, i) => <div key={`s${i}`} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(16,185,129,0.05)', marginBottom: 3, fontSize: '0.78rem', border: '1px solid rgba(16,185,129,0.12)' }}>✅ <strong>{a.name}</strong> — {a.description}</div>)}
+                    {data.safety.cautionAreas?.map((a, i) => <div key={`c${i}`} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(245,158,11,0.05)', marginBottom: 3, fontSize: '0.78rem', border: '1px solid rgba(245,158,11,0.12)' }}>⚠️ <strong>{a.name}</strong> — {a.description}</div>)}
+                    {/* Scams */}
+                    {data.safety.scamWarnings?.length > 0 && <div style={{ marginTop: 10 }}><h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>🚨 {t('Dolandırıcılık Uyarıları', 'Scam Warnings')}</h4>{data.safety.scamWarnings.map((s, i) => <div key={i} style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(239,68,68,0.04)', marginBottom: 4, fontSize: '0.78rem', border: '1px solid rgba(239,68,68,0.1)' }}>{s.emoji} <strong>{s.type}</strong> — {s.description}</div>)}</div>}
+                    {/* Night Safety */}
+                    {data.safety.nightSafety && <div style={{ marginTop: 10, background: 'var(--bg-secondary)', borderRadius: 14, padding: 14, border: '1px solid var(--border)' }}><h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>🌙 {t('Gece Güvenliği', 'Night Safety')}</h4><InfoRow emoji="🔒" label={t('Genel Seviye', 'Level')} value={data.safety.nightSafety.generalLevel} />{data.safety.nightSafety.safeNeighborhoods?.length > 0 && <InfoRow emoji="✅" label={t('Güvenli Bölgeler', 'Safe Areas')} value={data.safety.nightSafety.safeNeighborhoods.join(', ')} />}<InfoRow emoji="🚇" label={t('Gece Ulaşım', 'Late Transport')} value={data.safety.nightSafety.lateNightTransport} /><TipsList tips={data.safety.nightSafety.tips} /></div>}
+                </motion.div>
             )}
 
-            {/* Safe Areas */}
-            {data.safeAreas?.length > 0 && (
-                <div className="emer-section">
-                    <h4>✅ {locale === 'tr' ? 'Güvenli Bölgeler' : 'Safe Areas'}</h4>
-                    {data.safeAreas.map((a, i) => <div key={i} className="emer-area safe">{a.emoji} <strong>{a.name}</strong> — {a.description}</div>)}
-                </div>
+            {/* ═══ DAILY ═══ */}
+            {activeCat === 'daily' && data.dailyEssentials && (
+                <motion.div key="daily" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="🕐" label={t('Çalışma Saatleri', 'Working Hours')} value={data.dailyEssentials.workingHours} />
+                    <InfoRow emoji="📅" label={t('Hafta Sonu', 'Weekend')} value={data.dailyEssentials.weekendHours} />
+                    <InfoRow emoji="🛒" label={t('Marketler', 'Supermarkets')} value={data.dailyEssentials.supermarkets} />
+                    <InfoRow emoji="💊" label={t('Eczane', 'Pharmacy')} value={data.dailyEssentials.pharmacy} />
+                    <InfoRow emoji="🚻" label={t('Umumi Tuvalet', 'Public Toilets')} value={data.dailyEssentials.publicToilets} />
+                    <InfoRow emoji="🔌" label={t('Elektrik', 'Electricity')} value={data.dailyEssentials.electricity} />
+                    <InfoRow emoji="💧" label={t('Su Güvenliği', 'Water Safety')} value={data.dailyEssentials.waterSafety} />
+                    <InfoRow emoji="👕" label={t('Çamaşır', 'Laundry')} value={data.dailyEssentials.laundry} />
+                    <InfoRow emoji="📄" label={t('Pasaport Kaybı', 'Lost Passport')} value={data.dailyEssentials.lostPassport} />
+                    <TipsList tips={data.dailyEssentials.tips} />
+                </motion.div>
             )}
 
-            {/* Caution Areas */}
-            {data.cautionAreas?.length > 0 && (
-                <div className="emer-section">
-                    <h4>⚠️ {locale === 'tr' ? 'Dikkat Bölgeleri' : 'Caution Areas'}</h4>
-                    {data.cautionAreas.map((a, i) => <div key={i} className="emer-area caution">{a.emoji} <strong>{a.name}</strong> — {a.description}</div>)}
-                </div>
+            {/* ═══ TRANSPORT ═══ */}
+            {activeCat === 'transport' && data.transport && (
+                <motion.div key="transport" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="💳" label={t('Şehir Kartı', 'City Card')} value={data.transport.cityCard} />
+                    <InfoRow emoji="🚇" label="Metro" value={data.transport.metro} />
+                    <InfoRow emoji="🚌" label={t('Otobüs', 'Bus')} value={data.transport.bus} />
+                    {data.transport.tram && <InfoRow emoji="🚊" label="Tramvay" value={data.transport.tram} />}
+                    <InfoRow emoji="🚕" label="Taksi" value={data.transport.taxi} />
+                    {data.transport.ferry && <InfoRow emoji="⛴️" label={t('Vapur', 'Ferry')} value={data.transport.ferry} />}
+                    <InfoRow emoji="🚲" label={t('Bisiklet', 'Bike')} value={data.transport.bikeRental} />
+                    <InfoRow emoji="✈️" label={t('Havalimanı', 'Airport')} value={data.transport.airportTransfer} />
+                    <InfoRow emoji="🚗" label={t('Araç Kiralama', 'Car Rental')} value={data.transport.carRental} />
+                    <TipsList tips={data.transport.tips} />
+                </motion.div>
             )}
 
-            {/* Scam Warnings */}
-            {data.scamWarnings?.length > 0 && (
-                <div className="emer-section">
-                    <h4>🚨 {locale === 'tr' ? 'Dolandırıcılık Uyarıları' : 'Scam Warnings'}</h4>
-                    {data.scamWarnings.map((s, i) => <div key={i} className="emer-area caution">{s.emoji} <strong>{s.type}</strong> — {s.description}</div>)}
-                </div>
-            )}
-
-            {/* Tipping */}
-            {data.tipping && (
-                <div className="emer-section">
-                    <h4>💰 {locale === 'tr' ? 'Bahşiş Kültürü' : 'Tipping'}</h4>
-                    <div className="emer-tipping">
-                        <div>🍽️ {locale === 'tr' ? 'Restoran' : 'Restaurant'}: {data.tipping.restaurants}</div>
-                        <div>🏨 {locale === 'tr' ? 'Otel' : 'Hotel'}: {data.tipping.hotels}</div>
-                        <div>🚕 Taksi: {data.tipping.taxis}</div>
-                        {data.tipping.guides && <div>🎙️ Rehber: {data.tipping.guides}</div>}
-                    </div>
-                </div>
-            )}
-
-            {/* Local Transport */}
-            {data.localTransport && (
-                <div className="emer-section">
-                    <h4>🚇 {locale === 'tr' ? 'Yerel Ulaşım' : 'Local Transport'}</h4>
-                    <div className="emer-tipping">
-                        {data.localTransport.cards && <div>💳 {data.localTransport.cards}</div>}
-                        {data.localTransport.metro && <div>🚇 {data.localTransport.metro}</div>}
-                        {data.localTransport.bus && <div>🚌 {data.localTransport.bus}</div>}
-                        {data.localTransport.taxi && <div>🚕 {data.localTransport.taxi}</div>}
-                        {data.localTransport.tips?.map((tip, i) => <div key={i} style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {tip}</div>)}
-                    </div>
-                </div>
-            )}
-
-            {/* Currency */}
-            {data.currencyInfo && (
-                <div className="emer-section">
-                    <h4>💱 {locale === 'tr' ? 'Para & Döviz' : 'Currency & Exchange'}</h4>
-                    <div className="emer-tipping">
-                        <div>💵 {data.currencyInfo.currency}</div>
-                        <div>🏧 {data.currencyInfo.atmTips}</div>
-                        <div>💳 {data.currencyInfo.cardAcceptance}</div>
-                        {data.currencyInfo.exchangeTip && <div>🔄 {data.currencyInfo.exchangeTip}</div>}
-                    </div>
-                </div>
-            )}
-
-            {/* SIM Card */}
-            {data.simCard && (
-                <div className="emer-section">
-                    <h4>📱 {locale === 'tr' ? 'SIM Kart' : 'SIM Card'}</h4>
-                    <div className="emer-tipping">
-                        <div>📡 {data.simCard.providers?.join(', ')}</div>
-                        <div>📦 {data.simCard.touristPackage}</div>
-                        <div>📍 {data.simCard.whereToGet}</div>
-                        {data.simCard.tip && <div style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {data.simCard.tip}</div>}
-                    </div>
-                </div>
-            )}
-
-            {/* Night Safety */}
-            {data.nightSafety && (
-                <div className="emer-section">
-                    <h4>🌙 {locale === 'tr' ? 'Gece Güvenliği' : 'Night Safety'}</h4>
-                    <div className="emer-tipping">
-                        <div>🔒 {locale === 'tr' ? 'Genel seviye' : 'General level'}: <strong>{data.nightSafety.generalLevel}</strong></div>
-                        {data.nightSafety.safeNeighborhoods?.length > 0 && <div>✅ {locale === 'tr' ? 'Güvenli mahalleler' : 'Safe areas'}: {data.nightSafety.safeNeighborhoods.join(', ')}</div>}
-                        {data.nightSafety.lateNightTransport && <div>🚇 {data.nightSafety.lateNightTransport}</div>}
-                        {data.nightSafety.tips?.map((tip, i) => <div key={i} style={{ marginTop: 3, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {tip}</div>)}
-                    </div>
-                </div>
-            )}
-
-            {/* Emergency Phrases */}
-            {data.emergencyPhrases?.length > 0 && (
-                <div className="emer-section">
-                    <h4>🗣️ {locale === 'tr' ? 'Acil Cümleler' : 'Emergency Phrases'}</h4>
-                    {data.emergencyPhrases.map((p, i) => (
-                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(239,68,68,0.04)', borderRadius: 10, marginBottom: 4, border: '1px solid rgba(239,68,68,0.12)', cursor: 'pointer' }}
-                            onClick={() => { navigator.clipboard?.writeText(p.local) }}>
-                            <div>
-                                <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>{p.phrase}</div>
-                                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EF4444' }}>{p.local}</div>
-                                <div style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>🔊 {p.pronunciation}</div>
-                            </div>
-                            <Copy size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+            {/* ═══ MONEY ═══ */}
+            {activeCat === 'money' && data.moneyAndShopping && (
+                <motion.div key="money" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="💵" label={t('Para Birimi', 'Currency')} value={data.moneyAndShopping.currency} />
+                    <InfoRow emoji="🏧" label="ATM" value={data.moneyAndShopping.atm} />
+                    <InfoRow emoji="💳" label={t('Kart Kabul', 'Cards')} value={data.moneyAndShopping.cardAcceptance} />
+                    <InfoRow emoji="🔄" label={t('Döviz', 'Exchange')} value={data.moneyAndShopping.exchange} />
+                    {data.moneyAndShopping.tipping && (
+                        <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, padding: 14, marginTop: 10, border: '1px solid var(--border)' }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 8px' }}>💰 {t('Bahşiş Kültürü', 'Tipping')}</h4>
+                            <InfoRow emoji="🍽️" label={t('Restoran', 'Restaurant')} value={data.moneyAndShopping.tipping.restaurants} />
+                            <InfoRow emoji="☕" label={t('Kafe', 'Cafe')} value={data.moneyAndShopping.tipping.cafes} />
+                            <InfoRow emoji="🚕" label="Taksi" value={data.moneyAndShopping.tipping.taxis} />
+                            <InfoRow emoji="🏨" label={t('Otel', 'Hotel')} value={data.moneyAndShopping.tipping.hotels} />
+                            <InfoRow emoji="💇" label={t('Kuaför', 'Hairdresser')} value={data.moneyAndShopping.tipping.hairdresser} />
                         </div>
-                    ))}
-                </div>
+                    )}
+                    <InfoRow emoji="🤝" label={t('Pazarlık', 'Bargaining')} value={data.moneyAndShopping.bargaining} />
+                    <InfoRow emoji="🧾" label={t('Vergi İadesi', 'Tax Refund')} value={data.moneyAndShopping.taxRefund} />
+                    <InfoRow emoji="🕐" label={t('Alışveriş Saatleri', 'Shopping Hours')} value={data.moneyAndShopping.shoppingHours} />
+                    <TipsList tips={data.moneyAndShopping.tips} />
+                </motion.div>
             )}
 
-            {/* Local Laws */}
-            {data.localLaws?.length > 0 && (
-                <div className="emer-section">
-                    <h4>⚖️ {locale === 'tr' ? 'Yerel Yasalar' : 'Local Laws'}</h4>
-                    {data.localLaws.map((law, i) => (
-                        <div key={i} className="emer-area safe" style={{ marginBottom: 4 }}>{law.emoji} <strong>{law.topic}</strong> — {law.info}</div>
-                    ))}
-                </div>
+            {/* ═══ FOOD ═══ */}
+            {activeCat === 'food' && data.foodAndDrink && (
+                <motion.div key="food" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="🕐" label={t('Yemek Saatleri', 'Meal Times')} value={data.foodAndDrink.mealTimes} />
+                    <InfoRow emoji="📋" label={t('Restoran Adabı', 'Etiquette')} value={data.foodAndDrink.restaurantEtiquette} />
+                    <InfoRow emoji="🌯" label={t('Sokak Yemeği', 'Street Food')} value={data.foodAndDrink.streetFoodSafety} />
+                    <InfoRow emoji="💧" label={t('Su', 'Water')} value={data.foodAndDrink.waterAdvice} />
+                    <InfoRow emoji="🍺" label={t('Alkol', 'Alcohol')} value={data.foodAndDrink.alcoholRules} />
+                    <InfoRow emoji="🥬" label={t('Vejetaryen', 'Vegetarian')} value={data.foodAndDrink.vegetarianOptions} />
+                    <InfoRow emoji="☕" label={t('Kahve Kültürü', 'Coffee Culture')} value={data.foodAndDrink.coffeeCulture} />
+                    <InfoRow emoji="📞" label={t('Rezervasyon', 'Reservations')} value={data.foodAndDrink.reservations} />
+                    {data.foodAndDrink.localSpecialties?.length > 0 && (
+                        <div style={{ marginTop: 10 }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>🌟 {t('Mutlaka Dene', 'Must Try')}</h4>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                {data.foodAndDrink.localSpecialties.map((s, i) => <span key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(249,115,22,0.08)', color: '#EA580C', fontSize: '0.72rem', fontWeight: 600 }}>🍴 {s}</span>)}
+                            </div>
+                        </div>
+                    )}
+                    <TipsList tips={data.foodAndDrink.tips} />
+                </motion.div>
             )}
 
-            {/* Seasonal Warnings */}
-            {data.seasonalWarnings?.length > 0 && (
-                <div className="emer-section">
-                    <h4>🌡️ {locale === 'tr' ? 'Mevsimsel Uyarılar' : 'Seasonal Warnings'}</h4>
-                    {data.seasonalWarnings.map((w, i) => (
-                        <div key={i} className="emer-area caution">{w.emoji} <strong>{w.season}</strong> — {w.warning}</div>
-                    ))}
-                </div>
+            {/* ═══ CULTURE ═══ */}
+            {activeCat === 'culture' && data.cultureAndEtiquette && (
+                <motion.div key="culture" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="🤝" label={t('Selamlaşma', 'Greetings')} value={data.cultureAndEtiquette.greetings} />
+                    <InfoRow emoji="👔" label={t('Giyim', 'Dress Code')} value={data.cultureAndEtiquette.dressCode} />
+                    <InfoRow emoji="🕌" label={t('Cami Adabı', 'Mosque Etiquette')} value={data.cultureAndEtiquette.mosqueEtiquette} />
+                    <InfoRow emoji="📸" label={t('Fotoğraf', 'Photography')} value={data.cultureAndEtiquette.photographyRules} />
+                    <InfoRow emoji="🎁" label={t('Hediye', 'Gifts')} value={data.cultureAndEtiquette.giftCulture} />
+                    <InfoRow emoji="👋" label={t('Beden Dili', 'Body Language')} value={data.cultureAndEtiquette.bodyLanguage} />
+                    <InfoRow emoji="🚶" label={t('Sıra Kültürü', 'Queuing')} value={data.cultureAndEtiquette.queuing} />
+                    <InfoRow emoji="🔊" label={t('Gürültü', 'Noise')} value={data.cultureAndEtiquette.noiseLevels} />
+                    {data.cultureAndEtiquette.localTaboos?.length > 0 && (
+                        <div style={{ marginTop: 10 }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>🚫 {t('Yapma!', "Don't!")}</h4>
+                            {data.cultureAndEtiquette.localTaboos.map((tab, i) => <div key={i} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.04)', marginBottom: 3, fontSize: '0.78rem', border: '1px solid rgba(239,68,68,0.1)' }}>❌ {tab}</div>)}
+                        </div>
+                    )}
+                    <TipsList tips={data.cultureAndEtiquette.tips} />
+                </motion.div>
             )}
 
-            {/* Health */}
-            {data.healthInfo && (
-                <div className="emer-section">
-                    <h4>🏥 {locale === 'tr' ? 'Sağlık' : 'Health'}</h4>
-                    <div className="emer-tipping">
-                        <div>💧 {data.healthInfo.waterSafety}</div>
-                        <div>💊 {data.healthInfo.pharmacyHours}</div>
-                        {data.healthInfo.insuranceTip && <div>🛡️ {data.healthInfo.insuranceTip}</div>}
-                    </div>
-                </div>
+            {/* ═══ HEALTH ═══ */}
+            {activeCat === 'health' && data.health && (
+                <motion.div key="health" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <InfoRow emoji="💊" label={t('Eczane Saatleri', 'Pharmacy Hours')} value={data.health.pharmacyHours} />
+                    <InfoRow emoji="🌙" label={t('Nöbetçi Eczane', 'Duty Pharmacy')} value={data.health.dutyPharmacy} />
+                    <InfoRow emoji="💧" label={t('Su Güvenliği', 'Water Safety')} value={data.health.waterSafety} />
+                    <InfoRow emoji="💉" label={t('Yaygın İlaçlar', 'Common Meds')} value={data.health.commonMeds} />
+                    <InfoRow emoji="🛡️" label={t('Sigorta', 'Insurance')} value={data.health.insurance} />
+                    <InfoRow emoji="💉" label={t('Aşılar', 'Vaccines')} value={Array.isArray(data.health.vaccines) ? data.health.vaccines.join(', ') : data.health.vaccines} />
+                    <InfoRow emoji="☀️" label={t('Güneş Koruması', 'Sun Protection')} value={data.health.sunProtection} />
+                    {/* Seasonal Health */}
+                    {data.health.seasonalHealth?.map((s, i) => <div key={i} style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(6,182,212,0.05)', marginTop: 6, fontSize: '0.78rem', border: '1px solid rgba(6,182,212,0.12)' }}>{s.emoji} <strong>{s.season}</strong> — {s.warning}</div>)}
+                    {/* Emergency Phrases */}
+                    {data.health.emergencyPhrases?.length > 0 && (
+                        <div style={{ marginTop: 12 }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>🗣️ {t('Acil Cümleler', 'Emergency Phrases')}</h4>
+                            {data.health.emergencyPhrases.map((p, i) => (
+                                <div key={i} onClick={() => navigator.clipboard?.writeText(p.local)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(6,182,212,0.04)', borderRadius: 10, marginBottom: 4, border: '1px solid rgba(6,182,212,0.12)', cursor: 'pointer' }}>
+                                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{p.phrase}</div><div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0891B2' }}>{p.local}</div><div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>🔊 {p.pronunciation}</div></div>
+                                    <Copy size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <TipsList tips={data.health.tips} />
+                </motion.div>
             )}
 
-            {/* General Tips */}
-            {data.generalTips?.length > 0 && (
-                <div className="tool-tips">{data.generalTips.map((tip, i) => <div key={i} className="tool-tip">💡 {tip}</div>)}</div>
+            {/* ═══ DIGITAL ═══ */}
+            {activeCat === 'digital' && data.digital && (
+                <motion.div key="digital" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {data.digital.simCard && (
+                        <div style={{ background: 'var(--bg-secondary)', borderRadius: 14, padding: 14, marginBottom: 10, border: '1px solid var(--border)' }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 8px' }}>📡 SIM Kart</h4>
+                            <InfoRow emoji="📶" label={t('Operatörler', 'Providers')} value={data.digital.simCard.providers?.join(', ')} />
+                            <InfoRow emoji="📦" label={t('Turist Paketi', 'Tourist Package')} value={data.digital.simCard.touristPackage} />
+                            <InfoRow emoji="📋" label={t('Kayıt', 'Registration')} value={data.digital.simCard.registration} />
+                        </div>
+                    )}
+                    <InfoRow emoji="📶" label="WiFi" value={data.digital.wifi} />
+                    <InfoRow emoji="🔒" label="VPN" value={data.digital.vpn} />
+                    <InfoRow emoji="🔋" label={t('Şarj Noktaları', 'Charging')} value={data.digital.chargingSpots} />
+                    <InfoRow emoji="🆘" label={t('Acil Uygulamalar', 'Emergency Apps')} value={data.digital.emergencyApps} />
+                    <InfoRow emoji="💬" label={t('Sosyal Medya', 'Social Media')} value={data.digital.socialMedia} />
+                    {data.digital.usefulApps?.length > 0 && (
+                        <div style={{ marginTop: 10 }}>
+                            <h4 style={{ fontSize: '0.82rem', fontWeight: 700, margin: '0 0 6px' }}>📱 {t('Faydalı Uygulamalar', 'Useful Apps')}</h4>
+                            {data.digital.usefulApps.map((app, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 4, border: '1px solid var(--border)' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>{app.emoji}</span>
+                                    <div><div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{app.name}</div><div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{app.description}</div></div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <TipsList tips={data.digital.tips} />
+                </motion.div>
             )}
         </div>
     )
 }
+
+
 
 // ══════════════════════════════════════════════════
 //  PHOTO SPOTS TAB

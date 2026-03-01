@@ -10,105 +10,149 @@ export async function POST(request) {
 
     const lang = locale === 'tr' ? 'Turkish' : 'English'
     const destination = city || country
+    const month = new Date().toLocaleString('en', { month: 'long' })
 
-    const prompt = `Provide comprehensive emergency, safety, and practical travel information for a traveler visiting ${destination}.
+    const prompt = `You are a local expert writing a practical travel guidebook for someone visiting ${destination} in ${month}.
+Focus on DAILY PRACTICAL things a traveler actually needs — not just emergencies.
 
-Respond in ${lang}. Return ONLY valid JSON:
+Respond in ${lang}. Return ONLY valid JSON with these 8 categories:
 {
-  "emergencyNumbers": [
-    { "service": "Polis / Police", "number": "155", "emoji": "🚔" },
-    { "service": "Ambulans / Ambulance", "number": "112", "emoji": "🚑" },
-    { "service": "İtfaiye / Fire", "number": "110", "emoji": "🚒" },
-    { "service": "Turist Polis / Tourist Police", "number": "xxx", "emoji": "👮" }
-  ],
-  "hospitals": [
-    {
-      "name": "City Hospital Name",
+  "destination": "${destination}",
+  "dailyEssentials": {
+    "workingHours": "Typical shop hours, e.g. 09:00-21:00",
+    "weekendHours": "Saturday/Sunday hours",
+    "supermarkets": "Chain names (Migros, BIM, A101 etc), typical hours",
+    "pharmacy": "Normal hours, how to find nöbetçi/duty pharmacy at night",
+    "publicToilets": "Where to find, paid or free, typical price",
+    "electricity": "Outlet type (C/F), voltage 220V",
+    "waterSafety": "Tap water drinkable? Bottled water price",
+    "laundry": "Self-service laundromats available? Prices",
+    "lostPassport": "Step-by-step what to do if passport lost/stolen",
+    "tips": ["Practical daily tip 1", "Tip 2", "Tip 3"]
+  },
+  "transport": {
+    "cityCard": "Card name, where to buy, cost, how to reload",
+    "metro": "Lines, coverage, hours, price per ride",
+    "bus": "System info, night buses, how to pay",
+    "tram": "If available, info about tram",
+    "taxi": "Apps (BiTaksi, Uber etc), starting fare, per km",
+    "ferry": "If coastal city, ferry info",
+    "bikeRental": "Bike sharing services, cost",
+    "airportTransfer": "How to get from airport to city center, options and prices",
+    "carRental": "International companies available, driving tips, license needed",
+    "tips": ["Transport hack 1", "Tip 2"]
+  },
+  "moneyAndShopping": {
+    "currency": "Currency name, symbol, current rough exchange rate",
+    "atm": "Best ATM banks (low fees), daily limits",
+    "cardAcceptance": "Visa/MC acceptance level, contactless",
+    "exchange": "Best areas for exchange, avoid airport",
+    "tipping": {
+      "restaurants": "10-15%",
+      "cafes": "Round up",
+      "taxis": "Round up",
+      "hotels": "5-20 TRY housekeeping",
+      "hairdresser": "10%"
+    },
+    "bargaining": "Where is bargaining appropriate? (Bazaar yes, mall no)",
+    "taxRefund": "Tax-free shopping threshold, how to claim",
+    "shoppingHours": "Mall hours, bazaar hours, Sunday open?",
+    "tips": ["Money tip 1", "Tip 2"]
+  },
+  "foodAndDrink": {
+    "mealTimes": "Typical breakfast/lunch/dinner hours",
+    "restaurantEtiquette": "Cover charge (kuver), service charge, bread usually free",
+    "streetFoodSafety": "General safety level, what to look for",
+    "waterAdvice": "Drink bottled or tap? Ice safe?",
+    "alcoholRules": "Legal age, where to buy, sales hours restriction",
+    "vegetarianOptions": "How easy to find, useful phrases",
+    "localSpecialties": ["Must-try dish 1", "Dish 2", "Dish 3", "Dish 4", "Dish 5"],
+    "coffeeCulture": "Turkish coffee etiquette, çay (tea) culture",
+    "reservations": "Needed? How to make (Google, phone, walk-in)",
+    "tips": ["Food tip 1", "Tip 2"]
+  },
+  "cultureAndEtiquette": {
+    "greetings": "How locals greet (handshake, cheek kiss, etc)",
+    "dressCode": "General street dress + mosque/religious site rules",
+    "mosqueEtiquette": "Shoes off, head cover for women, quiet, no photos of praying",
+    "photographyRules": "Military no-photo, ask people before photos, selfie spots ok",
+    "localTaboos": ["Taboo 1 — what NOT to do", "Taboo 2"],
+    "giftCulture": "When/what to bring as guest gift",
+    "bodyLanguage": "Thumbs up ok? Pointing? Eye contact?",
+    "queuing": "Queue culture? Or push-in?",
+    "noiseLevels": "Are locals loud or quiet? Music hours?",
+    "tips": ["Culture tip 1", "Tip 2"]
+  },
+  "safety": {
+    "emergencyNumbers": [
+      { "service": "Police", "number": "155", "emoji": "🚔" },
+      { "service": "Ambulance", "number": "112", "emoji": "🚑" },
+      { "service": "Fire", "number": "110", "emoji": "🚒" },
+      { "service": "Tourist Police", "number": "xxx", "emoji": "👮" }
+    ],
+    "embassy": {
+      "name": "Turkish Embassy/Consulate name",
       "address": "Full address",
-      "phone": "+xx xxx xxx xxxx",
-      "isPublic": true,
-      "hasER": true,
-      "googleMapsUrl": "https://maps.google.com/?q=Hospital+Name+City"
+      "phone": "+xx xxx",
+      "googleMapsUrl": "https://maps.google.com/?q=..."
+    },
+    "hospitals": [
+      { "name": "Hospital", "address": "Addr", "phone": "+xx", "hasER": true, "isPublic": true, "googleMapsUrl": "..." }
+    ],
+    "safeAreas": [{ "name": "Area", "description": "Why safe", "emoji": "✅" }],
+    "cautionAreas": [{ "name": "Area", "description": "What to watch", "emoji": "⚠️" }],
+    "scamWarnings": [{ "type": "Scam type", "description": "How it works, how to avoid", "emoji": "🚨" }],
+    "nightSafety": {
+      "generalLevel": "safe|moderate|caution",
+      "safeNeighborhoods": ["Area1", "Area2"],
+      "tips": ["Night tip 1"],
+      "lateNightTransport": "How to get home late"
     }
-  ],
-  "embassy": {
-    "name": "T.C. Büyükelçiliği / Turkish Embassy",
-    "address": "Embassy address",
-    "phone": "+xx xxx xxx xxxx",
-    "website": "https://...",
-    "googleMapsUrl": "https://maps.google.com/?q=Turkish+Embassy+City",
-    "workingHours": "Mon-Fri 09:00-17:00"
   },
-  "localTransport": {
-    "cards": "İstanbulkart / HES Kodu / City card info",
-    "metro": "Metro lines info and tips",
-    "bus": "Bus system info, night buses",
-    "taxi": "Recommended taxi apps (BiTaksi, Uber etc)",
-    "tips": ["Use X card for discounts", "Avoid unlicensed taxis"]
+  "health": {
+    "pharmacyHours": "Normal hours, how to find 24h/duty pharmacy",
+    "dutyPharmacy": "How to find nöbetçi eczane (app, website, pharmacy door sign)",
+    "waterSafety": "Tap water safe?",
+    "commonMeds": "Parol (paracetamol), ibuprofen — available OTC?",
+    "insurance": "Travel insurance recommended? ER visit cost?",
+    "vaccines": "Any recommended vaccines",
+    "sunProtection": "UV index, sunscreen availability",
+    "seasonalHealth": [{ "season": "Summer", "warning": "Heat stroke risk", "emoji": "☀️" }],
+    "emergencyPhrases": [
+      { "phrase": "I need help", "local": "Yardım!", "pronunciation": "yar-duhm" },
+      { "phrase": "Call ambulance", "local": "Ambulans çağırın", "pronunciation": "am-bu-lans cha-uh-ruhn" },
+      { "phrase": "I need a doctor", "local": "Doktora ihtiyacım var", "pronunciation": "dok-to-ra eeh-tee-ya-juhm var" },
+      { "phrase": "Where is pharmacy?", "local": "Eczane nerede?", "pronunciation": "ej-za-ne ne-re-de" },
+      { "phrase": "I'm allergic to...", "local": "...alerjim var", "pronunciation": "a-ler-zheem var" }
+    ],
+    "tips": ["Health tip 1"]
   },
-  "currencyInfo": {
-    "currency": "TRY (Türk Lirası)",
-    "atmTips": "Best ATMs to use, avoid exchange bureaus at airports",
-    "cardAcceptance": "Visa/Mastercard widely accepted, always carry some cash",
-    "exchangeTip": "Best neighborhoods for exchange"
-  },
-  "simCard": {
-    "providers": ["Turkcell", "Vodafone", "Türk Telekom"],
-    "touristPackage": "Tourist SIM ~200-300 TRY, includes 20GB data",
-    "whereToGet": "Airport arrivals, brand stores in city center",
-    "tip": "Bring passport, registration required within 120 days"
-  },
-  "safeAreas": [
-    { "name": "Area name", "description": "Why it's safe, good for tourists", "emoji": "✅" }
-  ],
-  "cautionAreas": [
-    { "name": "Area name", "description": "What to watch for", "emoji": "⚠️" }
-  ],
-  "scamWarnings": [
-    { "type": "Taxi scam", "description": "How it works and how to avoid", "emoji": "🚕" }
-  ],
-  "nightSafety": {
-    "generalLevel": "safe|moderate|caution",
-    "safeNeighborhoods": ["Kadıköy", "Beyoğlu"],
-    "tips": ["Use BiTaksi at night", "Stay in well-lit areas"],
-    "lateNightTransport": "Metro runs until 00:30, night buses available"
-  },
-  "emergencyPhrases": [
-    { "phrase": "Help!", "local": "İmdat!", "pronunciation": "eem-dat" },
-    { "phrase": "Call police", "local": "Polis çağırın", "pronunciation": "po-lees cha-uh-ruhn" },
-    { "phrase": "I need a doctor", "local": "Doktora ihtiyacım var", "pronunciation": "dok-to-ra eeh-tee-ya-juhm var" },
-    { "phrase": "Where is the hospital?", "local": "Hastane nerede?", "pronunciation": "has-ta-ne ne-re-de" },
-    { "phrase": "I am lost", "local": "Kayboldum", "pronunciation": "kai-bol-doom" }
-  ],
-  "healthInfo": {
-    "waterSafety": "Tap water is safe / not safe to drink",
-    "vaccines": ["Recommended vaccines if any"],
-    "pharmacyHours": "Most pharmacies open 09:00-19:00",
-    "insuranceTip": "Travel insurance recommended, average ER visit costs..."
-  },
-  "localLaws": [
-    { "topic": "Alcohol", "info": "Legal drinking age is 18, no public drinking after 22:00", "emoji": "🍺" },
-    { "topic": "Photography", "info": "No photos of military areas", "emoji": "📸" },
-    { "topic": "Dress Code", "info": "Cover shoulders and knees when visiting mosques", "emoji": "👔" }
-  ],
-  "seasonalWarnings": [
-    { "season": "Summer", "warning": "Heat stroke risk, carry water, avoid 12-16 hours sun", "emoji": "☀️" }
-  ],
-  "tipping": {
-    "restaurants": "10-15% is customary",
-    "hotels": "5-10 TRY per night for housekeeping",
-    "taxis": "Round up to nearest lira",
-    "guides": "50-100 TRY per day"
-  },
-  "generalTips": [
-    "Keep copies of your passport separately",
-    "Register with your embassy before travel"
-  ]
+  "digital": {
+    "simCard": {
+      "providers": ["Turkcell", "Vodafone", "Türk Telekom"],
+      "touristPackage": "Price, data included, where to buy",
+      "registration": "Passport needed? Registration deadline?"
+    },
+    "wifi": "Free WiFi availability (cafes, metro, etc)",
+    "usefulApps": [
+      { "name": "App name", "description": "What it's for", "emoji": "📱" }
+    ],
+    "vpn": "VPN needed for any blocked services?",
+    "chargingSpots": "Powerbank rental, public chargers available?",
+    "emergencyApps": "112 app, Google Translate offline packs",
+    "socialMedia": "Popular local social media / messaging apps",
+    "tips": ["Digital tip 1"]
+  }
 }
 
-Include REAL, ACCURATE information for ${destination}. Use actual emergency numbers, real hospital names.
-Include the Turkish Embassy/Consulate with real address if available.
-List 3-5 hospitals, 3-5 safe areas, 2-3 caution areas, 3-5 scam warnings, 4-5 local laws, 5 emergency phrases.
+CRITICAL RULES:
+- ALL information must be REAL and ACCURATE for ${destination}
+- Use REAL phone numbers, addresses, app names, prices
+- Prices in local currency, realistic for 2025
+- Include cultural nuances specific to ${destination}
+- Be practical, not generic — a traveler should be able to use this info TODAY
+- Emergency numbers MUST be correct for the country
+- Hospital names and addresses should be real
 Respond ONLY with valid JSON.`
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
@@ -116,9 +160,9 @@ Respond ONLY with valid JSON.`
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: 'You are a travel safety expert. Provide accurate emergency information. Always respond with valid JSON. Use real phone numbers and addresses when possible.' }] },
+        systemInstruction: { parts: [{ text: 'You are a comprehensive travel guide expert. Provide accurate, practical daily travel information. Always respond with valid JSON. Use real data: real phone numbers, real addresses, real app names, real prices.' }] },
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 12288, responseMimeType: 'application/json' },
+        generationConfig: { temperature: 0.2, maxOutputTokens: 16384, responseMimeType: 'application/json' },
       }),
     })
 
@@ -130,7 +174,7 @@ Respond ONLY with valid JSON.`
 
     return NextResponse.json(JSON.parse(content))
   } catch (err) {
-    console.error('Emergency API error:', err)
+    console.error('Guidebook API error:', err)
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
