@@ -124,7 +124,9 @@ export default function DiscoverPage() {
                             fontSize: '1.6rem', fontWeight: 900, margin: '0 0 4px',
                             background: 'linear-gradient(135deg, #EC4899, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         }}>
-                            🧭 {t('Keşfet', 'Discover')}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
+                        </div>                            🧭 {t('Keşfet', 'Discover')}
                         </h1>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', margin: 0 }}>
                             {t('Gezginleri bul, takip et, ilham al', 'Find travelers, follow, get inspired')}

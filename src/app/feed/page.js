@@ -197,7 +197,8 @@ export default function FeedPage() {
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             marginBottom: 20, padding: '16px 0',
                         }}>
-                        <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
                             <h1 style={{ fontSize: '1.6rem', fontWeight: 900, margin: 0, background: 'linear-gradient(135deg, #0F2847, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                                 Feed
                             </h1>

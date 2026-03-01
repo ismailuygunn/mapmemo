@@ -175,7 +175,7 @@ export default function AdminPage() {
                             background: 'linear-gradient(135deg, #EF4444, #F59E0B)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                            <Shield size={22} color="white" />
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 22, height: 22, borderRadius: 4 }} />
                         </div>
                         <div>
                             <h1 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -23,16 +23,16 @@ export default function RootLayout({ children }) {
     <html lang="en" data-theme="dark" suppressHydrationWarning>
       <head>
         {/* Favicons */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-        <link rel="icon" href="/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png?v=3" />
+        <link rel="icon" href="/favicon-32.png?v=3" />
         {/* Apple Touch Icon — home screen */}
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="UMAE" />
         {/* Microsoft Tile */}
-        <meta name="msapplication-TileImage" content="/icon-192.png" />
+        <meta name="msapplication-TileImage" content="/icon-192.png?v=3" />
         <meta name="msapplication-TileColor" content="#0A1628" />
       </head>
       <body>

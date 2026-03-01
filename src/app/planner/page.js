@@ -602,7 +602,7 @@ export default function PlannerPage() {
                         }}>
                             <div>
                                 <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
+                                    <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 40, height: 40, borderRadius: 12 }} />
                                     ✈️ {t('planner.title')}
                                 </h1>
                                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.92rem', margin: '6px 0 0' }}>

@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div className="auth-bg">
       <div style={{ color: 'white', textAlign: 'center' }}>
-        <img src="/umae-icon.png?v=2" alt="UMAE" style={{
+        <img src="/umae-icon.png?v=3" alt="UMAE" style={{
           width: 72, height: 72, borderRadius: 18,
           margin: '0 auto 16px', display: 'block',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)'

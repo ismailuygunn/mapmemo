@@ -201,7 +201,7 @@ export default function DashboardPage() {
                     {/* ── Header ── */}
                     <motion.div className="dash-header" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                            <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 44, height: 44, borderRadius: 12, boxShadow: '0 4px 16px rgba(10,22,40,0.25)' }} />
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 44, height: 44, borderRadius: 12, boxShadow: '0 4px 16px rgba(10,22,40,0.25)' }} />
                             <div>
                                 <h1 className="dash-greeting">{greeting}, <span className="dash-name">{profile?.display_name || user?.email?.split('@')[0]}</span> 👋</h1>
                                 <p className="dash-subtitle">{t('Seyahat maceranı planla', 'Plan your next adventure')}</p>
@@ -444,7 +444,7 @@ export default function DashboardPage() {
                         <h2 className="dash-section-title">{t('Yaklaşan Seyahatler', 'Upcoming Trips')} ✈️</h2>
                         {upcomingTrips.length === 0 ? (
                             <div className="dash-empty">
-                                <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 48, height: 48, borderRadius: 12, opacity: 0.6, marginBottom: 8 }} />
+                                <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 48, height: 48, borderRadius: 12, opacity: 0.6, marginBottom: 8 }} />
                                 <p>{t('Henüz planlanmış trip yok', 'No upcoming trips yet')}</p>
                                 <button className="dash-cta-btn" onClick={() => router.push('/planner')}>{t('Trip Planla', 'Plan a Trip')} <ArrowRight size={14} /></button>
                             </div>

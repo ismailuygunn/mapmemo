@@ -190,11 +190,13 @@ export default function PublicProfilePage() {
                         }}>
                         {/* Cover */}
                         <div style={{
-                            height: 140,
+                            height: 140, position: 'relative',
                             background: profileData.cover_photo_url
                                 ? `url(${profileData.cover_photo_url}) center/cover`
                                 : 'linear-gradient(135deg, #0F2847, #EC4899, #F59E0B)',
-                        }} />
+                        }}>
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 28, height: 28, borderRadius: 8, position: 'absolute', top: 10, right: 12, opacity: 0.85 }} />
+                        </div>
 
                         {/* Avatar + info */}
                         <div style={{ padding: '0 20px 20px', marginTop: -40 }}>

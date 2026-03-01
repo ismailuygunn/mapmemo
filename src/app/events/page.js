@@ -280,7 +280,7 @@ export default function EventsPage() {
                                     color: 'white', fontSize: '2.4rem', fontWeight: 900, margin: 0, lineHeight: 1.15,
                                     textShadow: '0 2px 20px rgba(0,0,0,0.3)',
                                 }}>
-                                <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 44, height: 44, borderRadius: 12 }} />
+                                <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 44, height: 44, borderRadius: 12 }} />
                                 🎭 Etkinlikler
                             </motion.h1>
                             <motion.p

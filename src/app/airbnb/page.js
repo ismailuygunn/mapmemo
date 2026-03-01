@@ -272,7 +272,7 @@ export default function AirbnbPage() {
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 40px',
                         }}>
                             <h1 style={{ color: 'white', fontSize: '2.2rem', fontWeight: 900, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
-                                🏠 Konaklama
+                                <img src="/umae-icon.png?v=3" alt="UMAE" width={36} height={36} style={{ borderRadius: 10, verticalAlign: "middle", marginRight: 8 }} />🏠 Konaklama
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem', margin: '6px 0 0', textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
                                 Airbnb üzerinden gerçek ilanları keşfedin · Haritada arayın · Fiyat karşılaştırın

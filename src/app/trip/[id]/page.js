@@ -17,7 +17,8 @@ import {
     Navigation, Plane, Car, Hotel, Phone, Globe, ChevronDown, ChevronUp,
     MessageCircle, User, Home, Users, Bath, Wifi, Wind, Waves, Ticket,
     UtensilsCrossed, DollarSign, ListChecks, Backpack, Languages, Shield,
-    Upload, Camera, Copy, MapPinned
+    Upload, Camera, Copy, MapPinned, Tent, Sparkles, Wallet, Smartphone,
+    Scale, Moon, Zap, Heart, Coffee, Music, Palette, ShoppingBag, Gamepad2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -316,6 +317,7 @@ export default function TripPage() {
                     <div className="trip-hero-card">
                         {heroImage && (<div className="trip-hero-image" style={{ backgroundImage: `url(${heroImage})` }}><div className="trip-hero-overlay" /></div>)}
                         <div className="trip-hero-content">
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 28, height: 28, borderRadius: 8, marginBottom: 4, opacity: 0.9 }} />
                             {trip.country && <div className="trip-country-badge">🇹🇷 {trip.country}</div>}
                             <h1 className="trip-city-title">{trip.city}</h1>
                             {trip.slogan && <p className="trip-slogan">{trip.slogan}</p>}
@@ -670,6 +672,27 @@ export default function TripPage() {
                                     <MenuTranslatorTab locale={locale} />
                                 </motion.div>
                             )}
+
+                            {/* ═══ DAY TRIP TAB ═══ */}
+                            {activeTab === 'daytrip' && (
+                                <motion.div key="daytrip" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <DayTripTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ FUN ACTIVITIES TAB ═══ */}
+                            {activeTab === 'fun' && (
+                                <motion.div key="fun" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <FunActivitiesTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
+
+                            {/* ═══ BUDGET TIPS TAB ═══ */}
+                            {activeTab === 'budget' && (
+                                <motion.div key="budget" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.2 }}>
+                                    <BudgetTipsTab city={trip?.city} locale={locale} />
+                                </motion.div>
+                            )}
                         </AnimatePresence>
                     </div>
 
@@ -685,6 +708,9 @@ export default function TripPage() {
                         <button className={`trip-tab ${activeTab === 'emergency' ? 'active' : ''}`} onClick={() => setActiveTab('emergency')}>🆘 {t('Güvenlik', 'Safety')}</button>
                         <button className={`trip-tab ${activeTab === 'photospots' ? 'active' : ''}`} onClick={() => setActiveTab('photospots')}>📸 {t('Spot', 'Spots')}</button>
                         <button className={`trip-tab ${activeTab === 'menu' ? 'active' : ''}`} onClick={() => setActiveTab('menu')}>🍽️ {t('Menü', 'Menu')}</button>
+                        <button className={`trip-tab ${activeTab === 'daytrip' ? 'active' : ''}`} onClick={() => setActiveTab('daytrip')}>🏕️ {t('Günübirlik', 'Day Trip')}</button>
+                        <button className={`trip-tab ${activeTab === 'fun' ? 'active' : ''}`} onClick={() => setActiveTab('fun')}>🎉 {t('Eğlence', 'Fun')}</button>
+                        <button className={`trip-tab ${activeTab === 'budget' ? 'active' : ''}`} onClick={() => setActiveTab('budget')}>💰 {t('Bütçe', 'Budget')}</button>
                     </div>
                 </div>
             </div>
@@ -1133,6 +1159,97 @@ function EmergencyTab({ city, locale }) {
                 </div>
             )}
 
+            {/* Local Transport */}
+            {data.localTransport && (
+                <div className="emer-section">
+                    <h4>🚇 {locale === 'tr' ? 'Yerel Ulaşım' : 'Local Transport'}</h4>
+                    <div className="emer-tipping">
+                        {data.localTransport.cards && <div>💳 {data.localTransport.cards}</div>}
+                        {data.localTransport.metro && <div>🚇 {data.localTransport.metro}</div>}
+                        {data.localTransport.bus && <div>🚌 {data.localTransport.bus}</div>}
+                        {data.localTransport.taxi && <div>🚕 {data.localTransport.taxi}</div>}
+                        {data.localTransport.tips?.map((tip, i) => <div key={i} style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {tip}</div>)}
+                    </div>
+                </div>
+            )}
+
+            {/* Currency */}
+            {data.currencyInfo && (
+                <div className="emer-section">
+                    <h4>💱 {locale === 'tr' ? 'Para & Döviz' : 'Currency & Exchange'}</h4>
+                    <div className="emer-tipping">
+                        <div>💵 {data.currencyInfo.currency}</div>
+                        <div>🏧 {data.currencyInfo.atmTips}</div>
+                        <div>💳 {data.currencyInfo.cardAcceptance}</div>
+                        {data.currencyInfo.exchangeTip && <div>🔄 {data.currencyInfo.exchangeTip}</div>}
+                    </div>
+                </div>
+            )}
+
+            {/* SIM Card */}
+            {data.simCard && (
+                <div className="emer-section">
+                    <h4>📱 {locale === 'tr' ? 'SIM Kart' : 'SIM Card'}</h4>
+                    <div className="emer-tipping">
+                        <div>📡 {data.simCard.providers?.join(', ')}</div>
+                        <div>📦 {data.simCard.touristPackage}</div>
+                        <div>📍 {data.simCard.whereToGet}</div>
+                        {data.simCard.tip && <div style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {data.simCard.tip}</div>}
+                    </div>
+                </div>
+            )}
+
+            {/* Night Safety */}
+            {data.nightSafety && (
+                <div className="emer-section">
+                    <h4>🌙 {locale === 'tr' ? 'Gece Güvenliği' : 'Night Safety'}</h4>
+                    <div className="emer-tipping">
+                        <div>🔒 {locale === 'tr' ? 'Genel seviye' : 'General level'}: <strong>{data.nightSafety.generalLevel}</strong></div>
+                        {data.nightSafety.safeNeighborhoods?.length > 0 && <div>✅ {locale === 'tr' ? 'Güvenli mahalleler' : 'Safe areas'}: {data.nightSafety.safeNeighborhoods.join(', ')}</div>}
+                        {data.nightSafety.lateNightTransport && <div>🚇 {data.nightSafety.lateNightTransport}</div>}
+                        {data.nightSafety.tips?.map((tip, i) => <div key={i} style={{ marginTop: 3, fontSize: '0.78rem', color: 'var(--text-tertiary)' }}>💡 {tip}</div>)}
+                    </div>
+                </div>
+            )}
+
+            {/* Emergency Phrases */}
+            {data.emergencyPhrases?.length > 0 && (
+                <div className="emer-section">
+                    <h4>🗣️ {locale === 'tr' ? 'Acil Cümleler' : 'Emergency Phrases'}</h4>
+                    {data.emergencyPhrases.map((p, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(239,68,68,0.04)', borderRadius: 10, marginBottom: 4, border: '1px solid rgba(239,68,68,0.12)', cursor: 'pointer' }}
+                            onClick={() => { navigator.clipboard?.writeText(p.local) }}>
+                            <div>
+                                <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>{p.phrase}</div>
+                                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EF4444' }}>{p.local}</div>
+                                <div style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>🔊 {p.pronunciation}</div>
+                            </div>
+                            <Copy size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Local Laws */}
+            {data.localLaws?.length > 0 && (
+                <div className="emer-section">
+                    <h4>⚖️ {locale === 'tr' ? 'Yerel Yasalar' : 'Local Laws'}</h4>
+                    {data.localLaws.map((law, i) => (
+                        <div key={i} className="emer-area safe" style={{ marginBottom: 4 }}>{law.emoji} <strong>{law.topic}</strong> — {law.info}</div>
+                    ))}
+                </div>
+            )}
+
+            {/* Seasonal Warnings */}
+            {data.seasonalWarnings?.length > 0 && (
+                <div className="emer-section">
+                    <h4>🌡️ {locale === 'tr' ? 'Mevsimsel Uyarılar' : 'Seasonal Warnings'}</h4>
+                    {data.seasonalWarnings.map((w, i) => (
+                        <div key={i} className="emer-area caution">{w.emoji} <strong>{w.season}</strong> — {w.warning}</div>
+                    ))}
+                </div>
+            )}
+
             {/* Health */}
             {data.healthInfo && (
                 <div className="emer-section">
@@ -1283,6 +1400,340 @@ function MenuTranslatorTab({ locale }) {
                     <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => { setResult(null); setPreview(null) }}>
                         📸 {locale === 'tr' ? 'Başka Menü Tara' : 'Scan Another Menu'}
                     </button>
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  DAY TRIP TAB
+// ══════════════════════════════════════════════════
+const TRIP_PHOTOS = ['/trip-photos/hiking.png', '/trip-photos/coastal.png', '/trip-photos/ancient.png', '/trip-photos/adventure.png', '/trip-photos/streetfood.png', '/trip-photos/livemusic.png']
+const VIBE_COLORS = { adventure: '#EF4444', romantic: '#EC4899', family: '#F59E0B', friends: '#8B5CF6', solo: '#06B6D4', chill: '#10B981' }
+const DIFF_COLORS = { easy: '#10B981', moderate: '#F59E0B', hard: '#EF4444' }
+
+function DayTripTab({ city, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [expanded, setExpanded] = useState(null)
+    const t = (tr, en) => locale === 'tr' ? tr : en
+
+    const load = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/ai/daytrip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
+            const d = await res.json()
+            if (d.dayTrips) setData(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) load() }, [city])
+
+    if (loading) return <LoadingPlaceholder text={t('Günübirlik rotalar hazırlanıyor...', 'Preparing day trip routes...')} />
+    if (!data) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>🏕️</span><p>{t('Henüz rota yok', 'No routes yet')}</p><button className="btn btn-primary btn-sm" onClick={load}>{t('Keşfet', 'Explore')}</button></div>
+    )
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>🏕️ {t('Günübirlik Kaçamaklar', 'Day Trip Getaways')}</h3><span className="tool-badge">{data.dayTrips?.length || 0}</span></div>
+            {data.seasonalNote && <div className="tool-tip" style={{ marginBottom: 12 }}>🌤️ {data.seasonalNote}</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {data.dayTrips?.map((trip, i) => (
+                    <motion.div key={trip.id || i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                        style={{ background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
+                        {/* Card Header with photo */}
+                        <div style={{ position: 'relative', height: expanded === i ? 'auto' : 160, cursor: 'pointer' }} onClick={() => setExpanded(expanded === i ? null : i)}>
+                            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${TRIP_PHOTOS[i % TRIP_PHOTOS.length]})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)' }} />
+                            <div style={{ position: 'relative', padding: '16px 16px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%', minHeight: 140 }}>
+                                <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                                    <span style={{ padding: '2px 8px', borderRadius: 6, background: VIBE_COLORS[trip.vibe] || '#0D9488', color: '#fff', fontSize: '0.65rem', fontWeight: 700 }}>{trip.vibeEmoji} {trip.vibe}</span>
+                                    <span style={{ padding: '2px 8px', borderRadius: 6, background: DIFF_COLORS[trip.difficulty] || '#F59E0B', color: '#fff', fontSize: '0.65rem', fontWeight: 700 }}>{trip.difficulty}</span>
+                                    <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.65rem', fontWeight: 600 }}>📍 {trip.distance}</span>
+                                </div>
+                                <h3 style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{trip.emoji} {trip.title}</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: '4px 0 0' }}>{trip.destination} · {trip.duration}</p>
+                            </div>
+                        </div>
+
+                        {/* Expanded content */}
+                        <AnimatePresence>
+                            {expanded === i && (
+                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                                    <div style={{ padding: '14px 16px' }}>
+                                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>{trip.description}</p>
+
+                                        {/* Highlights */}
+                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                                            {trip.highlights?.map((h, hi) => <span key={hi} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(13,148,136,0.08)', color: '#0D9488', fontSize: '0.72rem', fontWeight: 600 }}>✨ {h}</span>)}
+                                        </div>
+
+                                        {/* Transport */}
+                                        {trip.transport && (
+                                            <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 12, marginBottom: 10, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, marginBottom: 6 }}>🚗 {t('Ulaşım', 'Transport')}</div>
+                                                {trip.transport.car && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 3 }}>🚗 {trip.transport.car}</div>}
+                                                {trip.transport.bus && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 3 }}>🚌 {trip.transport.bus}</div>}
+                                                {trip.transport.ferry && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>⛴️ {trip.transport.ferry}</div>}
+                                            </div>
+                                        )}
+
+                                        {/* Budget */}
+                                        {trip.estimatedBudget && (
+                                            <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 12, marginBottom: 10, border: '1px solid var(--border)' }}>
+                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, marginBottom: 6 }}>💰 {t('Tahmini Bütçe', 'Estimated Budget')}</div>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                                                    <div style={{ textAlign: 'center', padding: '6px', borderRadius: 8, background: 'rgba(16,185,129,0.06)' }}><div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>🚗</div><div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{trip.estimatedBudget.transport}</div></div>
+                                                    <div style={{ textAlign: 'center', padding: '6px', borderRadius: 8, background: 'rgba(245,158,11,0.06)' }}><div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>🍽️</div><div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{trip.estimatedBudget.food}</div></div>
+                                                    <div style={{ textAlign: 'center', padding: '6px', borderRadius: 8, background: 'rgba(139,92,246,0.06)' }}><div style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)' }}>🎯</div><div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{trip.estimatedBudget.activities}</div></div>
+                                                </div>
+                                                <div style={{ marginTop: 8, textAlign: 'center', fontSize: '0.82rem', fontWeight: 800, color: '#10B981' }}>≈ {trip.estimatedBudget.total}</div>
+                                            </div>
+                                        )}
+
+                                        {/* Schedule */}
+                                        {trip.schedule?.length > 0 && (
+                                            <div style={{ marginBottom: 10 }}>
+                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, marginBottom: 8 }}>📋 {t('Gün Planı', 'Day Plan')}</div>
+                                                {trip.schedule.map((s, si) => (
+                                                    <div key={si} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '6px 0', borderBottom: si < trip.schedule.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                                                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0D9488', minWidth: 42 }}>{s.time}</span>
+                                                        <span style={{ fontSize: '1rem' }}>{s.emoji}</span>
+                                                        <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{s.activity}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Tips */}
+                                        {trip.tips?.length > 0 && (
+                                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                {trip.tips.map((tip, ti) => <span key={ti} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.08)', color: '#B45309', fontSize: '0.7rem', fontWeight: 600 }}>💡 {tip}</span>)}
+                                            </div>
+                                        )}
+
+                                        {trip.photoSpot && <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>📸 {trip.photoSpot}</div>}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  FUN ACTIVITIES TAB
+// ══════════════════════════════════════════════════
+const CAT_ICONS = { outdoor: '🌿', art: '🎨', food: '🍕', music: '🎵', games: '🎮', photo: '📸', vintage: '🛍️', cafe: '☕' }
+
+function FunActivitiesTab({ city, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [activeCat, setActiveCat] = useState(null)
+    const t = (tr, en) => locale === 'tr' ? tr : en
+
+    const load = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/ai/fun-activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
+            const d = await res.json()
+            if (d.categories) { setData(d); setActiveCat(d.categories[0]?.id || null) }
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) load() }, [city])
+
+    if (loading) return <LoadingPlaceholder text={t('Eğlence önerileri keşfediliyor...', 'Discovering fun activities...')} />
+    if (!data) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>🎉</span><p>{t('Henüz öneri yok', 'No suggestions yet')}</p><button className="btn btn-primary btn-sm" onClick={load}>{t('Keşfet', 'Explore')}</button></div>
+    )
+
+    const activeCategory = data.categories?.find(c => c.id === activeCat) || data.categories?.[0]
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>🎉 {t('Eğlence & Deneyimler', 'Fun & Experiences')}</h3></div>
+
+            {/* Today's Pick */}
+            {data.todaysPick && (
+                <div style={{ background: 'linear-gradient(135deg, #0F2847, #1A3A5C)', borderRadius: 16, padding: 16, marginBottom: 14, color: '#fff' }}>
+                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, marginBottom: 4 }}>⭐ {t("Bugünün Önerisi", "Today's Pick")}</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800 }}>{data.todaysPick.emoji} {data.todaysPick.name}</div>
+                    <p style={{ fontSize: '0.78rem', opacity: 0.8, margin: '4px 0 0' }}>{data.todaysPick.reason}</p>
+                </div>
+            )}
+
+            {/* Category Tabs */}
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, marginBottom: 12 }}>
+                {data.categories?.map(cat => (
+                    <button key={cat.id} onClick={() => setActiveCat(cat.id)}
+                        style={{ padding: '6px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', background: activeCat === cat.id ? 'linear-gradient(135deg, #0F2847, #1A3A5C)' : 'var(--bg-tertiary)', color: activeCat === cat.id ? '#fff' : 'var(--text-secondary)', fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {cat.emoji} {cat.name}
+                    </button>
+                ))}
+            </div>
+
+            {/* Activities */}
+            {activeCategory?.activities?.map((act, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+                    style={{ background: 'var(--bg-secondary)', borderRadius: 14, border: '1px solid var(--border)', padding: '14px 16px', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <span style={{ fontSize: '1.5rem' }}>{act.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{act.name}</div>
+                            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '3px 0 6px', lineHeight: 1.4 }}>{act.description}</p>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(13,148,136,0.08)', fontSize: '0.68rem', fontWeight: 600, color: '#0D9488' }}>📍 {act.where}</span>
+                                <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(245,158,11,0.08)', fontSize: '0.68rem', fontWeight: 600, color: '#B45309' }}>💰 {act.price}</span>
+                                <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(139,92,246,0.08)', fontSize: '0.68rem', fontWeight: 600, color: '#7C3AED' }}>⏱️ {act.duration}</span>
+                                {act.bestTime && <span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(236,72,153,0.08)', fontSize: '0.68rem', fontWeight: 600, color: '#DB2777' }}>🕐 {act.bestTime}</span>}
+                            </div>
+                            {act.tip && <div style={{ marginTop: 6, fontSize: '0.72rem', color: 'var(--text-tertiary)', fontStyle: 'italic' }}>💡 {act.tip}</div>}
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+
+            {/* Hidden Gems */}
+            {data.hiddenGems?.length > 0 && (
+                <div style={{ marginTop: 16 }}>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0 0 8px' }}>💎 {t('Gizli Hazineler', 'Hidden Gems')}</h4>
+                    {data.hiddenGems.map((gem, i) => (
+                        <div key={i} style={{ background: 'rgba(212,168,83,0.06)', borderRadius: 12, padding: '10px 14px', marginBottom: 6, border: '1px solid rgba(212,168,83,0.15)' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{gem.emoji} {gem.name}</div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>{gem.description}</p>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--text-tertiary)' }}>📍 {gem.where}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Weekend Ideas */}
+            {data.weekendIdeas?.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0 0 8px' }}>🎯 {t('Hafta Sonu Fikirleri', 'Weekend Ideas')}</h4>
+                    {data.weekendIdeas.map((idea, i) => (
+                        <div key={i} style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: '10px 14px', marginBottom: 6, border: '1px solid var(--border)' }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{idea.emoji} {idea.title}</div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 0' }}>{idea.plan}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ══════════════════════════════════════════════════
+//  BUDGET TIPS TAB
+// ══════════════════════════════════════════════════
+function BudgetTipsTab({ city, locale }) {
+    const [data, setData] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const t = (tr, en) => locale === 'tr' ? tr : en
+
+    const load = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch('/api/ai/quick-tips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ city, locale }) })
+            const d = await res.json()
+            if (d.quickTips || d.city) setData(d)
+        } catch { }
+        setLoading(false)
+    }
+
+    useEffect(() => { if (city && !data) load() }, [city])
+
+    if (loading) return <LoadingPlaceholder text={t('Bütçe ipuçları hazırlanıyor...', 'Preparing budget tips...')} />
+    if (!data) return (
+        <div className="trip-placeholder"><span style={{ fontSize: '3rem' }}>💰</span><p>{t('Bütçe ipuçları yok', 'No budget tips')}</p><button className="btn btn-primary btn-sm" onClick={load}>{t('Yükle', 'Load')}</button></div>
+    )
+
+    const tipCatColors = { transport: '#2563EB', food: '#DC2626', activity: '#10B981', accommodation: '#F59E0B', hack: '#8B5CF6' }
+
+    return (
+        <div className="tool-tab">
+            <div className="tool-header"><h3>💰 {t('Bütçe Rehberi', 'Budget Guide')}</h3></div>
+            {data.slogan && <div style={{ fontSize: '0.82rem', fontStyle: 'italic', color: 'var(--text-tertiary)', marginBottom: 12, textAlign: 'center' }}>✨ {data.slogan}</div>}
+
+            {/* Daily Budget */}
+            {data.dailyBudget && (
+                <div style={{ background: 'linear-gradient(135deg, #0F2847, #1A3A5C)', borderRadius: 16, padding: 16, marginBottom: 14, color: '#fff' }}>
+                    <div style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, marginBottom: 8 }}>📊 {t('Günlük Bütçe', 'Daily Budget')}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>🎒 {t('Ultra Bütçe', 'Ultra Budget')}</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, marginTop: 2 }}>{data.dailyBudget.ultraBudget}</div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.65rem', opacity: 0.7 }}>😊 {t('Konforlu', 'Comfortable')}</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, marginTop: 2 }}>{data.dailyBudget.comfortable}</div>
+                        </div>
+                    </div>
+                    {data.dailyBudget.breakdown && <div style={{ marginTop: 8, fontSize: '0.72rem', opacity: 0.8, textAlign: 'center' }}>📋 {data.dailyBudget.breakdown}</div>}
+                </div>
+            )}
+
+            {/* Quick Tips */}
+            {data.quickTips?.map((tip, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
+                    style={{ background: 'var(--bg-secondary)', borderRadius: 12, border: '1px solid var(--border)', padding: '12px 14px', marginBottom: 6, borderLeft: `3px solid ${tipCatColors[tip.category] || '#0D9488'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: '1.2rem' }}>{tip.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: '0.82rem' }}>{tip.title}</div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: 1.4 }}>{tip.description}</p>
+                        </div>
+                        {tip.savingsEstimate && <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#10B981', whiteSpace: 'nowrap' }}>{tip.savingsEstimate}</span>}
+                    </div>
+                </motion.div>
+            ))}
+
+            {/* Free Activities */}
+            {data.freeActivities?.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0 0 8px' }}>🆓 {t('Ücretsiz Aktiviteler', 'Free Activities')}</h4>
+                    {data.freeActivities.map((a, i) => (
+                        <div key={i} style={{ background: 'rgba(16,185,129,0.05)', borderRadius: 10, padding: '8px 12px', marginBottom: 4, border: '1px solid rgba(16,185,129,0.12)' }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{a.name}</div>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{a.description}</div>
+                            <span style={{ fontSize: '0.65rem', color: '#0D9488' }}>🕐 {a.bestTime}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Cheap Eats */}
+            {data.cheapEats?.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0 0 8px' }}>🍕 {t('Ucuz Lezzetler', 'Cheap Eats')}</h4>
+                    {data.cheapEats.map((e, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 10, marginBottom: 4, border: '1px solid var(--border)' }}>
+                            <span style={{ fontSize: '1.2rem' }}>🍽️</span>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{e.name}</div>
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>{e.dish} · 📍 {e.area}</div>
+                            </div>
+                            <span style={{ fontWeight: 700, fontSize: '0.78rem', color: '#10B981' }}>{e.price}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Transport */}
+            {data.budgetTransport && (
+                <div style={{ marginTop: 14, background: 'var(--bg-secondary)', borderRadius: 14, padding: 14, border: '1px solid var(--border)' }}>
+                    <h4 style={{ fontSize: '0.88rem', fontWeight: 800, margin: '0 0 8px' }}>🚌 {t('Ulaşım', 'Transport')}</h4>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 4 }}>🚗 {data.budgetTransport.cheapestFromIstanbul}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: 4 }}>🎫 {data.budgetTransport.localTransport}</div>
+                    {data.budgetTransport.tips?.map((tip, i) => <div key={i} style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: 3 }}>💡 {tip}</div>)}
                 </div>
             )}
         </div>

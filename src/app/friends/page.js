@@ -175,6 +175,9 @@ export default function FriendsPage() {
                     {/* Header */}
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
                         style={{ marginBottom: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
+                        </div>
                         <h1 style={{
                             fontSize: '1.6rem', fontWeight: 900, margin: '0 0 4px',
                             background: 'linear-gradient(135deg, #EC4899, #0F2847)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',

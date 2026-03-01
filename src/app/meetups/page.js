@@ -543,7 +543,7 @@ export default function SOSPlanPage() {
                                 <motion.span animate={{ scale: [1, 1.15, 1] }} transition={{ repeat: Infinity, duration: 5 }}
                                     style={{ position: 'absolute', top: 20, right: 160, fontSize: '1.2rem', opacity: 0.1 }}>🎯</motion.span>
                                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <img src="/umae-icon.png?v=2" alt="UMAE" width={44} height={44} style={{ borderRadius: 12, marginBottom: 10 }} />
+                                    <img src="/umae-icon.png?v=3" alt="UMAE" width={44} height={44} style={{ borderRadius: 12, marginBottom: 10 }} />
                                     <h1 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, marginBottom: 6, letterSpacing: '-0.02em' }}>
                                         🚨 {t('sos.title')}
                                     </h1>

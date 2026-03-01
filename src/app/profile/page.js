@@ -175,6 +175,7 @@ export default function ProfilePage() {
                         }}>
                         <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
                         <div style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+                        <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 28, height: 28, borderRadius: 8, position: 'absolute', top: 12, right: 16, opacity: 0.85, zIndex: 1 }} />
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                             {/* Avatar */}

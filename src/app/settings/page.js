@@ -84,7 +84,7 @@ export default function SettingsPage() {
             <div className="main-content">
                 <div className="page" style={{ maxWidth: 640 }}>
                     <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <img src="/umae-icon.png?v=2" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
+                        <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 36, height: 36, borderRadius: 10 }} />
                         <h1>⚙️ {t('settings.title')}</h1>
                     </div>
 

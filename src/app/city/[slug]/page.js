@@ -66,6 +66,9 @@ export default function CityPage() {
                 <div className="page">
                     {/* City Header */}
                     <div className="city-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <img src="/umae-icon.png?v=3" alt="UMAE" style={{ width: 32, height: 32, borderRadius: 8 }} />
+                        </div>
                         <h1>{cityName}</h1>
                         {countryName && <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>{countryName}</p>}
                         <div className="city-stats">

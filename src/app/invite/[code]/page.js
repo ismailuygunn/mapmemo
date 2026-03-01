@@ -84,7 +84,7 @@ export default function InvitePage() {
                     padding: '40px 32px', boxShadow: 'var(--shadow-xl)',
                 }}
             >
-                <img src="/umae-icon.png?v=2" alt="UMAE" width={56} height={56} style={{ borderRadius: 14, marginBottom: 16 }} />
+                <img src="/umae-icon.png?v=3" alt="UMAE" width={56} height={56} style={{ borderRadius: 14, marginBottom: 16 }} />
 
                 {loading ? (
                     <div>

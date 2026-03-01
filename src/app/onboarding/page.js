@@ -202,7 +202,7 @@ function OnboardingInner() {
             >
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                    <img src="/umae-icon.png?v=2" alt="UMAE" style={{
+                    <img src="/umae-icon.png?v=3" alt="UMAE" style={{
                         width: 72, height: 72, margin: '0 auto 16px', display: 'block',
                         borderRadius: 18, boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
                     }} />
